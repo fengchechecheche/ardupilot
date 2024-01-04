@@ -1,0 +1,5 @@
+// 从多旋翼3.6.11稳定版固件创建分支，分支名为：MyCopter3.6.11
+git checkout -b MyCopter3.6.11 Copter-3.6.11
+
+//更新子模块
+git submodule update --init --recursive
