@@ -7,6 +7,7 @@
 
 /*
   constructor for Mode object
+  对类进行初始化
  */
 Mode::Mode(void) :
     g(copter.g),
@@ -26,6 +27,7 @@ Mode::Mode(void) :
 { };
 
 // return the static controller object corresponding to supplied mode
+// 根据输入的数字来返回具体是哪种模式
 Mode *Copter::mode_from_mode_num(const Mode::Number mode)
 {
     Mode *ret = nullptr;
@@ -33,6 +35,7 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
     switch (mode) {
 #if MODE_ACRO_ENABLED == ENABLED
         case Mode::Number::ACRO:
+            // 这里是根据不同的mode编号，由类来新建mode对象
             ret = &mode_acro;
             break;
 #endif
@@ -200,7 +203,8 @@ void Copter::mode_change_failed(const Mode *mode, const char *reason)
     }
 }
 
-// set_mode - change flight mode and perform any necessary initialisation
+// set_mode - 设置模式 change flight mode and perform any necessary initialisation
+// 可以通过地面站或遥控器来设置模式
 // optional force parameter used to force the flight mode change (used only first time mode is set)
 // returns true if mode was successfully set
 // ACRO, STABILIZE, ALTHOLD, LAND, DRIFT and SPORT can always be set successfully but the return state of other flight modes should be checked and the caller should deal with failures appropriately
@@ -233,6 +237,7 @@ bool Copter::set_mode(Mode::Number mode, ModeReason reason)
         return false;
     }
 
+    // 在解除锁定的情况下，允许切换到任何模式。我们依靠启动检查来执行
     bool ignore_checks = !motors->armed();   // allow switching to any mode if disarmed.  We rely on the arming check to perform
 
 #if FRAME_CONFIG == HELI_FRAME
@@ -339,6 +344,7 @@ bool Copter::set_mode(Mode::Number mode, ModeReason reason)
 
 bool Copter::set_mode(const uint8_t new_mode, const ModeReason reason)
 {
+    // 此处检查的是 new_mode 的数据类型是否与 Mode::Number 一致
     static_assert(sizeof(Mode::Number) == sizeof(new_mode), "The new mode can't be mapped to the vehicles mode number");
 #ifdef DISALLOW_GCS_MODE_CHANGE_DURING_RC_FAILSAFE
     if (reason == ModeReason::GCS_COMMAND && copter.failsafe.radio) {
@@ -350,9 +356,12 @@ bool Copter::set_mode(const uint8_t new_mode, const ModeReason reason)
 }
 
 // update_flight_mode - calls the appropriate attitude controllers based on flight mode
+// 根据飞行模式调用适当的姿态控制器
+// 在Copter::fast_loop()中每隔2.5毫秒被调用一次，来更新飞控的飞行模式
 // called at 100hz or more
 void Copter::update_flight_mode()
 {
+    // 使表面跟踪alt无效，默认为false，如果使用飞行模式将设置为true
     surface_tracking.invalidate_for_logging();  // invalidate surface tracking alt, flight mode will set to true if used
 
     flightmode->run();

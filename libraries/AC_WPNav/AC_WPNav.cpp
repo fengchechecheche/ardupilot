@@ -6,7 +6,7 @@ extern const AP_HAL::HAL& hal;
 // maximum velocities and accelerations
 #define WPNAV_ACCELERATION              250.0f      // maximum horizontal acceleration in cm/s/s that wp navigation will request
 #define WPNAV_WP_SPEED                 1000.0f      // default horizontal speed between waypoints in cm/s
-#define WPNAV_WP_SPEED_MIN               20.0f      // minimum horizontal speed between waypoints in cm/s
+#define WPNAV_WP_SPEED_MIN               20.0f      // minimum horizontal speed between waypoints in cm/s 航路点之间的最低水平速度（厘米/秒）
 #define WPNAV_WP_RADIUS                 200.0f      // default waypoint radius in cm
 #define WPNAV_WP_RADIUS_MIN               5.0f      // minimum waypoint radius in cm
 #define WPNAV_WP_SPEED_UP               250.0f      // default maximum climb velocity
@@ -285,6 +285,7 @@ bool AC_WPNav::get_wp_destination_loc(Location& destination) const
 
 /// set_wp_destination - set destination waypoints using position vectors (distance from ekf origin in cm)
 ///     terrain_alt should be true if destination.z is an altitude above terrain (false if alt-above-ekf-origin)
+///     如果destination.z是高于地形的高度，则terrain_alt应该为true。
 ///     returns false on failure (likely caused by missing terrain data)
 bool AC_WPNav::set_wp_destination(const Vector3f& destination, bool terrain_alt)
 {

@@ -822,6 +822,7 @@ private:
 class ModeDrawStar : public Mode {
 
 public:
+    // 此处定义类，在mode_DrawStar.cpp中定义各个方法具体的实现
     // inherit constructor
     using Mode::Mode;
     //注：Copter4.0.7的代码少写了下面这个语句，导致编译报错
@@ -842,6 +843,7 @@ public:
 
 protected:
 
+    // 此处显示的名字用于与地面站交互
     const char *name() const override { return "DRAW_STAR"; }
     const char *name4() const override { return "STAR"; }
 
