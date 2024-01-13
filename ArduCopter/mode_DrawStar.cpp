@@ -78,6 +78,10 @@ void ModeDrawStar::run()
             wp_nav->set_wp_destination(path[path_num], false); // 将下一个航点位置设置为导航控制模块的目标位置
         }
     }
+    else if((path_num == 6) && wp_nav->reached_wp_destination()){
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "Draw star finished, now go into Loiter Mode.");
+        copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_END);
+    }
 
     // 任何情况下，不管航点是否更新，位置控制器都需要更新
     pos_control_run(); // 位置控制器
