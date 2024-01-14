@@ -1057,10 +1057,12 @@ protected:
 
 private:
 
-    Vector3f path[10];
+    Vector3f path[20];
     int path_num;
 
     void generate_path();
+    void generate_path6();
+    void generate_path6_flip();
     void pos_control_start();
     void pos_control_run();
 };

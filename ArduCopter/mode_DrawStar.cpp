@@ -12,7 +12,7 @@
 bool ModeDrawStar::init(bool ignore_checks)
 {
     path_num = 0;
-    generate_path();
+    generate_path6_flap();
 
     pos_control_start();
 
@@ -34,11 +34,61 @@ void ModeDrawStar::generate_path()
 }
 
 
+void ModeDrawStar::generate_path6()
+{
+    float radius_cm = 1000.0;
+
+    wp_nav->get_wp_stopping_point(path[0]);
+
+    path[1] = path[0] + Vector3f(0, 2 * cosf(radians(30.0f)), 0) * radius_cm;
+    path[2] = path[0] + Vector3f(-cosf(radians(60.0f)), cosf(radians(30.0f)), 0) * radius_cm;
+    path[3] = path[0] + Vector3f(-1 - cosf(radians(60.0f)), cosf(radians(30.0f)), 0) * radius_cm;
+    path[4] = path[0] + Vector3f(-1, 0, 0) * radius_cm;
+    path[5] = path[0] + Vector3f(-1 - cosf(radians(60.0f)), -cosf(radians(30.0f)), 0) * radius_cm;
+    path[6] = path[0] + Vector3f(-cosf(radians(60.0f)), -cosf(radians(30.0f)), 0) * radius_cm;
+    path[7] = path[0] + Vector3f(0, -2 * cosf(radians(30.0f)), 0) * radius_cm;
+    path[8] = path[0] + Vector3f(cosf(radians(60.0f)), -cosf(radians(30.0f)), 0) * radius_cm;
+    path[9] = path[0] + Vector3f(1 + cosf(radians(60.0f)), -cosf(radians(30.0f)), 0) * radius_cm;
+    path[10] = path[0] + Vector3f(1, 0, 0) * radius_cm;
+    path[11] = path[0] + Vector3f(1 + cosf(radians(60.0f)), cosf(radians(30.0f)), 0) * radius_cm;
+    path[12] = path[0] + Vector3f(cosf(radians(60.0f)), cosf(radians(30.0f)), 0) * radius_cm;
+    path[13] = path[0] + Vector3f(0, 2 * cosf(radians(30.0f)), 0) * radius_cm;
+}
+
+
+void ModeDrawStar::generate_path6_flip()
+{
+    float radius_cm = 1000.0;
+
+    wp_nav->get_wp_stopping_point(path[0]);
+
+    /*
+     * 注：对于MATLAB中绘制和验证好的图形
+     * 把 Y 轴纵坐标放在 Vector3f() 的第一个参数的位置
+     * 把 X 轴横坐标放在 Vector3f() 的第二个参数的位置
+     * 才能得到和MATLAB中方向一致的结果
+     */
+    path[1] = path[0] + Vector3f(2 * cosf(radians(30.0f)), 0, 0) * radius_cm;
+    path[2] = path[0] + Vector3f(cosf(radians(30.0f)), -cosf(radians(60.0f)), 0) * radius_cm;
+    path[3] = path[0] + Vector3f(cosf(radians(30.0f)), -1 - cosf(radians(60.0f)), 0) * radius_cm;
+    path[4] = path[0] + Vector3f(0, -1, 0) * radius_cm;
+    path[5] = path[0] + Vector3f(-cosf(radians(30.0f)), -1 - cosf(radians(60.0f)), 0) * radius_cm;
+    path[6] = path[0] + Vector3f(-cosf(radians(30.0f)), -cosf(radians(60.0f)), 0) * radius_cm;
+    path[7] = path[0] + Vector3f(-2 * cosf(radians(30.0f)), 0, 0) * radius_cm;
+    path[8] = path[0] + Vector3f(-cosf(radians(30.0f)), cosf(radians(60.0f)), 0) * radius_cm;
+    path[9] = path[0] + Vector3f(-cosf(radians(30.0f)), 1 + cosf(radians(60.0f)), 0) * radius_cm;
+    path[10] = path[0] + Vector3f(0, 1, 0) * radius_cm;
+    path[11] = path[0] + Vector3f(cosf(radians(30.0f)), 1 + cosf(radians(60.0f)), 0) * radius_cm;
+    path[12] = path[0] + Vector3f(cosf(radians(30.0f)), cosf(radians(60.0f)), 0) * radius_cm;
+    path[13] = path[0] + Vector3f(2 * cosf(radians(30.0f)), 0, 0) * radius_cm;
+}
+
+
 // run - runs the guided controller
 // should be called at 100hz or more
 void ModeDrawStar::run()
 {
-    if(path_num < 6)
+    if(path_num < 13)
     {
         if(wp_nav->reached_wp_destination())
         {
@@ -46,7 +96,7 @@ void ModeDrawStar::run()
             wp_nav->set_wp_destination(path[path_num], false);
         }
     }
-    else if((path_num == 6) && wp_nav->reached_wp_destination())
+    else if((path_num == 13) && wp_nav->reached_wp_destination())
     {
         gcs().send_text(MAV_SEVERITY_CRITICAL, "Draw star finished, now go into Loiter Mode.");
         copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_END);
