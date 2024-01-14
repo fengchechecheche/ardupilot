@@ -629,6 +629,15 @@ void Copter::one_hz_loop()
 #endif
 
     AP_Notify::flags.flying = !ap.land_complete;
+
+    /* ====================================== 自定义代码-开始 =========================================== */
+
+    // 功能：飞控每隔1秒钟发送一次当前高度到地面站
+    // gcs().send_text(MAV_SEVERITY_CRITICAL,
+    //     "Current altitude: %.1fm",
+    //     copter.flightmode->get_alt_above_ground_cm() / 100.0f);
+
+    /* ====================================== 自定义代码-结束 =========================================== */
 }
 
 void Copter::init_simple_bearing()
