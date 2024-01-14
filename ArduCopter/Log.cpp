@@ -89,6 +89,23 @@ void Copter::Log_Write_EKF_POS()
     AP::ahrs().Log_Write();
 }
 
+struct PACKED log_OpenMV {
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    float height;
+};
+
+void Copter::Log_Write_OpenMV()
+{
+    struct log_OpenMV pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_OPENMV_MSG),
+        time_us     : AP_HAL::micros64(),
+        height      : copter.flightmode->get_alt_above_ground_cm() / 100.0f
+    };
+    logger.WriteCriticalBlock(&pkt, sizeof(pkt));
+}
+
+
 struct PACKED log_Data_Int16t {
     LOG_PACKET_HEADER;
     uint64_t time_us;
@@ -475,6 +492,8 @@ const struct LogStructure Copter::log_structure[] = {
 
     { LOG_CONTROL_TUNING_MSG, sizeof(log_Control_Tuning),
       "CTUN", "Qffffffefffhh", "TimeUS,ThI,ABst,ThO,ThH,DAlt,Alt,BAlt,DSAlt,SAlt,TAlt,DCRt,CRt", "s----mmmmmmnn", "F----00B000BB" , true },
+    { LOG_OPENMV_MSG, sizeof(log_OpenMV),         
+      "OMV",   "QB",         "TimeUS,height", "s--", "F--" },
     { LOG_DATA_INT16_MSG, sizeof(log_Data_Int16t),         
       "D16",   "QBh",         "TimeUS,Id,Value", "s--", "F--" },
     { LOG_DATA_UINT16_MSG, sizeof(log_Data_UInt16t),         

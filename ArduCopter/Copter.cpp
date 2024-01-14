@@ -629,6 +629,8 @@ void Copter::one_hz_loop()
 #endif
 
     AP_Notify::flags.flying = !ap.land_complete;
+
+    Log_Write_OpenMV();
 }
 
 void Copter::init_simple_bearing()
