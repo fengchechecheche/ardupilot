@@ -264,6 +264,12 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+// 使能五角星航线模式
+#ifndef MODE_DRAWSTAR_ENABLED
+# define MODE_DRAWSTAR_ENABLED ENABLED
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
 // GuidedNoGPS mode - control vehicle's angles from GCS
 #ifndef MODE_GUIDED_NOGPS_ENABLED
 # define MODE_GUIDED_NOGPS_ENABLED !HAL_MINIMIZE_FEATURES

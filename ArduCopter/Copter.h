@@ -217,6 +217,7 @@ public:
     friend class ModeZigZag;
     friend class ModeAutorotate;
     friend class ModeTurtle;
+    friend class ModeDrawStar;
 
     Copter(void);
 
@@ -943,6 +944,9 @@ private:
 #endif
 #if MODE_GUIDED_ENABLED == ENABLED
     ModeGuided mode_guided;
+#endif
+#if MODE_DRAWSTAR_ENABLED == ENABLED
+    ModeDrawStar mode_drawstar;
 #endif
     ModeLand mode_land;
 #if MODE_LOITER_ENABLED == ENABLED
