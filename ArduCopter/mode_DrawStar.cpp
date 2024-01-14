@@ -12,7 +12,7 @@
 bool ModeDrawStar::init(bool ignore_checks)
 {
     path_num = 0;
-    generate_path6_flap();
+    generate_path6_flip();
 
     pos_control_start();
 
