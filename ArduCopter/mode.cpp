@@ -37,7 +37,9 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
             break;
 #endif
 
+        //如果是增稳模式对应的模式号
         case Mode::Number::STABILIZE:
+            //则返回增稳模式的类实例化后的对象
             ret = &mode_stabilize;
             break;
 
@@ -201,6 +203,7 @@ void Copter::mode_change_failed(const Mode *mode, const char *reason)
 bool Copter::set_mode(Mode::Number mode, ModeReason reason)
 {
     // update last reason
+    // 更新最新的切换模式的原因
     const ModeReason last_reason = _last_reason;
     _last_reason = reason;
 
@@ -221,6 +224,7 @@ bool Copter::set_mode(Mode::Number mode, ModeReason reason)
     }
 #endif
 
+        //根据输入的模式号返回一个实例化后的模式对象
     Mode *new_flightmode = mode_from_mode_num(mode);
     if (new_flightmode == nullptr) {
         notify_no_such_mode((uint8_t)mode);
@@ -248,6 +252,11 @@ bool Copter::set_mode(Mode::Number mode, ModeReason reason)
         }
     }
 #endif
+
+    /*
+     * 下方代码的主要功能是进行安全判断
+     * 判断新的模式是否允许进入
+     */
 
 #if FRAME_CONFIG != HELI_FRAME
     // ensure vehicle doesn't leap off the ground if a user switches
@@ -299,6 +308,8 @@ bool Copter::set_mode(Mode::Number mode, ModeReason reason)
     prev_control_mode = flightmode->mode_number();
 
     // update flight mode
+    // 通过上面的安全判断后，才会将新的模式赋值给实际控制飞机飞行的对象
+    // 后续调用flightmode.run()方法时，就会进入到飞行模式对应的run()方法中
     flightmode = new_flightmode;
     control_mode_reason = reason;
     logger.Write_Mode((uint8_t)flightmode->mode_number(), reason);

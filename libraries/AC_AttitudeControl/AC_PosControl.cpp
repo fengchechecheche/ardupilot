@@ -608,16 +608,19 @@ void AC_PosControl::update_xy_controller()
     AP::ahrs().getControlLimits(ahrsGndSpdLimit, ahrsControlScaleXY);
 
     // Position Controller
+    /* ---------------------------------------------- 位置控制器 -------------------------------------------------- */
 
     const Vector3f &curr_pos = _inav.get_position_neu_cm();
     Vector2f vel_target = _p_pos_xy.update_all(_pos_target.x, _pos_target.y, curr_pos);
 
     // add velocity feed-forward scaled to compensate for optical flow measurement induced EKF noise
+    // 将遥控器输入的期望速度前馈到目标速度上，使得操作飞机时更“跟手”
     vel_target *= ahrsControlScaleXY;
     _vel_target.xy() = vel_target;
     _vel_target.xy() += _vel_desired.xy();
 
     // Velocity Controller
+    /* ---------------------------------------------- 速度控制器 -------------------------------------------------- */
 
     const Vector2f &curr_vel = _inav.get_velocity_xy_cms();
     Vector2f accel_target = _pid_vel_xy.update_all(_vel_target.xy(), curr_vel, _limit_vector.xy());
@@ -632,6 +635,7 @@ void AC_PosControl::update_xy_controller()
     _accel_target.xy() += _accel_desired.xy();
 
     // Acceleration Controller
+    /* ---------------------------------------------- 加速度控制器 ------------------------------------------------ */
 
     // limit acceleration using maximum lean angles
     float angle_max = MIN(_attitude_control.get_althold_lean_angle_max_cd(), get_lean_angle_max_cd());
@@ -644,6 +648,7 @@ void AC_PosControl::update_xy_controller()
     }
 
     // update angle targets that will be passed to stabilize controller
+    // 从目标加速度到目标倾角的换算（根据几何更新：多旋翼飞机倾角越大，产生的加速度也大）
     accel_to_lean_angles(_accel_target.x, _accel_target.y, _roll_target, _pitch_target);
     calculate_yaw_and_rate_yaw();
 }

@@ -581,13 +581,18 @@ void AP_MotorsMatrix::setup_motors(motor_frame_class frame_class, motor_frame_ty
 
     switch (frame_class) {
 #if AP_MOTORS_FRAME_QUAD_ENABLED
+        // 四旋翼飞行器
         case MOTOR_FRAME_QUAD:
             _frame_class_string = "QUAD";
             _mav_type = MAV_TYPE_QUADROTOR;
             switch (frame_type) {
                 case MOTOR_FRAME_TYPE_PLUS: {
+                    // 四个电机是十字形的分布
                     _frame_type_string = "PLUS";
                     static const AP_MotorsMatrix::MotorDef motors[] {
+                        // 第一个参数表示电机分布相对于机架中心的角度
+                        // 第二个参数表示电机是顺时针旋转还是逆时针旋转
+                        // 第三个参数表示具体的电机号是多少
                         {  90, AP_MOTORS_MATRIX_YAW_FACTOR_CCW,  2 },
                         { -90, AP_MOTORS_MATRIX_YAW_FACTOR_CCW,  4 },
                         {   0, AP_MOTORS_MATRIX_YAW_FACTOR_CW,   1 },
@@ -597,6 +602,7 @@ void AP_MotorsMatrix::setup_motors(motor_frame_class frame_class, motor_frame_ty
                     break;
                 }
                 case MOTOR_FRAME_TYPE_X: {
+                    // 四个电机是叉形的分布
                     _frame_type_string = "X";
                     static const AP_MotorsMatrix::MotorDef motors[] {
                         {   45, AP_MOTORS_MATRIX_YAW_FACTOR_CCW,  1 },

@@ -244,9 +244,11 @@ void Copter::fast_loop()
     ins.update();
 
     // run low level rate controllers that only require IMU data
+    // 多旋翼专用的速率控制器
     attitude_control->rate_controller_run();
 
     // send outputs to the motors library immediately
+    // 进行混控输出
     motors_output();
 
     // run EKF state estimator (expensive)

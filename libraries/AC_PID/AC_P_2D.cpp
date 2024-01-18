@@ -36,6 +36,7 @@ Vector2f AC_P_2D::update_all(postype_t &target_x, postype_t &target_y, const Vec
     }
 
     // MIN(_Dmax, _D2max / _kp) limits the max accel to the point where max jerk is exceeded
+    // 通过开方控制器平滑后，得到目标速度
     return sqrt_controller(_error, _kp, _D1_max, _dt);
 }
 

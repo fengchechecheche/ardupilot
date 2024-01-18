@@ -188,7 +188,9 @@ float AC_Loiter::get_angle_max_cd() const
 /// run the loiter controller
 void AC_Loiter::update(bool avoidance_on)
 {
+    // 计算目标速度
     calc_desired_velocity(_pos_control.get_dt(), avoidance_on);
+    // 更新水平方向的控制器
     _pos_control.update_xy_controller();
 }
 
