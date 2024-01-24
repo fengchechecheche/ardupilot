@@ -177,6 +177,24 @@ void AP_MotorsMatrix::output_to_motors()
     // convert output to PWM and send to each motor
     for (i = 0; i < AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
+            current_time_us = AP_HAL::micros64();
+            if(current_time_us - stored_time_us >= 5000000)
+            {
+                stored_time_us  =current_time_us;
+                sendtext_flag = 1;
+
+                pwm4_duty += 0.1f;
+                if(pwm4_duty - 0.9f > 0)
+                {
+                    pwm4_duty = 0.1;
+                }
+                _actuator[3] = pwm4_duty;
+            }
+            if(sendtext_flag == 1)
+            {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "(AP_MotorsMatrix)---> PWM[%d]:%f", i, _actuator[i]);
+            }
+
             rc_write(i, output_to_pwm(_actuator[i]));
         }
     }
@@ -593,6 +611,7 @@ void AP_MotorsMatrix::setup_motors(motor_frame_class frame_class, motor_frame_ty
                         {   0, AP_MOTORS_MATRIX_YAW_FACTOR_CW,   1 },
                         { 180, AP_MOTORS_MATRIX_YAW_FACTOR_CW,   3 },
                     };
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "AP_MotorsMatrix::setup_motors finished.");
                     add_motors(motors, ARRAY_SIZE(motors));
                     break;
                 }

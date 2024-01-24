@@ -128,6 +128,8 @@ void AP_Motors6DOF::setup_motors(motor_frame_class frame_class, motor_frame_type
         remove_motor(i);
     }
 
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "AP_Motors6DOF::setup_motors finished.");
+
     // hard coded config for supported frames
     switch ((sub_frame_t)frame_class) {
         //                 Motor #              Roll Factor     Pitch Factor    Yaw Factor      Throttle Factor     Forward Factor      Lateral Factor  Testing Order
@@ -273,8 +275,30 @@ void AP_Motors6DOF::output_to_motors()
     // send output to each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
+            current_time_us = AP_HAL::micros64();
+            if(current_time_us - stored_time_us >= 5000000)
+            {
+                stored_time_us  =current_time_us;
+                sendtext_flag = 1;
+
+                pwm4_duty += 100;
+                if(pwm4_duty >= 1900)
+                {
+                    pwm4_duty = 1100;
+                }
+                motor_out[3] = pwm4_duty;
+            }
+            if(sendtext_flag == 1)
+            {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "(AP_Motors6DOF)---> PWM[%d]:%d", i, motor_out[i]);
+            }
+
             rc_write(i, motor_out[i]);
         }
+    }
+    if(sendtext_flag == 1)
+    {
+        sendtext_flag = 0;
     }
 }
 

@@ -152,4 +152,9 @@ protected:
     const char*         _frame_type_string = "";  //  string representation of frame type
 private:
     static AP_MotorsMatrix *_singleton;
+
+    uint64_t current_time_us;
+    uint64_t stored_time_us;
+    uint8_t sendtext_flag = 1;
+    float pwm4_duty = 0.5f;
 };

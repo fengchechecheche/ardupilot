@@ -7,6 +7,7 @@
 #include <AP_Math/AP_Math.h>        // ArduPilot Mega Vector/Matrix math Library
 #include <RC_Channel/RC_Channel.h>     // RC Channel Library
 #include "AP_MotorsMatrix.h"
+#include <GCS_MAVLink/GCS.h>
 
 /// @class      AP_MotorsMatrix
 class AP_Motors6DOF : public AP_MotorsMatrix {
@@ -73,4 +74,9 @@ protected:
     // current limiting
     float _output_limited = 1.0f;
     float _batt_current_last = 0.0f;
+
+    uint64_t current_time_us;
+    uint64_t stored_time_us;
+    uint8_t sendtext_flag = 1;
+    uint16_t pwm4_duty = 1500;
 };
