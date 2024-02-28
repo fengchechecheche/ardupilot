@@ -51,6 +51,63 @@ void RC_Channels::init(void)
     }
 
     init_aux_all();
+
+    /* ----------------------------------- AP_HAL::RCOutput test ------------------------------------ */
+
+    // hal.rcout->enable_ch(9);    //初始化了9通道，用于输出不同占空比的PWM波
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "channel-9 enabled.\n");
+
+    /* ----------------------------------- AP_HAL::RCOutput test ------------------------------------ */
+
+    /* -------------------------------- ArduPilot RC Channel test ----------------------------------- */
+
+    for (int i=0; i<8; i++) {
+	    //  hal.console->printf("CH%u: %u|%u\n",
+		// 	  (unsigned)i+1,
+        //       (unsigned)rc().channel(i)->get_radio_min(),
+		// 	  (unsigned)rc().channel(i)->get_radio_max());
+
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "CH%u: %u|%u, trim: %u",
+              (unsigned)i+1,
+              (unsigned)rc().channel(i)->get_radio_min(),
+			  (unsigned)rc().channel(i)->get_radio_max(),
+              (unsigned)rc().channel(i)->get_radio_trim());
+    }
+
+    // set type of output, symmetrical angles or a number range;
+    // 设置输入通道的控制类型
+    // symmetrical angles 表示杆位回中时，输入值为量程的50%，向上打杆为正，向下打杆为负
+    // number range 表示杆位回中时，输入值为量程的0%，向上打杆输入增加
+    /* 在仿真的Console窗口中，通道1的输入值为0，对应量程的50%
+     * 在仿真的Console窗口中，通道2的输入值为0，对应量程的50%
+     * 在仿真的Console窗口中，通道3的输入值为0，对应量程的0%
+     * 在仿真的Console窗口中，通道4的输入值为0，对应量程的50%
+     * 在仿真的Console窗口中，通道5的输入值为800，对应量程的80%
+     * 在仿真的Console窗口中，通道6的输入值为0，对应量程的0%
+     * 在仿真的Console窗口中，通道7的输入值为0，对应量程的0%
+     * 在仿真的Console窗口中，通道8的输入值为800，对应量程的80%
+     */
+    rc().channel(CH_1)->set_angle(4500);
+    rc().channel(CH_1)->set_default_dead_zone(80);
+
+    rc().channel(CH_2)->set_angle(4500);
+    rc().channel(CH_2)->set_default_dead_zone(80);
+
+    rc().channel(CH_3)->set_range(1000);
+    rc().channel(CH_3)->set_default_dead_zone(20);
+
+    rc().channel(CH_4)->set_angle(6000);
+    rc().channel(CH_4)->set_default_dead_zone(500);
+
+    rc().channel(CH_5)->set_range(1000);
+
+    rc().channel(CH_6)->set_range(800);
+
+    rc().channel(CH_7)->set_range(1000);
+
+    rc().channel(CH_8)->set_range(1000);
+
+    /* -------------------------------- ArduPilot RC Channel test ----------------------------------- */
 }
 
 uint8_t RC_Channels::get_radio_in(uint16_t *chans, const uint8_t num_channels)
