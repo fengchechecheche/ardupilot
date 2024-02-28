@@ -6,7 +6,7 @@
     don't forget to push it to enable the PWM output.
 */
 
-#include <AP_HAL/AP_HAL.h>
+#include "AP_HAL/AP_HAL.h"
 
 // we need a boardconfig created so that the io processor's enable
 // parameter is available
