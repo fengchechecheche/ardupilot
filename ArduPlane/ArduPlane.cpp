@@ -24,11 +24,11 @@
 
 #define SCHED_TASK(func, rate_hz, max_time_micros, priority) SCHED_TASK_CLASS(Plane, &plane, func, rate_hz, max_time_micros, priority)
 
-// static uint16_t pwm = 1500;
-// static int8_t delta = 100;
+static uint16_t pwm = 1500;
+static int8_t delta = 100;
 static int8_t time_counter = 1;
-static uint16_t rc7_in = 100;
-static int8_t rc7_delta = 100;
+// static uint16_t rc7_in = 100;
+// static int8_t rc7_delta = 100;
 
 /*
   scheduler table - all regular tasks should be listed here.
@@ -354,87 +354,99 @@ void Plane::one_second_loop()
 
     /* ----------------------------------- AP_HAL::RCOutput test ------------------------------------ */
 
-    // hal.console->printf("Starting AP_HAL::RCOutput test\n");
-
     // 测试了通道2和通道7，但是在MP中都没有找到PWM2和PWM7通道的输出变化
     // 通道2：输入数值一直保持在1500，输出数值一直保持在1500
     // 通道7：输入数值一直保持在1000，输出数值一直保持在0
     // 通道9：输入数值一直保持在0，输出数值一直保持在0
     // 考虑在地面站中是否还要进行配置
 
-    // time_counter++;
-    // if (time_counter >= 10)
-    // {
-    //     time_counter = 1;
-
-    //     pwm += delta;
-    //     if (delta > 0 && pwm >= 2000) // delta = 1
-    //     {
-    //         delta = -100;
-    //         hal.console->printf("decreasing\n");
-    //     }
-    //     else if (delta < 0 && pwm <= 1000) // delta = -1
-    //     {
-    //         delta = 100;
-    //         hal.console->printf("increasing\n");
-    //     }
-    //     // else
-    //     // {
-    //     //     hal.console->printf("[error] delta:%d, pwm:%d.\n", delta, pwm);
-    //     // }
-    //     hal.rcout->write(9, pwm);
-    //     hal.console->printf("[normal-9] delta:%d, pwm:%d.\n", delta, pwm);
-
-    //     uint16_t v1 = hal.rcin->read(1);
-    //     hal.console->printf("[read-1] pwm:%d.\n", v1);
-    //     uint16_t v2 = hal.rcin->read(2);
-    //     hal.console->printf("[read-2] pwm:%d.\n", v2);
-    //     uint16_t v3 = hal.rcin->read(3);
-    //     hal.console->printf("[read-3] pwm:%d.\n", v3);
-    //     uint16_t v4 = hal.rcin->read(4);
-    //     hal.console->printf("[read-4] pwm:%d.\n", v4);
-    //     uint16_t v9 = hal.rcin->read(9);
-    //     hal.console->printf("[read-9] pwm:%d.\n", v9);
-    // }
-    /* ----------------------------------- AP_HAL::RCOutput test ------------------------------------ */
-
-    /* -------------------------------- ArduPilot RC Channel test ----------------------------------- */
-
     time_counter++;
     if (time_counter >= 10)
     {
         time_counter = 1;
 
-        // 下面所调用的这个函数的功能是：
-        // 在输入通道有新的输入时，把变量_has_had_rc_receiver的值置为true
-        // 在输入通道没有新的输入时，直接返回false
-        rc().read_input();
+        pwm += delta;
+        if (delta > 0 && pwm >= 2000) // delta = 1
+        {
+            delta = -100;
+            hal.console->printf("decreasing\n");
+        }
+        else if (delta < 0 && pwm <= 1000) // delta = -1
+        {
+            delta = 100;
+            hal.console->printf("increasing\n");
+        }
+        // else
+        // {
+        //     用于测试delta和pwm两个变量的变化情况是否出错
+        //     hal.console->printf("[error] delta:%d, pwm:%d.\n", delta, pwm);
+        // }
+        hal.rcout->write(8, pwm);
+        hal.console->printf("[write-8] delta:%d, pwm:%d.\n", delta, pwm);
 
-        rc7_in += rc7_delta;
-        if (rc7_delta > 0 && rc7_in >= 1000) // delta = 100
-        {
-            rc7_delta = -100;
-        }
-        else if (rc7_delta < 0 && rc7_in <= 100) // delta = -100
-        {
-            rc7_delta = 100;
-        }
-        /*
-         * 这里设置到通道里的值和地面站中对应的通道值不一样。
-         * 在地面站中观察不到通道输入值有发生过变化
-         * 需要在地面站的“配置/调试->全部参数表”中修改通道的功能，通道输出值才会随着输入值发生改变
-         * 考虑是需要在代码中修改通道的功能
-         */
-        rc().channel(7)->set_control_in(rc7_in);    // 通道从0开始索引
-
-        for (uint8_t i = 0; i < 8; i++)
-        {
-            // hal.console->printf("Ch %02u: %5d\n", (unsigned)i + 1, (int)rc().channel(i)->get_control_in());
-            // hal.console->printf("Ch %02u: %5d\n", (unsigned)i + 1, (int)rc().channel(i)->percent_input());
-            hal.console->printf("Ch %02u: %5d, %5d%%\n", (unsigned)i + 1, (int)rc().channel(i)->get_control_in(), (int)rc().channel(i)->percent_input());
-        }
-        hal.console->printf("\n");
+        // 输入和输出通道都是从0开始索引，代码里的0对应通道1，以此类推
+        uint16_t v0 = hal.rcin->read(0);
+        hal.console->printf("[read-01] pwm:%d.\n", v0);
+        uint16_t v1 = hal.rcin->read(1);
+        hal.console->printf("[read-02] pwm:%d.\n", v1);
+        uint16_t v2 = hal.rcin->read(2);
+        hal.console->printf("[read-03] pwm:%d.\n", v2);
+        uint16_t v3 = hal.rcin->read(3);
+        hal.console->printf("[read-04] pwm:%d.\n", v3);
+        uint16_t v4 = hal.rcin->read(4);
+        hal.console->printf("[read-05] pwm:%d.\n", v4);
+        uint16_t v5 = hal.rcin->read(5);
+        hal.console->printf("[read-06] pwm:%d.\n", v5);
+        uint16_t v6 = hal.rcin->read(6);
+        hal.console->printf("[read-07] pwm:%d.\n", v6);
+        uint16_t v7 = hal.rcin->read(7);
+        hal.console->printf("[read-08] pwm:%d.\n", v7);
+        uint16_t v8 = hal.rcin->read(8);
+        hal.console->printf("[read-09] pwm:%d.\n", v8);
+        uint16_t v9 = hal.rcin->read(9);
+        hal.console->printf("[read-10] pwm:%d.\n", v9);
+        hal.console->printf("----------------------------------------\n");
     }
+
+    /* ----------------------------------- AP_HAL::RCOutput test ------------------------------------ */
+
+    /* -------------------------------- ArduPilot RC Channel test ----------------------------------- */
+
+    // time_counter++;
+    // if (time_counter >= 10)
+    // {
+    //     time_counter = 1;
+
+    //     // 下面所调用的这个函数的功能是：
+    //     // 在输入通道有新的输入时，把变量_has_had_rc_receiver的值置为true
+    //     // 在输入通道没有新的输入时，直接返回false
+    //     rc().read_input();
+
+    //     rc7_in += rc7_delta;
+    //     if (rc7_delta > 0 && rc7_in >= 1000) // delta = 100
+    //     {
+    //         rc7_delta = -100;
+    //     }
+    //     else if (rc7_delta < 0 && rc7_in <= 100) // delta = -100
+    //     {
+    //         rc7_delta = 100;
+    //     }
+    //     /*
+    //      * 这里设置到通道里的值和地面站中对应的通道值不一样。
+    //      * 在地面站中观察不到通道输入值有发生过变化
+    //      * 需要在地面站的“配置/调试->全部参数表”中修改通道的功能，通道输出值才会随着输入值发生改变
+    //      * 考虑是需要在代码中修改通道的功能
+    //      */
+    //     rc().channel(7)->set_control_in(rc7_in);    // 通道从0开始索引
+
+    //     for (uint8_t i = 0; i < 8; i++)
+    //     {
+    //         // hal.console->printf("Ch %02u: %5d\n", (unsigned)i + 1, (int)rc().channel(i)->get_control_in());
+    //         // hal.console->printf("Ch %02u: %5d\n", (unsigned)i + 1, (int)rc().channel(i)->percent_input());
+    //         hal.console->printf("Ch %02u: %5d, %5d%%\n", (unsigned)i + 1, (int)rc().channel(i)->get_control_in(), (int)rc().channel(i)->percent_input());
+    //     }
+    //     hal.console->printf("\n");
+    // }
 
     /* -------------------------------- ArduPilot RC Channel test ----------------------------------- */
 }
