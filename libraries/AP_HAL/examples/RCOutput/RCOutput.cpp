@@ -37,8 +37,12 @@ static int8_t delta = 1;
 void loop (void)
 {
     for (uint8_t i=0; i < 14; i++) {
-        // 这里的pwm值在1000到2000之间，对应的是PWM波的占空比
-        // 频率默认是50Hz
+
+        /*
+         * PWM波的默认频率是50Hz
+         * 这里的1000到2000之间的含义是以微秒为单位的脉宽
+         * 在知道PWM波频率的情况下，可以得出写入值对应的占空比
+         */
         hal.rcout->write(i, pwm);
         pwm += delta;
         if (delta > 0 && pwm >= 2000) {

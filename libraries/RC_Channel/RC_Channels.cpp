@@ -67,6 +67,13 @@ void RC_Channels::init(void)
         //       (unsigned)rc().channel(i)->get_radio_min(),
 		// 	  (unsigned)rc().channel(i)->get_radio_max());
 
+        /*
+         * 输出数据的含义是：
+         * 通道号
+         * 以微秒为单位的最小脉宽。
+         * 以微秒为单位的最大脉宽。
+         * 以微秒为单位的微调脉宽。
+         */
         gcs().send_text(MAV_SEVERITY_CRITICAL, "CH%u: %u|%u, trim: %u",
               (unsigned)i+1,
               (unsigned)rc().channel(i)->get_radio_min(),
