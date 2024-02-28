@@ -40,7 +40,7 @@ void Plane::init_ardupilot()
 #else
     rc().convert_options(RC_Channel::AUX_FUNC::ARMDISARM_UNUSED, RC_Channel::AUX_FUNC::ARMDISARM);
 #endif
-    rc().init();
+    rc().init();    // 此处对输出通道进行初始化
 
     relay.init();
 
