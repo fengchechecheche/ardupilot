@@ -85,15 +85,19 @@ void SRV_Channel::output_ch(void)
 
         current_time_3_us = AP_HAL::micros64();
         current_time_4_us = AP_HAL::micros64();
-        if(ch_num == 8)
+        if(ch_num == 3 || ch_num == 8)
         {
+            /*
+             * 此处可能可以切断输入通道与输出通道的关系
+             * 不管输入通道的值是多少，输出通道的值都只能由代码控制
+             */
             if(current_time_4_us - stored_time_4_us > 200000)
             {
                 stored_time_4_us = current_time_4_us;
                 ch8_pwm += 10;
                 if(ch8_pwm >= 1900)
                 {
-                    ch8_pwm = 1000;
+                    ch8_pwm = 1100;
                 }
             }
             hal.rcout->write(ch_num, ch8_pwm);
