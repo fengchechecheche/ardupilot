@@ -175,6 +175,12 @@ void AP_MotorsMatrix::output_to_motors()
     }
 
     // convert output to PWM and send to each motor
+    /*
+     * 这里的代码在仿真中没有被执行
+     * 1.先搞清楚电机控制部分的代码在主函数的哪里被调用的
+     * 2.尝试把这里的代码移植到主函数的one_second_loop()中去执行
+     */
+    hal.console->printf("run AP_MotorsMatrix::output_to_motors()");
     for (i = 0; i < AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
             current_time_us = AP_HAL::micros64();

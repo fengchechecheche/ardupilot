@@ -407,6 +407,7 @@ void RCOutput::set_freq(uint32_t chmask, uint16_t freq_hz)
 
 /*
   set default output rate
+  此处也有一部分设置PWM输出频率的代码
  */
 void RCOutput::set_default_rate(uint16_t freq_hz)
 {

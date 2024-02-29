@@ -273,6 +273,7 @@ void AP_Motors6DOF::output_to_motors()
     }
 
     // send output to each motor
+    hal.console->printf("run AP_Motors6DOF::output_to_motors()");
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
             current_time_us = AP_HAL::micros64();

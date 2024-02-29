@@ -49,6 +49,7 @@
 #endif
 
 // motor update rate
+// 此处定义了用于控制电机的默认PWM输出频率为490Hz.
 #define AP_MOTORS_SPEED_DEFAULT     490 // default output rate to the motors
 
 /// @class      AP_Motors

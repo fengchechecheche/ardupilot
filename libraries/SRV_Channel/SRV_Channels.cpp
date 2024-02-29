@@ -178,6 +178,7 @@ const AP_Param::GroupInfo SRV_Channels::var_info[] = {
 
     // @Param: _RATE
     // @DisplayName: Servo default output rate
+    // 此处定义了伺服电机默认的PWM输出频率为50Hz.
     // @Description: This sets the default output rate in Hz for all outputs.
     // @Range: 25 400
     // @User: Advanced
