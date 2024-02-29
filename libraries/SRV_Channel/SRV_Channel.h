@@ -336,6 +336,15 @@ private:
     bool override_active;
 
     void set_override(bool b) {override_active = b;};
+
+    /* -------------------------- 测试代码 -------------------------------- */
+
+    // 用于测试是否执行了Plane::SRV_Channels::output_ch_all()函数
+    // static uint64_t current_time_3_us;
+    // static uint64_t stored_time_3_us;
+    // static uint8_t sendtext_flag_3;
+
+    /* -------------------------- 测试代码 -------------------------------- */
 };
 
 /*
@@ -566,6 +575,15 @@ public:
 private:
 
     static bool disabled_passthrough;
+
+    /* -------------------------- 测试代码 -------------------------------- */
+
+    // 用于测试是否执行了Plane::SRV_Channels::output_ch_all()函数
+    // static uint64_t current_time_3_us;
+    // static uint64_t stored_time_3_us;
+    // static uint8_t sendtext_flag_3;
+
+    /* -------------------------- 测试代码 -------------------------------- */
 
     SRV_Channel::servo_mask_t trimmed_mask;
 

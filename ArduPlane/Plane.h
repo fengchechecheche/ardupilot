@@ -1213,6 +1213,15 @@ public:
     bool set_velocity_match(const Vector2f &velocity) override;
 #endif // AP_SCRIPTING_ENABLED
 
+    // 用于测试是否执行了Plane::set_servos()函数
+    uint64_t current_time_1_us;
+    uint64_t stored_time_1_us;
+    uint8_t sendtext_flag_1 = 1;
+    // 用于测试是否执行了Plane::servos_output()函数
+    uint64_t current_time_2_us;
+    uint64_t stored_time_2_us;
+    uint8_t sendtext_flag_2 = 1;
+
 };
 
 extern Plane plane;

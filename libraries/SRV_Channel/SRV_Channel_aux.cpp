@@ -27,6 +27,13 @@
 
 extern const AP_HAL::HAL& hal;
 
+static uint64_t current_time_3_us;
+static uint64_t stored_time_3_us;
+static uint8_t sendtext_flag_3;
+static uint64_t current_time_4_us;
+static uint64_t stored_time_4_us;
+static uint16_t ch8_pwm = 1000;
+
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
 {
@@ -66,8 +73,58 @@ void SRV_Channel::output_ch(void)
     }
 #endif // HAL_BUILD_AP_PERIPH
 
+    
+
     if (!(SRV_Channels::disabled_mask & (1U<<ch_num))) {
-        hal.rcout->write(ch_num, output_pwm);
+
+        /* ---------------------------------- 测试代码 ---------------------------------------- */
+        /*
+         * 此处代码测试成功！
+         * 可以通过ch8_pwm变量修改通道9的PWM输出值，并且在MP中观察到通道9PWM输出值的变化情况。
+         */
+
+        current_time_3_us = AP_HAL::micros64();
+        current_time_4_us = AP_HAL::micros64();
+        if(ch_num == 8)
+        {
+            if(current_time_4_us - stored_time_4_us > 2000000)
+            {
+                stored_time_4_us = current_time_4_us;
+                ch8_pwm += 100;
+                if(ch8_pwm >= 1900)
+                {
+                    ch8_pwm = 1000;
+                }
+            }
+            hal.rcout->write(ch_num, ch8_pwm);
+        }
+        else
+        {
+            hal.rcout->write(ch_num, output_pwm);
+        }
+
+        if(current_time_3_us - stored_time_3_us > 5000000)
+        {
+            stored_time_3_us = current_time_3_us;
+            sendtext_flag_3 = 0;
+        }
+        if(sendtext_flag_3 == 0)
+        {
+            if(ch_num != 8)
+            {
+                hal.console->printf("hal.rcout->write(ch_num: %d, output_pwm: %d)\n", ch_num, output_pwm);
+            }
+            else
+            {
+                hal.console->printf("hal.rcout->write(ch_num: %d, output_pwm: %d)\n", ch_num, ch8_pwm);
+            }
+            if(ch_num >= 8)
+            {
+                sendtext_flag_3 = 1;
+            }
+        }
+
+         /* ---------------------------------- 测试代码 ---------------------------------------- */
     }
 }
 
@@ -76,6 +133,37 @@ void SRV_Channel::output_ch(void)
  */
 void SRV_Channels::output_ch_all(void)
 {
+    /* -------------------------- 测试代码 -------------------------------- */
+    /*
+     * 此处编译报错
+     * undefined reference to `SRV_Channels::sendtext_flag_3'
+     * collect2: error: ld returned 1 exit status
+     */
+    // current_time_3_us = AP_HAL::micros64();
+    // if(current_time_3_us - stored_time_3_us > 5000000)
+    // {
+    //     stored_time_3_us = current_time_3_us;
+    //     sendtext_flag_3 = 0;
+    // }
+    // if(sendtext_flag_3 == 0)
+    // {
+    //     sendtext_flag_3 = 1;
+    //     hal.console->printf("start 3 Plane::set_servos.\n");
+    // }
+
+    // SRV_Channels::current_time_3_us = AP_HAL::micros64();
+    // if(SRV_Channels::current_time_3_us - SRV_Channels::stored_time_3_us > 5000000)
+    // {
+    //     SRV_Channels::stored_time_3_us = SRV_Channels::current_time_3_us;
+    //     SRV_Channels::sendtext_flag_3 = 0;
+    // }
+    // if(SRV_Channels::sendtext_flag_3 == 0)
+    // {
+    //     SRV_Channels::sendtext_flag_3 = 1;
+    //     hal.console->printf("start 3 Plane::set_servos.\n");
+    // }
+    /* -------------------------- 测试代码 -------------------------------- */
+
     for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
         channels[i].output_ch();
     }

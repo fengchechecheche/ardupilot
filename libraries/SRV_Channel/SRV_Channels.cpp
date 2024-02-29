@@ -236,6 +236,7 @@ const AP_Param::GroupInfo SRV_Channels::var_info[] = {
     // @RebootRequired: True
     AP_GROUPINFO("_GPIO_MASK",  26, SRV_Channels, gpio_mask, 0),
     
+    
     AP_GROUPEND
 };
 

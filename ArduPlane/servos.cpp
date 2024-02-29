@@ -806,14 +806,35 @@ void Plane::force_flare(void)
 */
 void Plane::set_servos(void)
 {
+    /* -------------------------- 测试代码 -------------------------------- */
+    current_time_1_us = AP_HAL::micros64();
+    if(current_time_1_us - stored_time_1_us > 5000000)
+    {
+        stored_time_1_us = current_time_1_us;
+        sendtext_flag_1 = 0;
+    }
+    if(sendtext_flag_1 == 0)
+    {
+        sendtext_flag_1 = 1;
+        hal.console->printf("start 1 Plane::set_servos.\n");
+    }
+    /* -------------------------- 测试代码 -------------------------------- */
+
     // start with output corked. the cork is released when we run
     // servos_output(), which is run from all code paths in this
     // function
+    /*
+     * 当开始执行这个函数时，PWM输出是被阻塞的
+     * 当执行到servos_output()时，PWM输出阻塞才被释放
+     */
     SRV_Channels::cork();
     
     // this is to allow the failsafe module to deliberately crash 
     // the plane. Only used in extreme circumstances to meet the
     // OBC rules
+    /*
+     *这是为了让故障保护模块故意让飞机坠毁。只在极端情况下使用以满足 OBC 规则
+     */
 #if ADVANCED_FAILSAFE == ENABLED
     if (afs.should_crash_vehicle()) {
         afs.terminate_vehicle();
@@ -824,6 +845,7 @@ void Plane::set_servos(void)
 #endif
 
     // do any transition updates for quadplane
+    // 是否对四边形进行任何过渡更新
 #if HAL_QUADPLANE_ENABLED
     quadplane.update();
 #endif
@@ -837,20 +859,28 @@ void Plane::set_servos(void)
 
     /*
       see if we are doing ground steering.
+      看看我们是否在做地面转向。
      */
     if (!steering_control.ground_steering) {
         // we are not at an altitude for ground steering. Set the nose
         // wheel to the rudder just in case the barometer has drifted
         // a lot
+        /*
+         * 我们现在的高度不适合地面操纵。把前轮调到方向舵上，以防气压计偏离太多
+         */
         steering_control.steering = steering_control.rudder;
     } else if (!SRV_Channels::function_assigned(SRV_Channel::k_steering)) {
         // we are within the ground steering altitude but don't have a
         // dedicated steering channel. Set the rudder to the ground
         // steering output
+        /*
+         * 我们在地面操舵高度，但没有专用的操舵频道。将方向舵调到地面转向输出
+         */
         steering_control.rudder = steering_control.steering;
     }
 
     // clear ground_steering to ensure manual control if the yaw stabilizer doesn't run
+    // 清除地面转向，以确保在偏航稳定器不运行时手动控制
     steering_control.ground_steering = false;
 
     if (control_mode == &mode_training) {
@@ -875,18 +905,28 @@ void Plane::set_servos(void)
 #endif
 
     // set airbrake outputs
+    // 设置空气制动器输出
     airbrake_update();
 
     // slew rate limit throttle
+    // 回转速率限制节流阀
     throttle_slew_limit(SRV_Channel::k_throttle);
 
     if (!arming.is_armed()) {
         //Some ESCs get noisy (beep error msgs) if PWM == 0.
         //This little segment aims to avoid this.
+        /*
+         * 如果PWM == 0，一些ESCs会有噪声(哔哔声错误消息)。
+         * 下面的语句旨在避免这种情况。
+         */
         switch (arming.arming_required()) { 
         case AP_Arming::Required::NO:
             //keep existing behavior: do nothing to radio_out
             //(don't disarm throttle channel even if AP_Arming class is)
+            /*
+             * 保持现有的行为: 对radio_out不做任何操作
+             * (不要解除油门通道，即使AP_Arming类是)
+             */
             break;
 
         case AP_Arming::Required::YES_ZERO_PWM:
@@ -908,10 +948,12 @@ void Plane::set_servos(void)
     uint8_t override_pct;
     if (g2.ice_control.throttle_override(override_pct)) {
         // the ICE controller wants to override the throttle for starting
+        // ICE控制器想要覆盖油门进行启动
         SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, override_pct);
     }
 
     // run output mixer and send values to the hal for output
+    // 运行输出混频器并将值发送到Hal进行输出
     servos_output();
 }
 
@@ -953,12 +995,28 @@ void Plane::landing_neutral_control_surface_servos(void)
  */
 void Plane::servos_output(void)
 {
+    /* -------------------------- 测试代码 -------------------------------- */
+    current_time_2_us = AP_HAL::micros64();
+    if(current_time_2_us - stored_time_2_us > 5000000)
+    {
+        stored_time_2_us = current_time_2_us;
+        sendtext_flag_2 = 0;
+    }
+    if(sendtext_flag_2 == 0)
+    {
+        sendtext_flag_2 = 1;
+        hal.console->printf("start 2 Plane::servos_output.\n");
+    }
+    /* -------------------------- 测试代码 -------------------------------- */
+
     SRV_Channels::cork();
 
     // support twin-engine aircraft
+    // 支持双发飞机
     servos_twin_engine_mix();
 
     // run vtail and elevon mixers
+    // 运行vtail和elevon混合器
     channel_function_mixer(SRV_Channel::k_aileron, SRV_Channel::k_elevator, SRV_Channel::k_elevon_left, SRV_Channel::k_elevon_right);
     channel_function_mixer(SRV_Channel::k_rudder,  SRV_Channel::k_elevator, SRV_Channel::k_vtail_right, SRV_Channel::k_vtail_left);
 
@@ -969,12 +1027,15 @@ void Plane::servos_output(void)
 #endif
 
     // support forced flare option
+    // 支持强制flare选项
     force_flare();
 
     // implement differential spoilers
+    // 采用差分扰流板
     dspoiler_update();
 
     //  set control surface servos to neutral
+    // 将控制面伺服设为空挡
     landing_neutral_control_surface_servos();
 
     // support MANUAL_RCMASK

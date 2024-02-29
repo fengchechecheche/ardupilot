@@ -21,7 +21,7 @@
  */
 
 #include "Plane.h"
-#include <AP_HAL/AP_HAL.h>
+// #include <AP_HAL/AP_HAL.h>
 #include <AP_Vehicle/AP_Vehicle.h>
 
 #define SCHED_TASK(func, rate_hz, max_time_micros, priority) SCHED_TASK_CLASS(Plane, &plane, func, rate_hz, max_time_micros, priority)
@@ -65,7 +65,9 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(update_speed_height, 50, 200, 12),
     SCHED_TASK(update_control_mode, 400, 100, 15),
     SCHED_TASK(stabilize, 400, 100, 18),
+    // 考虑下面这个任务和电机控制有关
     SCHED_TASK(set_servos, 400, 100, 21),
+    // 考虑下面这个任务和电机控制有关
     SCHED_TASK(update_throttle_hover, 100, 90, 24),
     SCHED_TASK(read_control_switch, 7, 100, 27),
     SCHED_TASK(update_GPS_50Hz, 50, 300, 30),
@@ -415,7 +417,7 @@ void Plane::one_second_loop()
     /* ----------------------------------- AP_Motor_Class::rc_write test ------------------------------------ */
     // 此处编译报错
     // ‘rc_write’ was not declared in this scope; did you mean ‘write’?
-    rc_write(4, 1600);
+    // rc_write(4, 1600);
 }
 
 void Plane::three_hz_loop()
