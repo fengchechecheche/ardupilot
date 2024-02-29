@@ -87,10 +87,10 @@ void SRV_Channel::output_ch(void)
         current_time_4_us = AP_HAL::micros64();
         if(ch_num == 8)
         {
-            if(current_time_4_us - stored_time_4_us > 2000000)
+            if(current_time_4_us - stored_time_4_us > 200000)
             {
                 stored_time_4_us = current_time_4_us;
-                ch8_pwm += 100;
+                ch8_pwm += 10;
                 if(ch8_pwm >= 1900)
                 {
                     ch8_pwm = 1000;

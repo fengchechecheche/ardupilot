@@ -807,17 +807,21 @@ void Plane::force_flare(void)
 void Plane::set_servos(void)
 {
     /* -------------------------- 测试代码 -------------------------------- */
-    current_time_1_us = AP_HAL::micros64();
-    if(current_time_1_us - stored_time_1_us > 5000000)
-    {
-        stored_time_1_us = current_time_1_us;
-        sendtext_flag_1 = 0;
-    }
-    if(sendtext_flag_1 == 0)
-    {
-        sendtext_flag_1 = 1;
-        hal.console->printf("start 1 Plane::set_servos.\n");
-    }
+    /*
+     * 这里的测试代码没有问题，但是为了仿真过程中观察到的结果尽量精简
+     * 所以暂时注释掉了
+     */ 
+    // current_time_1_us = AP_HAL::micros64();
+    // if(current_time_1_us - stored_time_1_us > 5000000)
+    // {
+    //     stored_time_1_us = current_time_1_us;
+    //     sendtext_flag_1 = 0;
+    // }
+    // if(sendtext_flag_1 == 0)
+    // {
+    //     sendtext_flag_1 = 1;
+    //     hal.console->printf("start 1 Plane::set_servos.\n");
+    // }
     /* -------------------------- 测试代码 -------------------------------- */
 
     // start with output corked. the cork is released when we run
@@ -996,17 +1000,21 @@ void Plane::landing_neutral_control_surface_servos(void)
 void Plane::servos_output(void)
 {
     /* -------------------------- 测试代码 -------------------------------- */
-    current_time_2_us = AP_HAL::micros64();
-    if(current_time_2_us - stored_time_2_us > 5000000)
-    {
-        stored_time_2_us = current_time_2_us;
-        sendtext_flag_2 = 0;
-    }
-    if(sendtext_flag_2 == 0)
-    {
-        sendtext_flag_2 = 1;
-        hal.console->printf("start 2 Plane::servos_output.\n");
-    }
+    /*
+     * 这里的测试代码没有问题，但是为了仿真过程中观察到的结果尽量精简
+     * 所以暂时注释掉了
+     */ 
+    // current_time_2_us = AP_HAL::micros64();
+    // if(current_time_2_us - stored_time_2_us > 5000000)
+    // {
+    //     stored_time_2_us = current_time_2_us;
+    //     sendtext_flag_2 = 0;
+    // }
+    // if(sendtext_flag_2 == 0)
+    // {
+    //     sendtext_flag_2 = 1;
+    //     hal.console->printf("start 2 Plane::servos_output.\n");
+    // }
     /* -------------------------- 测试代码 -------------------------------- */
 
     SRV_Channels::cork();
