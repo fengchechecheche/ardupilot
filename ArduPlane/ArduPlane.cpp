@@ -410,45 +410,6 @@ void Plane::one_second_loop()
 
     /* ----------------------------------- AP_HAL::RCOutput test ------------------------------------ */
 
-    /* -------------------------------- ArduPilot RC Channel test ----------------------------------- */
-
-    // time_counter++;
-    // if (time_counter >= 10)
-    // {
-    //     time_counter = 1;
-
-    //     // 下面所调用的这个函数的功能是：
-    //     // 在输入通道有新的输入时，把变量_has_had_rc_receiver的值置为true
-    //     // 在输入通道没有新的输入时，直接返回false
-    //     rc().read_input();
-
-    //     rc7_in += rc7_delta;
-    //     if (rc7_delta > 0 && rc7_in >= 1000) // delta = 100
-    //     {
-    //         rc7_delta = -100;
-    //     }
-    //     else if (rc7_delta < 0 && rc7_in <= 100) // delta = -100
-    //     {
-    //         rc7_delta = 100;
-    //     }
-    //     /*
-    //      * 这里设置到通道里的值和地面站中对应的通道值不一样。
-    //      * 在地面站中观察不到通道输入值有发生过变化
-    //      * 需要在地面站的“配置/调试->全部参数表”中修改通道的功能，通道输出值才会随着输入值发生改变
-    //      * 考虑是需要在代码中修改通道的功能
-    //      */
-    //     rc().channel(7)->set_control_in(rc7_in);    // 通道从0开始索引
-
-    //     for (uint8_t i = 0; i < 8; i++)
-    //     {
-    //         // hal.console->printf("Ch %02u: %5d\n", (unsigned)i + 1, (int)rc().channel(i)->get_control_in());
-    //         // hal.console->printf("Ch %02u: %5d\n", (unsigned)i + 1, (int)rc().channel(i)->percent_input());
-    //         hal.console->printf("Ch %02u: %5d, %5d%%\n", (unsigned)i + 1, (int)rc().channel(i)->get_control_in(), (int)rc().channel(i)->percent_input());
-    //     }
-    //     hal.console->printf("\n");
-    // }
-
-    /* -------------------------------- ArduPilot RC Channel test ----------------------------------- */
 }
 
 void Plane::three_hz_loop()
