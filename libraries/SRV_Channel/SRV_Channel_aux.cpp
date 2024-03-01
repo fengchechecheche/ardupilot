@@ -85,7 +85,7 @@ void SRV_Channel::output_ch(void)
 
         current_time_3_us = AP_HAL::micros64();
         current_time_4_us = AP_HAL::micros64();
-        if(ch_num == 3 || ch_num == 8)
+        if(ch_num == 0 || ch_num == 1 || ch_num == 2 || ch_num == 3 || ch_num == 8)
         {
             /*
              * 此处可能可以切断输入通道与输出通道的关系
