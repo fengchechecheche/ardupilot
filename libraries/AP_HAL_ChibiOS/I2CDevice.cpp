@@ -11,6 +11,7 @@
  *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 这里也有一个IIC设备有关的代码文件。
  */
 
 #include <hal.h>
@@ -172,6 +173,7 @@ void I2CBus::clear_bus(uint8_t busidx)
 #if HAL_I2C_CLEAR_ON_TIMEOUT
 /*
   read SDA on a bus, to check if it may be stuck
+  此处找到了一个读IIC总线上的数据的函数
  */
 uint8_t I2CBus::read_sda(uint8_t busidx)
 {

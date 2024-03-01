@@ -65,9 +65,8 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(update_speed_height, 50, 200, 12),
     SCHED_TASK(update_control_mode, 400, 100, 15),
     SCHED_TASK(stabilize, 400, 100, 18),
-    // 考虑下面这个任务和电机控制有关
+    // 下面这个任务和电机控制有关
     SCHED_TASK(set_servos, 400, 100, 21),
-    // 考虑下面这个任务和电机控制有关
     SCHED_TASK(update_throttle_hover, 100, 90, 24),
     SCHED_TASK(read_control_switch, 7, 100, 27),
     SCHED_TASK(update_GPS_50Hz, 50, 300, 30),
@@ -90,8 +89,10 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
 #if AC_FENCE == ENABLED
     SCHED_TASK_CLASS(AC_Fence, &plane.fence, update, 10, 100, 75),
 #endif
+    // 下面这个函数和读取测距模块的数据有关
     SCHED_TASK(read_rangefinder, 50, 100, 78),
     SCHED_TASK_CLASS(AP_ICEngine, &plane.g2.ice_control, update, 10, 100, 81),
+    // 下面这个函数和读取磁罗盘的数据有关
     SCHED_TASK_CLASS(Compass, &plane.compass, cal_update, 50, 50, 84),
 #if AP_OPTICALFLOW_ENABLED
     SCHED_TASK_CLASS(OpticalFlow, &plane.optflow, update, 50, 50, 87),

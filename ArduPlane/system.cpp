@@ -58,6 +58,7 @@ void Plane::init_ardupilot()
     barometer.init();
 
     // initialise rangefinder
+    // 此处是测距模块的初始化函数
     rangefinder.set_log_rfnd_bit(MASK_LOG_SONAR);
     rangefinder.init(ROTATION_PITCH_270);
 
@@ -80,6 +81,7 @@ void Plane::init_ardupilot()
     log_init();
 #endif
 
+    // 此处是磁罗盘的初始化函数
     AP::compass().set_log_bit(MASK_LOG_COMPASS);
     AP::compass().init();
 

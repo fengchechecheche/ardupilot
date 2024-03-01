@@ -1,6 +1,7 @@
 # hw definition file for processing by chibios_pins.py
 # for iFlight Beast F7 v2 hardware, based on Beast F7 v1
 # thanks to betaflight for pin information
+# 找到了hwdef.dat文件。
 
 include ../BeastF7/hwdef.dat
 undef APJ_BOARD_ID

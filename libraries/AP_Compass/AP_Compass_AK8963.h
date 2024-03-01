@@ -18,10 +18,12 @@ class AP_Compass_AK8963 : public AP_Compass_Backend
 {
 public:
     /* Probe for AK8963 standalone on I2C bus */
+    /* AK8963单机在I2C总线上的探头 */
     static AP_Compass_Backend *probe(AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev,
                                      enum Rotation rotation);
 
     /* Probe for AK8963 on auxiliary bus of MPU9250, connected through I2C */
+    /* 在MPU9250辅助总线上的AK8963探头，通过I2C连接 */
     static AP_Compass_Backend *probe_mpu9250(AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev,
                                              enum Rotation rotation);
 

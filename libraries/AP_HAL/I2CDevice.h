@@ -43,6 +43,7 @@ public:
     /*
      * Read location from device multiple times, advancing the buffer each
      * time
+     * 多次从设备读取位置，每次都推进缓冲区
      */
     virtual bool read_registers_multiple(uint8_t first_reg, uint8_t *recv,
                                          uint32_t recv_len, uint8_t times) = 0;
