@@ -39,5 +39,5 @@ void Plane::read_encoder(void)
 {
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1] run Plane::read_encoder() start.");
     rangefinder.update_encoder();
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1] run Plane::read_encoder() finished.");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] run Plane::read_encoder() finished.");
 }
