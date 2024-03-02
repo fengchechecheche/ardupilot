@@ -19,6 +19,8 @@
 extern const AP_HAL::HAL& hal;
 
 #define LIGHTWARE_DISTANCE_READ_REG 0
+#define ENCODER_MT6701_READ_REG_1 0X03
+#define ENCODER_MT6701_READ_REG_2 0X04
 #define LIGHTWARE_LOST_SIGNAL_TIMEOUT_READ_REG 22
 #define LIGHTWARE_LOST_SIGNAL_TIMEOUT_WRITE_REG 23
 #define LIGHTWARE_TIMEOUT_REG_DESIRED_VALUE 20      // number of lost signal confirmations for legacy protocol only
@@ -336,6 +338,17 @@ bool AP_RangeFinder_LightWareI2C::sf20_init()
     return true;
 }
 
+bool AP_RangeFinder_LightWareI2C::init_encoder()
+{
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[2-1] run AP_RangeFinder_LightWareI2C::init_encoder() start.");
+    // call timer() at 20Hz
+    _dev->register_periodic_callback(50000,
+                                     FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void));
+
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[2-2] run AP_RangeFinder_LightWareI2C::init_encoder() finished.");
+    return true;
+}
+
 // read - return last value measured by sensor
 bool AP_RangeFinder_LightWareI2C::legacy_get_reading(float &reading_m)
 {
@@ -354,6 +367,29 @@ bool AP_RangeFinder_LightWareI2C::legacy_get_reading(float &reading_m)
         }
         return true;
     }
+    return false;
+}
+
+bool AP_RangeFinder_LightWareI2C::get_reading_encoder(float &reading_m)
+{
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-1] run AP_RangeFinder_LightWareI2C::get_reading_encoder() start.");
+    be16_t val;
+
+    const uint8_t read_reg = ENCODER_MT6701_READ_REG_1;
+
+    // read the high and low byte distance registers
+    if (_dev->transfer(&read_reg, 1, (uint8_t *)&val, sizeof(val))) {
+        int16_t signed_val = int16_t(be16toh(val));
+        if (signed_val < 0) {
+            // some lidar firmwares will return 65436 for out of range
+            reading_m = uint16_t(max_distance_cm() + LIGHTWARE_OUT_OF_RANGE_ADD_CM) * 0.01f;
+        } else {
+            reading_m = uint16_t(signed_val) * 0.01f;
+        }
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-2] read register successed.");
+        return true;
+    }
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3] read register failed.");
     return false;
 }
 
@@ -466,6 +502,19 @@ void AP_RangeFinder_LightWareI2C::legacy_timer(void)
         // update range_valid state based on distance measured
         update_status();
     } else {
+        set_status(RangeFinder::Status::NoData);
+    }
+}
+
+void AP_RangeFinder_LightWareI2C::timer_encoder(void)
+{
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-1] run AP_RangeFinder_LightWareI2C::timer_encoder() start.");
+    if (get_reading_encoder(state.distance_m)) {
+        // update range_valid state based on distance measured
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2] read register successed.");
+        update_status();
+    } else {
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-3] read register failed.");
         set_status(RangeFinder::Status::NoData);
     }
 }

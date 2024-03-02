@@ -1043,6 +1043,7 @@ private:
 
     // sensors.cpp
     void read_rangefinder(void);
+    void read_encoder(void);
 
     // system.cpp
     void init_ardupilot() override;

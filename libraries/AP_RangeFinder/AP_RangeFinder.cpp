@@ -315,6 +315,23 @@ void RangeFinder::update(void)
 #endif
 }
 
+void RangeFinder::update_encoder(void)
+{
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-1] run RangeFinder::update_encoder() start.");
+    for (uint8_t i=0; i<num_instances; i++) {
+        if (drivers[i] != nullptr) {
+            if ((Type)params[i].type.get() == Type::NONE) {
+                // allow user to disable a rangefinder at runtime
+                state[i].status = Status::NotConnected;
+                state[i].range_valid_count = 0;
+                continue;
+            }
+            drivers[i]->update_encoder();
+        }
+    }
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-2] run RangeFinder::update_encoder() finished.");
+}
+
 bool RangeFinder::_add_backend(AP_RangeFinder_Backend *backend, uint8_t instance, uint8_t serial_instance)
 {
     if (!backend) {
@@ -588,6 +605,24 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t& serial_instance)
     default:
         break;
     }
+
+#ifdef HAL_ENCODER_MT6701_I2C_BUS
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] HAL_ENCODER_MT6701_I2C_BUS defined.");
+            _add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
+                                                             hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, params[instance].address)),
+                                                             instance);
+#else
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] HAL_ENCODER_MT6701_I2C_BUS not defined.");
+            FOREACH_I2C(i) {
+                if (_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
+                                                                     hal.i2c_mgr->get_device(i, params[instance].address)),
+                                 instance)) {
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend successed.");
+                    break;
+                }
+            }
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] _add_backend failed.");
+#endif
 
     // if the backend has some local parameters then make those available in the tree
     if (drivers[instance] && state[instance].var_info) {
