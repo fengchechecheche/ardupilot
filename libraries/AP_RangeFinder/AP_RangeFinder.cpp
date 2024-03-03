@@ -300,7 +300,7 @@ void RangeFinder::init(enum Rotation orientation_default)
             num_instances = MAX(num_instances, i + 1);
         }
 
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "num_instances: %d\n", num_instances);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[%d] num_instances: %d\n", i, num_instances);
         // initialise status
         state[i].status = Status::NotConnected;
         state[i].range_valid_count = 0;
