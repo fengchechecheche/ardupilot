@@ -72,7 +72,18 @@ public:
 
 class I2CDeviceManager {
 public:
+    // 这段代码定义了两个get_device函数，它们都是虚函数（virtual），意味着它们可以在派生类中被重写（override）。
+    // 这两个函数的目的都是获取一个指向I2C设备的指针，但是它们接受不同的参数集，并具有不同的实现。
+    // 总的来说，这段代码提供了两种获取I2C设备对象的方法。
+    // 第一种方法通过指定I2C总线和设备地址来获取设备，而第二种方法通过提供一系列可能的设备路径来获取设备。
+    // 这两种方法的具体实现将取决于派生类，这些派生类可能针对不同的硬件平台或操作系统提供特定的实现。
     /* Get a device handle */
+    // 参数：它接受四个参数——I2C总线编号（bus）、设备地址（address）、总线时钟频率（bus_clock，默认为400000 Hz）、是
+    // 否使用SMBus协议（use_smbus，默认为false）和超时时间（timeout_ms，默认为4毫秒）。
+    // 返回类型：返回一个OwnPtr<AP_HAL::I2CDevice>类型的对象。
+    // OwnPtr可能是一个智能指针，用于自动管理I2C设备对象的生命周期（例如，当对象不再需要时自动释放内存）。
+    // 实现：这个函数的实现被声明为= 0，意味着它是一个纯虚函数。
+    // 这意味着在这个函数的声明所在的类中，它必须被声明为virtual，并且在这个类的任何派生类中都必须被重写（实现）。
     virtual OwnPtr<AP_HAL::I2CDevice> get_device(uint8_t bus, uint8_t address,
                                                  uint32_t bus_clock=400000,
                                                  bool use_smbus = false,
@@ -85,6 +96,13 @@ public:
      * returned by 'udevadm info -q path /dev/i2c-X'. The first I2C bus
      * matching a prefix in @devpaths is used to create a I2CDevice object.
      */
+    // 参数：它接受一个字符串向量（devpaths）和设备地址（address）。
+    // devpaths可能包含一系列可能的I2C总线路径，这些路径将被用来查找和创建I2C设备对象。
+    // 返回类型：返回一个OwnPtr<I2CDevice>类型的对象。
+    // 注意这里的I2CDevice可能与第一个函数中的AP_HAL::I2CDevice不同，这取决于具体的实现和上下文。
+    // 实现：这个函数的实现目前为空，只是返回了一个nullptr。
+    // 这意味着这个函数目前没有被实现，调用它将返回一个空指针。
+    // 这可能是因为这个函数在基类中被声明为虚函数，预期在派生类中被重写。
     virtual OwnPtr<I2CDevice> get_device(std::vector<const char *> devpaths,
                                          uint8_t address) {
         // Not implemented

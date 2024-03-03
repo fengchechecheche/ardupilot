@@ -246,7 +246,7 @@ void RangeFinder::convert_params(void)
     // no conversion is supported on this platform
     // 此平台不支持任何转换
     params[0].type.save(true);
-    return; 
+    return;
 #endif
 
     for (uint8_t i = 0; i < ARRAY_SIZE(conversionTable); i++)
@@ -300,8 +300,8 @@ void RangeFinder::init(enum Rotation orientation_default)
         // if a serial driver is loaded for this instance
         // 如果在 detect_instance() 函数内部为这个实例加载了串行驱动, serial_instance 变量的值将增加。
 
-        //这行代码使用了WITH_SEMAPHORE宏（或函数），可能是为了确保线程安全或互斥访问某种资源。
-        // 这里，它可能是用来保护 detect_instance() 函数的执行，确保在同一时间只有一个线程可以执行该函数。
+        // 这行代码使用了WITH_SEMAPHORE宏（或函数），可能是为了确保线程安全或互斥访问某种资源。
+        //  这里，它可能是用来保护 detect_instance() 函数的执行，确保在同一时间只有一个线程可以执行该函数。
         WITH_SEMAPHORE(detect_sem);
 
         // 调用detect_instance函数，传递当前的实例编号i和serial_instance作为参数。
@@ -329,7 +329,7 @@ void RangeFinder::init(enum Rotation orientation_default)
             // 如果drivers[i]为空，执行以下代码块。
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[%d] drivers[i] == nullptr\n", i);
         }
-        
+
         // initialise status
         // 这是一个注释，说明接下来的代码将初始化状态。
 
@@ -747,16 +747,44 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
      * Fast Mode:          hi2c1.Init.Timing = 0x0010061A;  十进制：105 0138
      * Standerd Mode:      hi2c1.Init.Timing = 0x00303D5B;  十进制：316 1435
      */
+
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] _add_backend start.");
+
     // 调用_add_backend函数将接口放到一个指针数组中，方便通过数组轮流调用相应的接口
     // _add_backend 这个函数就是把上面查找到的传感器接口放入指针数组drivers中，在update中调用
-    if(_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
-                                                     hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, SlaveAddress)),
-                                                     instance)){
-                                                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed.");
-                                                     }
-    else{
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend failed.");
+    // 其中 AP_RangeFinder_LightWareI2C::detect 函数是一个静态成员函数调用，属于 AP_RangeFinder_LightWareI2C 类。
+    // 它用于检测LightWare I2C接口的测距仪是否存在并可以正常工作。函数接受三个参数：
+    // state[instance]：这是一个数组，包含了每个测距仪实例的状态信息。instance 是当前正在检测的实例的索引。
+    // params[instance]：这是一个包含每个测距仪实例配置参数（传感器类型、引脚、地址、安装方向等）的数组，与IIC通信关系不大。
+    // hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, SlaveAddress)：
+    // 这调用了一个硬件抽象层（HAL）的I2C管理器函数，用于获取指定I2C总线（HAL_ENCODER_MT6701_I2C_BUS）上的从设备（SlaveAddress）。
+    // 这个 if 语句检查 _add_backend 函数的返回值。如果 _add_backend 成功添加了一个后端（即返回值为 true），则执行 if 语句块内的代码。
+    // 总结一下，这段代码的主要作用是尝试使用LightWare I2C接口检测并添加一个测距仪后端。如果成功添加了后端，它将向地面控制站发送一条确认消息。
+
+    // 这段代码直接使用了HAL_ENCODER_MT6701_I2C_BUS宏定义的I2C总线编号来获取设备，并尝试添加后端。
+    // 这里假定LightWare测距仪总是连接在特定的I2C总线上。
+    // if(_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
+    //                                                  hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, SlaveAddress)),
+    //                                                  instance)){
+    //                                                     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed.");
+    //                                                  }
+    // else{
+    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend failed.");
+    // }
+
+    // 在没有定义HAL_RANGEFINDER_LIGHTWARE_I2C_BUS的情况下，
+    // 代码将遍历所有可用的I2C总线，尝试在每个总线上找到LightWare测距仪（MT6701）并添加后端。
+    FOREACH_I2C(i)
+    {
+        if (_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
+                                                             hal.i2c_mgr->get_device(i, SlaveAddress)),
+                         instance)){
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed.");
+                            break;
+                         }
+        else{
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend failed.");
+        }
     }
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] state[instance]: %d.", (int)state[instance].status);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] _add_backend finish.");
