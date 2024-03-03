@@ -779,7 +779,7 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
         if (_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
                                                              hal.i2c_mgr->get_device(i, SlaveAddress)),
                          instance)){
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed.");
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed[%ld].", i);
                             break;
                          }
         else{

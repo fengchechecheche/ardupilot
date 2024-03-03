@@ -199,7 +199,7 @@ bool AP_RangeFinder_LightWareI2C::init()
     }
     if(init_encoder()){
         hal.console->printf("Found MT6701 Encoder\n");
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "Found MT6701 Encoder.");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[2-3] run init_encoder() successed.");
         return true;
     }
     hal.console->printf("SF20 not found\n");
