@@ -389,6 +389,8 @@ void RangeFinder::update_encoder(void)
             // update函数中会调用update函数对传感器数据进行更新，update也是一个接口，
             // TeraRanger传感器继承自AP_RangeFinder_Backend_Serial，
             // 其对应的update函数在AP_RangeFinder_Backend_Serial.cpp中实现
+            // 【★】update() 函数是在 AP_RangeFinder_Backend_Serial.cpp 中实现的
+            // 因此考虑此处调用的函数也应该修改为与AP_RangeFinder_Backend_Serial.cpp 中的实现一致
             drivers[i]->update_encoder();
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-5] run drivers[i]->update_encoder() finished.");
         }
