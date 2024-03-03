@@ -306,6 +306,7 @@ void RangeFinder::init(enum Rotation orientation_default)
 
         // 调用detect_instance函数，传递当前的实例编号i和serial_instance作为参数。
         // 这个函数可能会尝试检测并加载该实例的测距仪驱动。
+        // detect_instance函数的作用就是针对不同的传感器，调用相应的子类
         detect_instance(i, serial_instance);
 
         // 检查drivers数组的第i个元素是否不为空。如果不为空，说明该实例的驱动已经成功加载。
@@ -384,6 +385,10 @@ void RangeFinder::update_encoder(void)
                 continue;
             }
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-4] run drivers[i]->update_encoder() start.");
+
+            // update函数中会调用update函数对传感器数据进行更新，update也是一个接口，
+            // TeraRanger传感器继承自AP_RangeFinder_Backend_Serial，
+            // 其对应的update函数在AP_RangeFinder_Backend_Serial.cpp中实现
             drivers[i]->update_encoder();
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-5] run drivers[i]->update_encoder() finished.");
         }
@@ -415,6 +420,7 @@ bool RangeFinder::_add_backend(AP_RangeFinder_Backend *backend, uint8_t instance
 
 /*
   detect if an instance of a rangefinder is connected.
+  检测测距仪实例是否已连接
  */
 void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
 {
@@ -740,6 +746,8 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
      * Standerd Mode:      hi2c1.Init.Timing = 0x00303D5B;  十进制：316 1435
      */
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] _add_backend start.");
+    // 调用_add_backend函数将接口放到一个指针数组中，方便通过数组轮流调用相应的接口
+    // _add_backend 这个函数就是把上面查找到的传感器接口放入指针数组drivers中，在update中调用
     if(_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
                                                      hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, SlaveAddress)),
                                                      instance)){
