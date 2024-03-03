@@ -19,6 +19,7 @@
 
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Math/AP_Math.h>
+#include <GCS_MAVLink/GCS.h>
 #include "Util.h"
 #include "GPIO.h"
 
@@ -245,17 +246,44 @@ I2CDeviceManager::I2CDeviceManager(void)
     }
 }
 
+// 这个I2CDevice的构造函数用于初始化一个I2CDevice对象。
+// 它接收几个参数：busnum（I2C总线编号）、address（设备在总线上的地址）、
+// bus_clock（总线时钟频率）、use_smbus（是否使用SMBus协议）和timeout_ms（超时时间，以毫秒为单位）。
+// 这个构造函数确保了I2CDevice对象在创建时就被正确地配置了，包括其I2C总线、设备地址、时钟频率和其他相关参数。
 I2CDevice::I2CDevice(uint8_t busnum, uint8_t address, uint32_t bus_clock, bool use_smbus, uint32_t timeout_ms) :
+    // 1.成员变量初始化：
+    // 这部分代码是成员初始化列表，用于在对象创建时初始化类的成员变量。
+    // 这里，_retries 被初始化为2（重试次数），_address 被设置为传入的设备地址，
+    // _use_smbus 设置为是否使用SMBus，_timeout_ms 设置为超时时间，
+    // 而 bus 成员变量从 I2CDeviceManager::businfo 数组中取得相应总线编号的配置信息。
     _retries(2),
     _address(address),
     _use_smbus(use_smbus),
     _timeout_ms(timeout_ms),
     bus(I2CDeviceManager::businfo[busnum])
 {
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] run I2CDevice::I2CDevice() start.");
+
+    // 2.设置设备总线和地址：
+    // 这两行代码调用类的成员函数来设置设备的总线编号和地址。
+    // 这里，busnum+HAL_I2C_BUS_BASE 可能是为了将硬件抽象层（HAL）的基础总线编号转换为内部管理使用的编号。
     set_device_bus(busnum+HAL_I2C_BUS_BASE);
     set_device_address(address);
+
+    // 3.生成设备名称：
+    // 使用asprintf函数（或类似的函数）来格式化一个字符串，该字符串包含了设备的名称，
+    // 格式为 "I2C:总线编号:设备地址"。这个名称可能会被用于日志记录或调试。
     asprintf(&pname, "I2C:%u:%02x",
              (unsigned)busnum, (unsigned)address);
+
+    // 4.配置总线时钟：  
+    // 接下来的代码块根据传入的bus_clock参数和硬件平台（通过预处理器指令检查）来配置I2C总线的时钟。
+    // 如果传入的bus_clock小于存储在bus成员变量中的总线时钟，代码会根据不同的硬件平台进行调整。
+    // 对于STM32F7、STM32H7、STM32F3、STM32G4或STM32L4，如果bus_clock小于或等于100kHz，
+    // 它会设置特定的时钟配置（HAL_I2C_F7_100_TIMINGR）和总线时钟为100kHz。
+    // 对于其他硬件平台，它会直接设置bus_clock作为总线的时钟频率，
+    // 并在时钟频率小于或等于100kHz时设置标准占空比（STD_DUTY_CYCLE）。
+    // 最后，它会通过控制台输出当前的I2C总线时钟。
     if (bus_clock < bus.busclock) {
 #if defined(STM32F7) || defined(STM32H7) || defined(STM32F3) || defined(STM32G4) || defined(STM32L4)
         if (bus_clock <= 100000) {
@@ -263,6 +291,9 @@ I2CDevice::I2CDevice(uint8_t busnum, uint8_t address, uint32_t bus_clock, bool u
             bus.busclock = 100000;
         }
 #else
+
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] bus_clock < bus.busclock.");
+
         bus.i2ccfg.clock_speed = bus_clock;
         bus.busclock = bus_clock;
         if (bus_clock <= 100000) {
@@ -271,6 +302,8 @@ I2CDevice::I2CDevice(uint8_t busnum, uint8_t address, uint32_t bus_clock, bool u
 #endif
         hal.console->printf("I2C%u clock %ukHz\n", busnum, unsigned(bus.busclock/1000));
     }
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-6] I2C%u clock %ukHz\n", busnum, unsigned(bus.busclock/1000));
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-7] run I2CDevice::I2CDevice() start.");
 }
 
 I2CDevice::~I2CDevice()
@@ -443,16 +476,20 @@ I2CDeviceManager::get_device(uint8_t bus, uint8_t address,
                              bool use_smbus,
                              uint32_t timeout_ms)
 {
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] run I2CDeviceManager::get_device start.");
     // 对总线编号进行调整，通常是为了将硬件抽象层（HAL）的基础总线编号转换为内部管理使用的编号。
     bus -= HAL_I2C_BUS_BASE;
     // 检查调整后的总线编号是否超出了预定义的I2C设备数组的大小。如果是，函数将返回一个空的
     if (bus >= ARRAY_SIZE(I2CD)) {
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] bus >= ARRAY_SIZE(I2CD), return nullptr.");
         // 即指向null的指针
         return AP_HAL::OwnPtr<AP_HAL::I2CDevice>(nullptr);
     }
     // 如果总线编号有效，函数将创建一个新的 I2CDevice 对象，并将其包装在一个 AP_HAL::OwnPtr 智能指针中。
     // 这个智能指针负责在对象不再需要时自动删除它，以避免内存泄漏。
     auto dev = AP_HAL::OwnPtr<AP_HAL::I2CDevice>(new I2CDevice(bus, address, bus_clock, use_smbus, timeout_ms));
+
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-8] run I2CDeviceManager::get_device end.");
 
     // 返回包含新创建的 I2CDevice 对象的智能指针。
     return dev;

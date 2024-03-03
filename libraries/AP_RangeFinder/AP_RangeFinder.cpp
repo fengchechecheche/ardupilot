@@ -805,15 +805,15 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
         if (_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
                                                              hal.i2c_mgr->get_device(i, SlaveAddress, 0x0010061A)),
                          instance)){
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed[%ld].", i);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-9] _add_backend successed[%ld].", i);
                             break;
                          }
         else{
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend failed.");
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-10] _add_backend failed.");
         }
     }
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] state[instance]: %d.", (int)state[instance].status);
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] _add_backend finish.");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-11] state[instance]: %d.", (int)state[instance].status);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-12] _add_backend finish.");
 
     // #else
     //             gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] HAL_ENCODER_MT6701_I2C_BUS not defined.");
