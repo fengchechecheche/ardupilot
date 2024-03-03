@@ -45,9 +45,25 @@ AP_RangeFinder_Backend_Serial::AP_RangeFinder_Backend_Serial(
 
 }
 
+// AP_RangeFinder_Backend_Serial::init_serial 函数是用于初始化串行通信接口的。
+// 这个函数是 AP_RangeFinder_Backend_Serial 类的一部分，该类通常代表一个通过串行接口与主机通信的测距仪后端。
+// 函数的参数 serial_instance 指定了要使用的串行接口的实例。
+// 总体来说，AP_RangeFinder_Backend_Serial::init_serial 函数的目的是设置测距仪后端所使用的串行接口，
+// 以便它可以与主机进行通信。这通常包括配置串行接口的波特率、数据位、停止位等参数，
+// 以及设置接收和发送缓冲区的大小。
 void AP_RangeFinder_Backend_Serial::init_serial(uint8_t serial_instance)
 {
+    // 1.查找串行接口：
+    // 这行代码调用了全局的串行管理器 AP::serialmanager() 的 find_serial 方法来查找一个特定的串行接口。
+    // 它指定了协议类型为 AP_SerialManager::SerialProtocol_Rangefinder，这通常表示该串行接口将用于与测距仪通信。
+    // serial_instance 参数则指定了具体使用哪个串行接口的实例。
     uart = AP::serialmanager().find_serial(AP_SerialManager::SerialProtocol_Rangefinder, serial_instance);
+    
+    // 2.初始化串行接口：
+    // 如果找到了有效的串行接口（即 uart 不为 nullptr），则调用该接口的 begin 方法来初始化它。
+    // begin 方法通常用于配置串行通信的参数，
+    // 如波特率、接收缓冲区大小（rx_bufsize() 返回的值）和发送缓冲区大小（tx_bufsize() 返回的值）。
+    // initial_baudrate(serial_instance) 是一个函数调用，它返回针对给定串行实例的初始波特率配置。
     if (uart != nullptr) {
         uart->begin(initial_baudrate(serial_instance), rx_bufsize(), tx_bufsize());
     }

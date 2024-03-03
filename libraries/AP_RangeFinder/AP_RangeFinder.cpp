@@ -398,23 +398,49 @@ void RangeFinder::update_encoder(void)
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-6] run RangeFinder::update_encoder() finished.");
 }
 
+// RangeFinder::_add_backend 函数是用于向测距仪系统中添加一个新的后端设备的。
+// 后端设备通常指的是与特定硬件（如LightWare I2C测距仪）交互的类。
+// 这个函数接受三个参数：后端设备指针 backend，设备实例 instance，以及串行实例 serial_instance
+// 总的来说，RangeFinder::_add_backend 函数负责验证和初始化后端设备，并将其添加到测距仪系统的管理之中。
+// 它确保每个后端设备都被正确配置，并且系统不会超出其处理能力。
 bool RangeFinder::_add_backend(AP_RangeFinder_Backend *backend, uint8_t instance, uint8_t serial_instance)
 {
+    // 1.检查后端设备指针：
+    // 如果传入的后端设备指针为 nullptr，函数立即返回 false，表示添加后端失败。
     if (!backend)
     {
         return false;
     }
+
+    // 2.检查实例编号是否超出最大限制：
+    // 如果传入的实例编号 instance 大于或等于系统定义的最大实例数 RANGEFINDER_MAX_INSTANCES，
+    // 则触发一个系统恐慌（panic），因为这意味着系统尝试添加的后端设备数量超过了允许的最大值。
     if (instance >= RANGEFINDER_MAX_INSTANCES)
     {
         AP_HAL::panic("Too many RANGERS backends");
     }
+
+    // 3.检查该实例是否已分配：
+    // 如果已经为指定的 instance 分配了后端设备（即 drivers[instance] 不为 nullptr），
+    // 则触发一个内部错误。这表示相同的实例被分配了两次，这是不应该发生的。
     if (drivers[instance] != nullptr)
     {
         // we've allocated the same instance twice
         INTERNAL_ERROR(AP_InternalError::error_t::flow_of_control);
     }
+
+    // 4.初始化串行通信：
+    // 调用后端设备的 init_serial 方法来初始化串行通信。
+    // 这对于需要通过串行接口与主机通信的后端设备是必要的。
     backend->init_serial(serial_instance);
+
+    // 5.将后端设备添加到系统中：
+    // 将后端设备指针保存到 drivers 数组中，以便后续可以通过实例编号访问该设备。
     drivers[instance] = backend;
+
+    // 6.更新已分配实例的数量：
+    // 更新 num_instances 变量，以确保它反映了系统中已分配的最大实例编号。
+    // 这有助于在后续添加新设备时确定是否超出了最大实例限制。
     num_instances = MAX(num_instances, instance + 1);
 
     return true;
@@ -802,13 +828,30 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
     //             gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] _add_backend finish.");
     // #endif
 
+    // 这段特定的代码段处理了一个特定实例（instance）的测距仪后端的本地参数。
     // if the backend has some local parameters then make those available in the tree
+    // 1.条件检查：
+    // 这行代码检查两个条件：
+    // drivers[instance]：确保指定实例的驱动程序存在。
+    // state[instance].var_info：确保该实例的状态包含变量信息（可能是参数设置）。
+    // 如果这两个条件都满足，代码将执行大括号内的语句。
     if (drivers[instance] && state[instance].var_info)
     {
+        // 2.存储变量信息：
+        // 这行代码将指定实例的状态中的变量信息复制到backend_var_info数组的相应位置。
         backend_var_info[instance] = state[instance].var_info;
+
+        // 3.从EEPROM加载参数：
+        // 这行代码调用AP_Param类的load_object_from_eeprom方法，
+        // 从EEPROM（一种非易失性存储设备）中加载指定驱动程序实例的参数。
         AP_Param::load_object_from_eeprom(drivers[instance], backend_var_info[instance]);
 
         // param count could have changed
+        // 4.参数计数无效化：
+        // 这行代码调用AP_Param类的invalidate_count方法。
+        // 由于参数可能已经改变（例如，通过从EEPROM加载新值），
+        // 因此调用此方法是为了确保任何依赖于当前参数计数的内部状态都被更新或重新验证。
+        // 这通常涉及到重新计算参数的总数或检查参数的一致性。
         AP_Param::invalidate_count();
     }
 }

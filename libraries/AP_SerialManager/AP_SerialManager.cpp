@@ -598,19 +598,45 @@ const AP_SerialManager::UARTState *AP_SerialManager::find_protocol_instance(enum
 // find_serial - searches available serial ports for the first instance that allows the given protocol
 //  instance should be zero if searching for the first instance, 1 for the second, etc
 //  returns uart on success, nullptr if a serial port cannot be found
+// Find_serial -为第一个实例搜索可用的串行端口，允许给定的协议实例在搜索第一个实例时为零，
+// 在搜索第二个实例时为1，等成功时返回uart，如果找不到串行端口则返回nullptr
+// AP_SerialManager::find_serial 函数是在 AP_SerialManager 类中定义的，
+// 用于在串行管理器中查找并返回一个特定的串行端口实例。这个函数通常用于初始化硬件接口，如测距仪、GPS等。
+// 函数接受两个参数：
+// protocol：一个枚举值，表示要查找的串行协议的类型（例如，测距仪协议）。
+// instance：一个无符号8位整数，表示要查找的串行实例的编号。
+// 总的来说，AP_SerialManager::find_serial 函数用于在串行管理器中查找并配置一个特定的串行端口实例，
+// 以便后续可以通过该端口进行通信。这对于初始化与串行通信相关的硬件接口（如测距仪）是必要的步骤。
 AP_HAL::UARTDriver *AP_SerialManager::find_serial(enum SerialProtocol protocol, uint8_t instance) const
 {
+    // 1.查找协议实例：
+    // 调用 find_protocol_instance 方法来查找与指定协议和实例编号匹配的串行端口状态。
+    // 这个状态结构体通常包含了串行端口的配置信息和状态。
     const struct UARTState *_state = find_protocol_instance(protocol, instance);
+
+    // 2.检查状态是否为空：
+    // 如果找不到匹配的串行端口状态（即 _state 为 nullptr），则函数立即返回 nullptr，表示没有找到相应的串行端口。
     if (_state == nullptr) {
         return nullptr;
     }
+
+    // 3.计算串行索引：
+    // 通过计算 _state 指针与 state 数组首元素的差值，得到当前串行端口的索引 serial_idx。
+    // 这个索引用于从硬件抽象层（HAL）中获取对应的串行端口对象。
     const uint8_t serial_idx = _state - &state[0];
 
     // set options before any user does begin()
+    // 4.获取串行端口对象并设置选项：
+    // 通过调用 hal.serial(serial_idx) 从硬件抽象层（HAL）中获取对应索引的串行端口对象。
+    // 如果获取成功（即 port 不为 nullptr），则调用 set_options 方法来设置该串行端口的配置选项，
+    // 这些选项通常包括波特率、数据位、停止位和校验位等。
     AP_HAL::UARTDriver *port = hal.serial(serial_idx);
     if (port) {
         port->set_options(_state->options);
     }
+
+    // 5.返回串行端口对象：
+    // 最后，函数返回找到的串行端口对象。如果找不到对应的串行端口，则返回 nullptr。
     return port;
 }
 

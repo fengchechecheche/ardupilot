@@ -70,22 +70,36 @@ AP_RangeFinder_LightWareI2C::AP_RangeFinder_LightWareI2C(RangeFinder::RangeFinde
    Detects if a Lightware rangefinder is connected. We'll detect by
    trying to take a reading on I2C. If we get a result the sensor is
    there.
+   检测是否连接了Lightware测距仪。
+   我们将通过I2C上的读数来检测。如果我们得到结果，传感器就在那里。
 */
+// AP_RangeFinder_LightWareI2C::detect 函数是用于检测并初始化 LightWare 品牌的 I2C 接口测距仪的。
+// 该函数接受三个参数：测距仪的状态 _state、测距仪的参数 _params，以及一个指向 I2C 设备的智能指针 dev。
 AP_RangeFinder_Backend *AP_RangeFinder_LightWareI2C::detect(RangeFinder::RangeFinder_State &_state,
         AP_RangeFinder_Params &_params,
         AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
 {
+    // 1.检查设备指针：
+    // 如果传入的 I2C 设备指针 dev 为空，函数立即返回 nullptr，表示没有检测到设备。
     if (!dev) {
         return nullptr;
     }
 
+    // 2.创建测距仪对象：
+    // 使用传入的状态、参数和设备指针来创建一个新的 AP_RangeFinder_LightWareI2C 对象（即 LightWare 测距仪的实例）。
+    // 这里使用了 std::move(dev) 来将设备所有权从传入的智能指针转移到新创建的测距仪对象中。
     AP_RangeFinder_LightWareI2C *sensor
         = new AP_RangeFinder_LightWareI2C(_state, _params, std::move(dev));
 
+    // 3.检查测距仪对象是否成功创建：
+    // 如果由于某种原因（如内存分配失败）sensor 对象未能成功创建，函数将返回 nullptr。
     if (!sensor) {
         return nullptr;
     }
 
+    // 4.获取设备互斥锁并初始化：
+    // 使用 WITH_SEMAPHORE 宏来获取设备的互斥锁，以确保在初始化过程中设备不会被其他线程或任务干扰。
+    // 然后调用 sensor->init() 方法来初始化测距仪。如果初始化失败（返回 false），则删除刚创建的 sensor 对象并返回 nullptr。
     WITH_SEMAPHORE(sensor->_dev->get_semaphore());
     if (!sensor->init()) {
         delete sensor;

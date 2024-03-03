@@ -434,17 +434,27 @@ bool I2CDevice::adjust_periodic_callback(AP_HAL::Device::PeriodicHandle h, uint3
     return bus.adjust_timer(h, period_usec);
 }
 
+// I2CDeviceManager::get_device 函数是在一个名为 I2CDeviceManager 的类中定义的，用于获取一个指向特定I2C总线上的设备的指针。
+// 总的来说，I2CDeviceManager::get_device 函数的作用是创建一个新的I2C设备对象（如果请求的总线编号有效），
+// 或者返回一个空指针（如果请求的总线编号无效）。这个对象可以用于后续的I2C通信操作。
 AP_HAL::OwnPtr<AP_HAL::I2CDevice>
 I2CDeviceManager::get_device(uint8_t bus, uint8_t address,
                              uint32_t bus_clock,
                              bool use_smbus,
                              uint32_t timeout_ms)
 {
+    // 对总线编号进行调整，通常是为了将硬件抽象层（HAL）的基础总线编号转换为内部管理使用的编号。
     bus -= HAL_I2C_BUS_BASE;
+    // 检查调整后的总线编号是否超出了预定义的I2C设备数组的大小。如果是，函数将返回一个空的
     if (bus >= ARRAY_SIZE(I2CD)) {
+        // 即指向null的指针
         return AP_HAL::OwnPtr<AP_HAL::I2CDevice>(nullptr);
     }
+    // 如果总线编号有效，函数将创建一个新的 I2CDevice 对象，并将其包装在一个 AP_HAL::OwnPtr 智能指针中。
+    // 这个智能指针负责在对象不再需要时自动删除它，以避免内存泄漏。
     auto dev = AP_HAL::OwnPtr<AP_HAL::I2CDevice>(new I2CDevice(bus, address, bus_clock, use_smbus, timeout_ms));
+
+    // 返回包含新创建的 I2CDevice 对象的智能指针。
     return dev;
 }
 
