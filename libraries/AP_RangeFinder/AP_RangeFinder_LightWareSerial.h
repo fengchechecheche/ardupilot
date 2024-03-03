@@ -8,10 +8,12 @@ class AP_RangeFinder_LightWareSerial : public AP_RangeFinder_Backend_Serial
 
 public:
 
+    // 这里通过using继承基类构造函数，从而可以在子类中直接使用基类构造函数
     using AP_RangeFinder_Backend_Serial::AP_RangeFinder_Backend_Serial;
 
 protected:
 
+    // 在子类实现父类的接口
     MAV_DISTANCE_SENSOR _get_mav_distance_sensor_type() const override {
         return MAV_DISTANCE_SENSOR_LASER;
     }

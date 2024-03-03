@@ -2,6 +2,13 @@
 
 #include "AP_RangeFinder_Backend.h"
 
+/*
+ * 所有串口协议的测距传感器驱动都继承自AP_RangeFinder_Backend_Serial
+ * AP_RangeFinder_Backend_Serial是一个抽象类，里面通过纯虚函数提供了不同测距传感器的驱动接口
+ * 
+ */
+
+
 class AP_RangeFinder_Backend_Serial : public AP_RangeFinder_Backend
 {
 public:
