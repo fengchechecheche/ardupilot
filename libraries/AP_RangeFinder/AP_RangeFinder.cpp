@@ -688,34 +688,35 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
     // delay(2000)时可以看到从0号设备开始的初始化情况
     hal.scheduler->delay(3000);
 
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] _add_backend start.");
-    if (_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
-                                                         hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, SlaveAddress)),
-                     instance))
-    {
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed.");
-    }
-    else
-    {
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend failed.");
-    }
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] state[instance]: %d.", (int)state[instance].status);
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] _add_backend finish.");
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] _add_backend start.");
+    // if (_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
+    //                                                      hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, SlaveAddress)),
+    //                  instance))
+    // {
+    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed.");
+    // }
+    // else
+    // {
+    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend failed.");
+    // }
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] state[instance]: %d.", (int)state[instance].status);
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] _add_backend finish.");
 
     /*
      * Fast Mode:          hi2c1.Init.Timing = 0x0010061A;
      * Standerd Mode:      hi2c1.Init.Timing = 0x00303D5B;
      */
-    // if(_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
-    //                                                  hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, params[instance].address)),
-    //                                                  instance)){
-    //                                                     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed.");
-    //                                                  }
-    // else{
-    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend failed.");
-    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] state[instance]: %d.", state[instance]);
-    // }
-    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] _add_backend finish.");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] _add_backend start.");
+    if(_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
+                                                     hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, SlaveAddress, 0x00303D5B)),
+                                                     instance)){
+                                                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed.");
+                                                     }
+    else{
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend failed.");
+    }
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] state[instance]: %d.", state[instance]);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] _add_backend finish.");
 
     // #else
     //             gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] HAL_ENCODER_MT6701_I2C_BUS not defined.");
