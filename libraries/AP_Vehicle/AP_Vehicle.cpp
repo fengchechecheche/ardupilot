@@ -152,7 +152,9 @@ void AP_Vehicle::setup()
 #endif
 
     // init_ardupilot is where the vehicle does most of its initialisation.
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[8-1] run init_ardupilot() start.");
     init_ardupilot();
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[8-2] run init_ardupilot() end.");
 
 #if AP_AIRSPEED_ENABLED
     airspeed.init();

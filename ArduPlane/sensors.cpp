@@ -2,6 +2,8 @@
 #include <AP_RSSI/AP_RSSI.h>
 #include <AP_OpticalFlow/AP_OpticalFlow.h>
 
+static uint8_t counter = 0;
+
 /*
   read the rangefinder and update height estimate
  */
@@ -37,7 +39,13 @@ void Plane::read_rangefinder(void)
 
 void Plane::read_encoder(void)
 {
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1] run Plane::read_encoder() start.");
-    rangefinder.update_encoder();
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] run Plane::read_encoder() finished.");
+    counter++;
+    if(counter >= 5)
+    {
+        counter = 0;
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1] run Plane::read_encoder() start.");
+        rangefinder.update_encoder();
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] run Plane::read_encoder() finished.");
+    }
+    
 }

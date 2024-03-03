@@ -29,7 +29,7 @@ extern const AP_HAL::HAL& hal;
 
 static uint64_t current_time_3_us;
 static uint64_t stored_time_3_us;
-static uint8_t sendtext_flag_3;
+static uint8_t sendtext_flag_3 = 1;
 static uint64_t current_time_4_us;
 static uint64_t stored_time_4_us;
 static uint16_t ch8_pwm = 1000;
@@ -110,7 +110,8 @@ void SRV_Channel::output_ch(void)
         if(current_time_3_us - stored_time_3_us > 5000000)
         {
             stored_time_3_us = current_time_3_us;
-            sendtext_flag_3 = 0;
+            // 在调试IIC总线时注释掉对发送输据标志位的操作，不输出PWM通道信息
+            // sendtext_flag_3 = 0;
         }
         if(sendtext_flag_3 == 0)
         {

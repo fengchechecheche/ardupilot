@@ -197,6 +197,11 @@ bool AP_RangeFinder_LightWareI2C::init()
         hal.console->printf("Found SF20 legacy Lidar\n");
         return true;
     }
+    if(init_encoder()){
+        hal.console->printf("Found MT6701 Encoder\n");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "Found MT6701 Encoder.");
+        return true;
+    }
     hal.console->printf("SF20 not found\n");
     return false;
 }
@@ -341,11 +346,28 @@ bool AP_RangeFinder_LightWareI2C::sf20_init()
 bool AP_RangeFinder_LightWareI2C::init_encoder()
 {
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[2-1] run AP_RangeFinder_LightWareI2C::init_encoder() start.");
-    // call timer() at 20Hz
-    _dev->register_periodic_callback(50000,
-                                     FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void));
+    // call timer() at 10s （10000000）
+    // 地面站调试速度
+    _dev->register_periodic_callback(10000000,
+                                     FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void)); 
+    // call timer() at 5s （5000000）
+    // 这个速度适中
+    // _dev->register_periodic_callback(5000000,
+    //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void));
+    // call timer() at 1Hz （1000000）
+    // _dev->register_periodic_callback(1000000,
+    //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void)); 
+    // call timer() at 10Hz （100000）
+    // _dev->register_periodic_callback(100000,
+    //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void)); 
+    // call timer() at 20Hz （50000）
+    // _dev->register_periodic_callback(50000,
+    //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void));
+    // call timer() at 40Hz （25000）
+    // _dev->register_periodic_callback(25000,
+    //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void));                                 
 
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[2-2] run AP_RangeFinder_LightWareI2C::init_encoder() finished.");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[2-2] run AP_RangeFinder_LightWareI2C::init_encoder() end.");
     return true;
 }
 
@@ -372,7 +394,7 @@ bool AP_RangeFinder_LightWareI2C::legacy_get_reading(float &reading_m)
 
 bool AP_RangeFinder_LightWareI2C::get_reading_encoder(float &reading_m)
 {
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-1] run AP_RangeFinder_LightWareI2C::get_reading_encoder() start.");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-1] run AP_RangeFinder_LightWareI2C::get_reading_encoder() start.");
     be16_t val;
 
     const uint8_t read_reg = ENCODER_MT6701_READ_REG_1;
@@ -386,10 +408,13 @@ bool AP_RangeFinder_LightWareI2C::get_reading_encoder(float &reading_m)
         } else {
             reading_m = uint16_t(signed_val) * 0.01f;
         }
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-2] read register successed.");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2] read register successed.");
         return true;
     }
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3] read register failed.");
+    else{
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-3] read register failed.");
+    }
+    
     return false;
 }
 
@@ -508,13 +533,13 @@ void AP_RangeFinder_LightWareI2C::legacy_timer(void)
 
 void AP_RangeFinder_LightWareI2C::timer_encoder(void)
 {
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-1] run AP_RangeFinder_LightWareI2C::timer_encoder() start.");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-1] run AP_RangeFinder_LightWareI2C::timer_encoder() start.");
     if (get_reading_encoder(state.distance_m)) {
         // update range_valid state based on distance measured
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2] read register successed.");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-2] read register successed.");
         update_status();
     } else {
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-3] read register failed.");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3] read register failed.");
         set_status(RangeFinder::Status::NoData);
     }
 }

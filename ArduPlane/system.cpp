@@ -59,8 +59,10 @@ void Plane::init_ardupilot()
 
     // initialise rangefinder
     // 此处是测距模块的初始化函数
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[9-1] run rangefinder.init() start.");
     rangefinder.set_log_rfnd_bit(MASK_LOG_SONAR);
     rangefinder.init(ROTATION_PITCH_270);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[9-2] run rangefinder.init() end.");
 
     // initialise battery monitoring
     battery.init();
