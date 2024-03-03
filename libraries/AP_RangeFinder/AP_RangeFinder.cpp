@@ -715,7 +715,7 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
     else{
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] _add_backend failed.");
     }
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] state[instance]: %d.", state[instance]);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] state[instance]: %d.", (int)state[instance].status);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] _add_backend finish.");
 
     // #else
