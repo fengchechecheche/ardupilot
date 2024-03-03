@@ -32,6 +32,7 @@ const AP_Param::GroupInfo AP_WheelEncoder::var_info[] = {
     // @Param: _CPR
     // @DisplayName: WheelEncoder counts per revolution
     // @Description: WheelEncoder counts per full revolution of the wheel
+    // @Description: 轮轮编码器每转一轮计数
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("_CPR",     1, AP_WheelEncoder, _counts_per_revolution[0], WHEELENCODER_CPR_DEFAULT),
@@ -39,6 +40,7 @@ const AP_Param::GroupInfo AP_WheelEncoder::var_info[] = {
     // @Param: _RADIUS
     // @DisplayName: Wheel radius
     // @Description: Wheel radius
+    // @Description: 车轮半径
     // @Units: m
     // @Increment: 0.001
     // @User: Standard

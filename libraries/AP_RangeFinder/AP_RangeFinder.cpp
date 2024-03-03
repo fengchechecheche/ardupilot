@@ -184,6 +184,7 @@ void RangeFinder::convert_params(void)
     if (params[0].type.configured_in_storage())
     {
         // _params[0]._type will always be configured in storage after conversion is done the first time
+        // _params[0].type 这个变量在第一次完成转换后，在内存中将始终是被配置过的状态
         return;
     }
 
@@ -194,6 +195,7 @@ void RangeFinder::convert_params(void)
         uint8_t instance;
     };
 
+    // 下面定义的参数和 AP_RangeFinder_Params 类中定义的参数大部分是相同的
     const struct ConversionTable conversionTable[] = {
         // rangefinder 1
         {0, 0, 0},   // 0, TYPE 1
@@ -241,8 +243,10 @@ void RangeFinder::convert_params(void)
 #elif APM_BUILD_TYPE(APM_BUILD_Rover)
     info.old_key = 197;
 #else
+    // no conversion is supported on this platform
+    // 此平台不支持任何转换
     params[0].type.save(true);
-    return; // no conversion is supported on this platform
+    return; 
 #endif
 
     for (uint8_t i = 0; i < ARRAY_SIZE(conversionTable); i++)
@@ -277,32 +281,61 @@ void RangeFinder::init(enum Rotation orientation_default)
     }
     init_done = true;
 
+    // 配置设备参数
     convert_params();
 
     // set orientation defaults
+    // 设置方向默认值
     for (uint8_t i = 0; i < RANGEFINDER_MAX_INSTANCES; i++)
     {
         params[i].orientation.set_default(orientation_default);
     }
 
+    // 这段代码是一个循环，用于初始化并检测一系列测距仪（rangefinder）实例。
+    // 这是一个for循环，其中i用于迭代测距仪的实例，serial_instance用于追踪已加载的串行驱动实例数量。
+    // 循环将继续进行，直到i达到RANGEFINDER_MAX_INSTANCES，这是允许的最大测距仪实例数。
     for (uint8_t i = 0, serial_instance = 0; i < RANGEFINDER_MAX_INSTANCES; i++)
     {
         // serial_instance will be increased inside detect_instance
         // if a serial driver is loaded for this instance
+        // 如果在 detect_instance() 函数内部为这个实例加载了串行驱动, serial_instance 变量的值将增加。
+
+        //这行代码使用了WITH_SEMAPHORE宏（或函数），可能是为了确保线程安全或互斥访问某种资源。
+        // 这里，它可能是用来保护 detect_instance() 函数的执行，确保在同一时间只有一个线程可以执行该函数。
         WITH_SEMAPHORE(detect_sem);
+
+        // 调用detect_instance函数，传递当前的实例编号i和serial_instance作为参数。
+        // 这个函数可能会尝试检测并加载该实例的测距仪驱动。
         detect_instance(i, serial_instance);
+
+        // 检查drivers数组的第i个元素是否不为空。如果不为空，说明该实例的驱动已经成功加载。
         if (drivers[i] != nullptr)
         {
             // we loaded a driver for this instance, so it must be
             // present (although it may not be healthy). We use MAX()
             // here as a UAVCAN rangefinder may already have been
             // found
-            num_instances = MAX(num_instances, i + 1);
-        }
+            // 这是一系列注释，解释了如果为这个实例加载了驱动，那么该实例必须存在（尽管它可能不处于正常状态）。
+            // 这里使用MAX()函数是因为可能已经找到了一个UAVCAN测距仪。
 
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[%d] num_instances: %d\n", i, num_instances);
+            // 更新num_instances的值，取其当前值和i + 1中的较大值。
+            // 这确保了num_instances总是反映了已加载的测距仪实例的最大数量。
+            num_instances = MAX(num_instances, i + 1);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[%d] num_instances: %d\n", i, num_instances);
+        }
+        else
+        {
+            // 如果drivers[i]为空，执行以下代码块。
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[%d] drivers[i] == nullptr\n", i);
+        }
+        
         // initialise status
+        // 这是一个注释，说明接下来的代码将初始化状态。
+
+        // 将第i个实例的状态设置为“NotConnected”（未连接）。
         state[i].status = Status::NotConnected;
+
+        // 将第i个实例的有效距离计数设置为0。这可能是一个用于跟踪测距仪返回的有效距离读数的计数器。
         state[i].range_valid_count = 0;
     }
 }
