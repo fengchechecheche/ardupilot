@@ -679,7 +679,7 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
 
     // #ifdef HAL_ENCODER_MT6701_I2C_BUS
     /*
-     * bus_clock=400000
+     * bus_clock=40 0000
      */
 
     // 在此处加入延时函数，看看延时过后能不能在地面站收到输出信息
@@ -703,12 +703,12 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] _add_backend finish.");
 
     /*
-     * Fast Mode:          hi2c1.Init.Timing = 0x0010061A;
-     * Standerd Mode:      hi2c1.Init.Timing = 0x00303D5B;
+     * Fast Mode:          hi2c1.Init.Timing = 0x0010061A;  十进制：105 0138
+     * Standerd Mode:      hi2c1.Init.Timing = 0x00303D5B;  十进制：316 1435
      */
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] _add_backend start.");
     if(_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
-                                                     hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, SlaveAddress, 0x00303D5B)),
+                                                     hal.i2c_mgr->get_device(HAL_ENCODER_MT6701_I2C_BUS, SlaveAddress)),
                                                      instance)){
                                                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] _add_backend successed.");
                                                      }
