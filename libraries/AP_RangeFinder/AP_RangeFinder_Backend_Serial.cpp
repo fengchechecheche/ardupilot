@@ -13,6 +13,14 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * 这里主要是初始化端口和波特率，还有更新读取的数据，
+ * AP_RangeFinder_Backend_Serial::update() 函数就是在AP_RangeFinder.cpp中被调用的，
+ * 在update() 函数中会调用 get_reading() 函数，这里的 get_reading() 是一个接口，
+ * 就是第二节AP_RangeFinder_TeraRanger_Serial中实现的，到这里就完成了串口传感器的读取。
+ * ----> 接下来从二、AP_RangeFinder_TeraRanger_Serial.cpp 开始看
+ */
+
 #include <AP_HAL/AP_HAL.h>
 #include "AP_RangeFinder_Backend_Serial.h"
 #include <AP_SerialManager/AP_SerialManager.h>
