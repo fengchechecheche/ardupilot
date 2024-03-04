@@ -361,27 +361,30 @@ bool AP_RangeFinder_LightWareI2C::sf20_init()
 
 bool AP_RangeFinder_LightWareI2C::init_encoder()
 {
+    /*
+     * register_periodic_callback() 函数的第一个参数的单位是微秒
+     */
     hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[2-1] run AP_RangeFinder_LightWareI2C::init_encoder() start.");
     hal.scheduler->delay(10);
-    // call timer() at 10s （10000000）
+    // call timer() at 10s （10,000,000）
     // 地面站调试速度
     _dev->register_periodic_callback(10000000,
                                      FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void)); 
-    // call timer() at 5s （5000000）
+    // call timer() at 5s （5,000,000）
     // 这个速度适中
     // _dev->register_periodic_callback(5000000,
     //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void));
-    // call timer() at 1Hz （1000000）
+    // call timer() at 1Hz （1,000,000）
     // _dev->register_periodic_callback(1000000,
     //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void)); 
-    // call timer() at 10Hz （100000）
+    // call timer() at 10Hz （100,000）
     // _dev->register_periodic_callback(100000,
     //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void)); 
-    // call timer() at 20Hz （50000）
+    // call timer() at 20Hz （50,000）
     // _dev->register_periodic_callback(50000,
     //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void));
-    // call timer() at 40Hz （25000）
+    // call timer() at 40Hz （25,000）
     // _dev->register_periodic_callback(25000,
     //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void));                                 
 
