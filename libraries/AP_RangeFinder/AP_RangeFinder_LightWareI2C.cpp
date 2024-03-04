@@ -97,6 +97,8 @@ AP_RangeFinder_Backend *AP_RangeFinder_LightWareI2C::detect(RangeFinder::RangeFi
         return nullptr;
     }
 
+    sensor->_dev->set_split_transfers(true);
+
     // 4.获取设备互斥锁并初始化：
     // 使用 WITH_SEMAPHORE 宏来获取设备的互斥锁，以确保在初始化过程中设备不会被其他线程或任务干扰。
     // 然后调用 sensor->init() 方法来初始化测距仪。如果初始化失败（返回 false），则删除刚创建的 sensor 对象并返回 nullptr。
@@ -406,20 +408,34 @@ bool AP_RangeFinder_LightWareI2C::legacy_get_reading(float &reading_m)
     return false;
 }
 
+// 这段代码是一个成员函数get_reading_encoder，属于AP_RangeFinder_LightWareI2C类。
+// 它似乎是为了从一个LightWare的激光雷达设备（通过I2C接口）读取距离数据。
 bool AP_RangeFinder_LightWareI2C::get_reading_encoder(float &reading_m)
 {
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-1] run AP_RangeFinder_LightWareI2C::get_reading_encoder() start.");
+    // 定义一个16位的大端序（big-endian）整数变量val，用于存储从激光雷达读取的数据。
     be16_t val;
 
+    // 定义一个常量read_reg，它似乎是一个寄存器地址，用于指示要从激光雷达读取哪个寄存器。
     const uint8_t read_reg = ENCODER_MT6701_READ_REG_1;
 
     // read the high and low byte distance registers
+    // 使用_dev（可能是一个指向I2C设备的指针）的transfer方法来从指定的寄存器地址读取数据。
+    // 这里读取1个字节的寄存器地址和sizeof(val)个字节的数据。
     if (_dev->transfer(&read_reg, 1, (uint8_t *)&val, sizeof(val))) {
+        // 将读取到的大端序数据val转换为小端序，并赋值给signed_val。
+        // 这里假设数据是有符号的16位整数。
         int16_t signed_val = int16_t(be16toh(val));
+        // 检查读取到的值是否为负。
+        // 如果读取到的值为负（可能表示超出范围），则计算一个表示“超出范围”的距离值，并将其赋给reading_m。
+        // 这里max_distance_cm()可能是一个函数，返回激光雷达的最大测量距离（以厘米为单位），
+        // 而LIGHTWARE_OUT_OF_RANGE_ADD_CM是一个常量，可能用于表示超出范围的距离增量。
         if (signed_val < 0) {
             // some lidar firmwares will return 65436 for out of range
             reading_m = uint16_t(max_distance_cm() + LIGHTWARE_OUT_OF_RANGE_ADD_CM) * 0.01f;
-        } else {
+        } 
+        // 如果读取到的值不是负的，则直接将其转换为厘米（乘以0.01）并赋给reading_m。
+        else {
             reading_m = uint16_t(signed_val) * 0.01f;
         }
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2] read register successed.");

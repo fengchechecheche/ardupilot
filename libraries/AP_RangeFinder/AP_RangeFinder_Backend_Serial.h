@@ -33,6 +33,7 @@ protected:
 
     // update state; not all backends call this!
     virtual void update(void) override;
+    // virtual void update_encoder(void) override;
 
     // it is essential that anyone relying on the base-class update to
     // implement this:

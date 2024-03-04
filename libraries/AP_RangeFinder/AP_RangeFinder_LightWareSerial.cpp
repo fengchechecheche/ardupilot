@@ -43,22 +43,41 @@ bool AP_RangeFinder_LightWareSerial::get_reading(float &reading_m)
         char c = uart->read();
 
         // use legacy protocol
+        // 这段代码是一个处理特定协议的片段，可能是从串口或其他数据流中读取数据并进行解析。
+        // 1.这部分代码检查当前的协议状态。如果状态是UNKNOWN（未知）或LEGACY（旧版），则执行以下操作。
         if (protocol_state == ProtocolState::UNKNOWN || protocol_state == ProtocolState::LEGACY) {
+            // 2. 回车符处理:
+            // 当读取到字符c为回车符（\r）时，执行以下操作：
             if (c == '\r') {
+                // 在linebuf的当前长度位置放置一个空字符（\0），使linebuf成为一个合法的C字符串。
                 linebuf[linebuf_len] = 0;
+                // 使用strtof函数将linebuf中的字符串转换为浮点数dist。
                 const float dist = strtof(linebuf, nullptr);
+                // 这部分代码检查dist是否是一个非负值，并且不是一个表示信号丢失的特定距离值。
                 if (!is_negative(dist) && !is_lost_signal_distance(dist * 100, distance_cm_max)) {
+                    // 累加距离和更新有效计数:
+                    // 如果上述条件满足，将dist累加到sum中，并增加valid_count。
                     sum += dist;
                     valid_count++;
                     // if still determining protocol update legacy valid count
+                    // 更新旧版协议的有效计数:
+                    // 如果协议状态是UNKNOWN，则增加legacy_valid_count。
                     if (protocol_state == ProtocolState::UNKNOWN) {
                         legacy_valid_count++;
                     }
                 } else {
+                    // 增加无效计数:
+                    // 如果dist不满足上述条件，则增加invalid_count。
                     invalid_count++;
                 }
+                // 重置行缓冲区长度:
+                // 将linebuf的长度重置为0，以便为下一行数据做准备。
                 linebuf_len = 0;
-            } else if (isdigit(c) || c == '.' || c == '-') {
+            } 
+            // 3. 处理数字、小数点和负号:
+            // 如果读取到的字符c是数字、小数点或负号，则将其添加到linebuf中，并增加linebuf_len。
+            // 同时，检查linebuf是否已满（即是否达到其大小）。如果已满，则重置linebuf_len为0，丢弃当前行。
+            else if (isdigit(c) || c == '.' || c == '-') {
                 linebuf[linebuf_len++] = c;
                 if (linebuf_len == sizeof(linebuf)) {
                     // too long, discard the line
@@ -68,27 +87,55 @@ bool AP_RangeFinder_LightWareSerial::get_reading(float &reading_m)
         }
 
         // use binary protocol
+        // 这段代码是处理二进制协议的片段。它似乎是从一个数据流中读取数据，并根据二进制格式解析这些数据。
+        // 1.协议状态检查：
+        // 如果当前的协议状态是UNKNOWN（未知）或BINARY（二进制），则执行以下操作。
         if (protocol_state == ProtocolState::UNKNOWN || protocol_state == ProtocolState::BINARY) {
+            // 2.检查最高位：
+            // 使用BIT_IS_SET宏（或函数）检查字符c的最高位（第7位）是否设置。
+            // 这通常用于确定数据字节是高字节还是低字节。
             bool msb_set = BIT_IS_SET(c, 7);
+            // 3.处理高字节：
+            // 如果最高位被设置，表示接收到的是高字节。
+            // 将c的值赋给high_byte变量，并设置high_byte_received标志为true。
             if (msb_set) {
                 // received the high byte
                 high_byte = c;
                 high_byte_received = true;
-            } else {
+            } 
+            // 4.处理低字节：
+            // 如果最高位没有被设置，表示接收到的是低字节。
+            // 此时，如果high_byte_received标志为true（即已经接收到了一个高字节），则执行以下操作：
+            else {
                 // received the low byte which should be second
                 if (high_byte_received) {
+                    // a. 组合高字节和低字节：
+                    // 通过位操作组合高字节和低字节，创建一个16位整数dist。
+                    // 这里使用& 0x7f来移除每个字节的最高位（通常用作符号位），并通过左移和按位或操作组合它们。
                     const int16_t dist = (high_byte & 0x7f) << 7 | (c & 0x7f);
+                    // b. 验证距离值：
+                    // 检查组合后的距离值dist是否非负，并且不是表示信号丢失的特定距离值。
                     if (dist >= 0 && !is_lost_signal_distance(dist, distance_cm_max)) {
+                        // c. 更新统计信息：
+                        // 如果dist满足上述条件，将其乘以0.01（可能是从毫米转换为厘米或其他单位），
+                        // 并累加到sum中。同时，增加valid_count。
                         sum += dist * 0.01f;
                         valid_count++;
                         // if still determining protocol update binary valid count
+                        // d. 更新二进制协议的有效计数：
+                        // 如果协议状态仍然是UNKNOWN，则增加binary_valid_count。
                         if (protocol_state == ProtocolState::UNKNOWN) {
                             binary_valid_count++;
                         }
-                    } else {
+                    } 
+                    // e. 增加无效计数：
+                    // 如果dist不满足上述条件，则增加invalid_count。
+                    else {
                         invalid_count++;
                     }
                 }
+                // f. 重置高字节接收标志：
+                // 无论如何，都需要重置high_byte_received标志，以便为下一组高低字节做准备。
                 high_byte_received = false;
             }
         }

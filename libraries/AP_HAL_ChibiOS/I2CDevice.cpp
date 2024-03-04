@@ -330,14 +330,26 @@ void I2CBus::dma_deallocate(Shared_DMA *)
 {
 }
 
+// 这段代码是一个名为 I2CDevice::transfer 的成员函数，它属于 I2CDevice 类。
+// 这个函数用于通过 I2C 总线执行数据的发送和接收操作。
+// 1.函数参数:
+// const uint8_t *send: 指向要发送数据的指针。
+// uint32_t send_len: 要发送的数据的长度。
+// uint8_t *recv: 指向接收数据的缓冲区的指针。
+// uint32_t recv_len: 接收缓冲区的大小。
 bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
                          uint8_t *recv, uint32_t recv_len)
 {
+    // 首先，它检查当前对象（即 I2CDevice 的一个实例）是否拥有 I2C 总线的访问权。
+    // 如果没有，则打印错误消息并返回 false。
     if (!bus.semaphore.check_owner()) {
         hal.console->printf("I2C: not owner of 0x%x for addr 0x%02x\n", (unsigned)get_bus_id(), _address);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1] I2C: not owner of 0x%x for addr 0x%02x\n", (unsigned)get_bus_id(), _address);
         return false;
     }
 
+    // 接着，根据编译器的定义（例如 STM32F7、STM32H7 等），它配置 I2C 或 SMBus 模式。
+    // SMBus 是 I2C 的一个子集，通常用于低速设备通信。
 #if defined(STM32F7) || defined(STM32H7) || defined(STM32F3) || defined(STM32G4) || defined(STM32L4)
     if (_use_smbus) {
         bus.i2ccfg.cr1 |= I2C_CR1_SMBHEN;
@@ -352,6 +364,9 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
     }
 #endif
 
+    // 如果 _split_transfers 为 true，则发送和接收操作被分为两部分执行。
+    // 这是为了避免在某些设备（如 LidarLite 蓝色标签）上不支持 SCL 低电平停止条件的情况。
+    // 如果发送和/或接收数据存在，它们会被分别发送和接收。
     if (_split_transfers) {
         /*
           splitting the transfer() into two pieces avoids a stop condition
@@ -359,22 +374,31 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
           LidarLite blue label)
         */
         if (send && send_len) {
+            // _transfer 函数是实际执行发送和接收操作的函数。
+            // 如果在上述任何传输过程中发生错误，函数将返回 false。
+            // _transfer 函数是私有的（由 _ 前缀指示），这意味着它只能在 I2CDevice 类内部被调用。
             if (!_transfer(send, send_len, nullptr, 0)) {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2] run _transfer() failed.\n");
                 return false;
             }
         }
         if (recv && recv_len) {
             if (!_transfer(nullptr, 0, recv, recv_len)) {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-3] run _transfer() failed.\n");
                 return false;
             }
         }
-    } else {
+    } 
+    // 如果 _split_transfers 为 false，则发送和接收操作会组合在一起执行。
+    else {
         // combined transfer
         if (!_transfer(send, send_len, recv, recv_len)) {
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-4] run _transfer() failed.\n");
             return false;
         }
     }
 
+    // 如果所有操作都成功完成，函数将返回 true。
     return true;
 }
 
