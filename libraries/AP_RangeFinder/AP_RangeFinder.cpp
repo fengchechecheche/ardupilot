@@ -60,6 +60,7 @@ extern const AP_HAL::HAL &hal;
 #define HAL_ENCODER_MT6701_I2C_BUS 2
 #endif
 #define SlaveAddress 0X0C // MT6701 地址
+// #define SlaveAddress 0X0D // MT6701 地址
 
 // table of user settable parameters
 const AP_Param::GroupInfo RangeFinder::var_info[] = {
@@ -753,7 +754,7 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
     // 有效果，但delay(1000)时只能看到从3号开始的设备
     // 0，1，2号设备看不到
     // delay(2000)时可以看到从0号设备开始的初始化情况
-    hal.scheduler->delay(3000);
+    hal.scheduler->delay(10000);
 
     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] _add_backend start.");
     // if (_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
@@ -774,7 +775,9 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
      * Standerd Mode:      hi2c1.Init.Timing = 0x00303D5B;  十进制：316 1435, 对应100kHz的时钟频率， bus_clock=400000
      */
 
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] _add_backend start.");
+    hal.scheduler->delay(10);
 
     // 调用_add_backend函数将接口放到一个指针数组中，方便通过数组轮流调用相应的接口
     // _add_backend 这个函数就是把上面查找到的传感器接口放入指针数组drivers中，在update中调用
@@ -805,11 +808,16 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
         if (_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
                                                              hal.i2c_mgr->get_device(i, SlaveAddress)),
                          instance)){
+                            // hal.i2c_mgr->get_device(i, SlaveAddress);
+                            hal.scheduler->delay(10);
                             gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-9] _add_backend successed[%ld].", i);
+                            hal.scheduler->delay(10);
                             break;
                          }
         else{
+            hal.scheduler->delay(10);
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-10] _add_backend failed.");
+            hal.scheduler->delay(10);
         }
     }
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-11] state[instance]: %d.", (int)state[instance].status);

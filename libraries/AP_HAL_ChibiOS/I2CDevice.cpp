@@ -262,7 +262,9 @@ I2CDevice::I2CDevice(uint8_t busnum, uint8_t address, uint32_t bus_clock, bool u
     _timeout_ms(timeout_ms),
     bus(I2CDeviceManager::businfo[busnum])
 {
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] run I2CDevice::I2CDevice() start.");
+    hal.scheduler->delay(10);
 
     // 2.设置设备总线和地址：
     // 这两行代码调用类的成员函数来设置设备的总线编号和地址。
@@ -292,7 +294,9 @@ I2CDevice::I2CDevice(uint8_t busnum, uint8_t address, uint32_t bus_clock, bool u
         }
 #else
 
+        hal.scheduler->delay(10);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] bus_clock < bus.busclock.");
+        hal.scheduler->delay(10);
 
         bus.i2ccfg.clock_speed = bus_clock;
         bus.busclock = bus_clock;
@@ -302,9 +306,13 @@ I2CDevice::I2CDevice(uint8_t busnum, uint8_t address, uint32_t bus_clock, bool u
 #endif
         hal.console->printf("I2C%u clock %ukHz\n", busnum, unsigned(bus.busclock/1000));
     }
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-6-1] I2C%u clock %ukHz\n", busnum, unsigned(bus_clock/1000));
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-6-2] I2C%u clock %ukHz\n", busnum, unsigned(bus.busclock/1000));
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-6-1] I2C(%u, %x) clock %ukHz\n", busnum, address, unsigned(bus_clock/1000));
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-6-2] I2C(%u, %x) clock %ukHz\n", busnum, address, unsigned(bus.busclock/1000));
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-7] run I2CDevice::I2CDevice() end.");
+    hal.scheduler->delay(10);
 }
 
 I2CDevice::~I2CDevice()
@@ -402,27 +410,42 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
     return true;
 }
 
+// 这段代码是 I2CDevice 类中的另一个成员函数，名为 _transfer，它负责执行实际的 I2C 数据传输。
+// 1.函数参数：
+// const uint8_t *send：指向要发送数据的指针。
+// uint32_t send_len：要发送的数据的长度。
+// uint8_t *recv：指向接收数据的缓冲区的指针。
+// uint32_t recv_len：接收缓冲区的大小。
 bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
                          uint8_t *recv, uint32_t recv_len)
 {
+    // 2.函数功能：
+    // i2cAcquireBus(I2CD[bus.busnum].i2c)：获取对 I2C 总线的访问权。
     i2cAcquireBus(I2CD[bus.busnum].i2c);
 
+    // 设置用于数据传输的缓冲区。如果设置失败，释放总线并返回 false。
     if (!bus.bouncebuffer_setup(send, send_len, recv, recv_len)) {
         i2cReleaseBus(I2CD[bus.busnum].i2c);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[11-1] run bus.bouncebuffer_setup() failed.\n");
         return false;
     }
 
+    // 循环中，代码尝试执行数据传输，最大重试次数由 _retries 定义。
     for(uint8_t i=0 ; i <= _retries; i++) {
         int ret;
         // calculate a timeout as twice the expected transfer time, and set as min of 4ms
+        // timeout_ms 计算了传输的超时时间，这是基于预期的传输时间和一个最小超时值（4ms）来确定的。
         uint32_t timeout_ms = 1+2*(((8*1000000UL/bus.busclock)*(send_len+recv_len))/1000);
         timeout_ms = MAX(timeout_ms, _timeout_ms);
 
         // we get the lock and start the bus inside the retry loop to
         // allow us to give up the DMA channel to an SPI device on
         // retries
+        // 使用 bus.dma_handle->lock() 获取 DMA（直接内存访问）通道的锁，
+        // 这对于某些硬件上的高效数据传输是必要的。
         bus.dma_handle->lock();
 
+        // 启动 I2C 总线。
         i2cStart(I2CD[bus.busnum].i2c, &bus.i2ccfg);
         osalDbgAssert(I2CD[bus.busnum].i2c->state == I2C_READY, "i2cStart state");
 
@@ -430,6 +453,7 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
         hal.util->persistent_data.i2c_count++;
         osalSysUnlock();
 
+        // 执行带有超时的主设备接收或发送操作。
         if(send_len == 0) {
             ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
         } else {
@@ -437,11 +461,14 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
                                            recv, recv_len, chTimeMS2I(timeout_ms));
         }
 
+        // 执行 I2C 总线的软停止。
         i2cSoftStop(I2CD[bus.busnum].i2c);
         osalDbgAssert(I2CD[bus.busnum].i2c->state == I2C_STOP, "i2cStart state");
 
+        // 释放 DMA 通道的锁。
         bus.dma_handle->unlock();
 
+        // 如果在传输过程中发生错误（如 I2C_ISR_LIMIT），则记录内部错误并跳出循环。
         if (I2CD[bus.busnum].i2c->errors & I2C_ISR_LIMIT) {
             INTERNAL_ERROR(AP_InternalError::error_t::i2c_isr);
             break;
@@ -452,19 +479,28 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
         pd.i2c_isr_count += I2CD[bus.busnum].i2c->isr_count;
 #endif
 
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[11-2] run i2cMasterReceiveTimeout() state(%d).\n", ret);
+        // 如果传输成功（ret == MSG_OK），则清理缓冲区并释放总线，返回 true。
         if (ret == MSG_OK) {
             bus.bouncebuffer_finish(send, recv, recv_len);
             i2cReleaseBus(I2CD[bus.busnum].i2c);
             return true;
         }
 #if HAL_I2C_CLEAR_ON_TIMEOUT
+        // 如果传输超时且总线处于空闲状态（I2CBus::read_sda(bus.busnum) == 0），则清除总线。
         if (ret == MSG_TIMEOUT && I2CBus::read_sda(bus.busnum) == 0) {
             I2CBus::clear_bus(bus.busnum);
         }
+
+    
 #endif
     }
+    // 错误处理和重试：
+    // 如果在传输过程中发生错误，代码会尝试重新执行传输，直到达到最大重试次数 _retries。
+    // 如果所有重试都失败，则清理缓冲区，释放总线，并返回 false。
     bus.bouncebuffer_finish(send, recv, recv_len);
     i2cReleaseBus(I2CD[bus.busnum].i2c);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[11-3] run out of _retries(%d) times.\n", _retries);
     return false;
 }
 
@@ -506,7 +542,9 @@ I2CDeviceManager::get_device(uint8_t bus, uint8_t address,
     bus -= HAL_I2C_BUS_BASE;
     // 检查调整后的总线编号是否超出了预定义的I2C设备数组的大小。如果是，函数将返回一个空的
     if (bus >= ARRAY_SIZE(I2CD)) {
+        hal.scheduler->delay(10);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] bus >= ARRAY_SIZE(I2CD), return nullptr.");
+        hal.scheduler->delay(10);
         // 即指向null的指针
         return AP_HAL::OwnPtr<AP_HAL::I2CDevice>(nullptr);
     }
@@ -514,7 +552,9 @@ I2CDeviceManager::get_device(uint8_t bus, uint8_t address,
     // 这个智能指针负责在对象不再需要时自动删除它，以避免内存泄漏。
     auto dev = AP_HAL::OwnPtr<AP_HAL::I2CDevice>(new I2CDevice(bus, address, bus_clock, use_smbus, timeout_ms));
 
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-8] run I2CDeviceManager::get_device end.");
+    hal.scheduler->delay(10);
 
     // 返回包含新创建的 I2CDevice 对象的智能指针。
     return dev;
