@@ -323,12 +323,16 @@ void RangeFinder::init(enum Rotation orientation_default)
             // 更新num_instances的值，取其当前值和i + 1中的较大值。
             // 这确保了num_instances总是反映了已加载的测距仪实例的最大数量。
             num_instances = MAX(num_instances, i + 1);
+            hal.scheduler->delay(10);
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[%d] num_instances: %d\n", i, num_instances);
+            hal.scheduler->delay(10);
         }
         else
         {
             // 如果drivers[i]为空，执行以下代码块。
+            hal.scheduler->delay(10);
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[%d] drivers[i] == nullptr\n", i);
+            hal.scheduler->delay(10);
         }
 
         // initialise status
@@ -369,12 +373,16 @@ void RangeFinder::update(void)
 
 void RangeFinder::update_encoder(void)
 {
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-1] run RangeFinder::update_encoder() start.");
+    hal.scheduler->delay(10);
     for (uint8_t i = 0; i < num_instances; i++)
     {
         if (drivers[i] != nullptr)
         {
+            hal.scheduler->delay(10);
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-2] drivers[i] != nullptr.");
+            hal.scheduler->delay(10);
             if ((Type)params[i].type.get() == Type::NONE)
             {
                 // allow user to disable a rangefinder at runtime
@@ -382,10 +390,14 @@ void RangeFinder::update_encoder(void)
                 state[i].range_valid_count = 0;
                 // 执行到此处时，因为没有检测到IIC设备连接，所以直接跳出循环了
                 // 后面的drivers[i]->update_encoder()也不被执行
+                hal.scheduler->delay(10);
                 gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-3] (Type)params[i].type.get() == Type::NONE.");
+                hal.scheduler->delay(10);
                 continue;
             }
+            hal.scheduler->delay(10);
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-4] run drivers[i]->update_encoder() start.");
+            hal.scheduler->delay(10);
 
             // update函数中会调用update函数对传感器数据进行更新，update也是一个接口，
             // TeraRanger传感器继承自AP_RangeFinder_Backend_Serial，
@@ -393,10 +405,14 @@ void RangeFinder::update_encoder(void)
             // 【★】update() 函数是在 AP_RangeFinder_Backend_Serial.cpp 中实现的
             // 因此考虑此处调用的函数也应该修改为与AP_RangeFinder_Backend_Serial.cpp 中的实现一致
             drivers[i]->update_encoder();
+            hal.scheduler->delay(10);
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-5] run drivers[i]->update_encoder() finished.");
-        }
+            hal.scheduler->delay(10);
+        
     }
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-6] run RangeFinder::update_encoder() finished.");
+    hal.scheduler->delay(10);
 }
 
 // RangeFinder::_add_backend 函数是用于向测距仪系统中添加一个新的后端设备的。

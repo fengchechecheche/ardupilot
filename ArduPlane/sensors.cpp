@@ -43,9 +43,13 @@ void Plane::read_encoder(void)
     if(counter >= 5)
     {
         counter = 0;
+        hal.scheduler->delay(10);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1] run Plane::read_encoder() start.");
+        hal.scheduler->delay(10);
         rangefinder.update_encoder();
+        hal.scheduler->delay(10);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] run Plane::read_encoder() finished.");
+        hal.scheduler->delay(10);
     }
     
 }

@@ -361,7 +361,9 @@ bool AP_RangeFinder_LightWareI2C::sf20_init()
 
 bool AP_RangeFinder_LightWareI2C::init_encoder()
 {
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[2-1] run AP_RangeFinder_LightWareI2C::init_encoder() start.");
+    hal.scheduler->delay(10);
     // call timer() at 10s （10000000）
     // 地面站调试速度
     _dev->register_periodic_callback(10000000,
@@ -383,7 +385,9 @@ bool AP_RangeFinder_LightWareI2C::init_encoder()
     // _dev->register_periodic_callback(25000,
     //                                  FUNCTOR_BIND_MEMBER(&AP_RangeFinder_LightWareI2C::timer_encoder, void));                                 
 
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[2-2] run AP_RangeFinder_LightWareI2C::init_encoder() end.");
+    hal.scheduler->delay(10);
     return true;
 }
 

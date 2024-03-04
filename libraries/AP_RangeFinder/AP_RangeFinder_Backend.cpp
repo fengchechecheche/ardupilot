@@ -82,5 +82,7 @@ void AP_RangeFinder_Backend::set_status(RangeFinder::Status _status)
 
 void AP_RangeFinder_Backend::update_encoder(void)
 {
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-1] run AP_RangeFinder_Backend::update_encoder() start.");
+    hal.scheduler->delay(10);
 }

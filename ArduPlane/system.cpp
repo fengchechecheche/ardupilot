@@ -60,10 +60,14 @@ void Plane::init_ardupilot()
     // initialise rangefinder
     // 此处是测距模块的初始化函数，这个函数里面主要是初始化了传感器的参数和状态，
     // 调用了detect_instance函数对传感器接口进行查询
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[9-1] run rangefinder.init() start.");
+    hal.scheduler->delay(10);
     rangefinder.set_log_rfnd_bit(MASK_LOG_SONAR);
     rangefinder.init(ROTATION_PITCH_270);
+    hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[9-2] run rangefinder.init() end.");
+    hal.scheduler->delay(10);
 
     // initialise battery monitoring
     battery.init();
