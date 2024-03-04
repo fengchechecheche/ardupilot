@@ -302,8 +302,9 @@ I2CDevice::I2CDevice(uint8_t busnum, uint8_t address, uint32_t bus_clock, bool u
 #endif
         hal.console->printf("I2C%u clock %ukHz\n", busnum, unsigned(bus.busclock/1000));
     }
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-6] I2C%u clock %ukHz\n", busnum, unsigned(bus.busclock/1000));
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-7] run I2CDevice::I2CDevice() start.");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-6-1] I2C%u clock %ukHz\n", busnum, unsigned(bus_clock/1000));
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-6-2] I2C%u clock %ukHz\n", busnum, unsigned(bus.busclock/1000));
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-7] run I2CDevice::I2CDevice() end.");
 }
 
 I2CDevice::~I2CDevice()

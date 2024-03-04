@@ -770,8 +770,8 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-5] _add_backend finish.");
 
     /*
-     * Fast Mode:          hi2c1.Init.Timing = 0x0010061A;  十进制：105 0138
-     * Standerd Mode:      hi2c1.Init.Timing = 0x00303D5B;  十进制：316 1435
+     * Fast Mode:          hi2c1.Init.Timing = 0x0010061A;  十进制：105 0138, 对应400kHz的时钟频率， bus_clock=100000
+     * Standerd Mode:      hi2c1.Init.Timing = 0x00303D5B;  十进制：316 1435, 对应100kHz的时钟频率， bus_clock=400000
      */
 
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] _add_backend start.");
@@ -803,7 +803,7 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t &serial_instance)
     FOREACH_I2C(i)
     {
         if (_add_backend(AP_RangeFinder_LightWareI2C::detect(state[instance], params[instance],
-                                                             hal.i2c_mgr->get_device(i, SlaveAddress, 0x0010061A)),
+                                                             hal.i2c_mgr->get_device(i, SlaveAddress)),
                          instance)){
                             gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-9] _add_backend successed[%ld].", i);
                             break;
