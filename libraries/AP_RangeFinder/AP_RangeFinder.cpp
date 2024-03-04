@@ -408,7 +408,7 @@ void RangeFinder::update_encoder(void)
             hal.scheduler->delay(10);
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-5] run drivers[i]->update_encoder() finished.");
             hal.scheduler->delay(10);
-        
+        }
     }
     hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-6] run RangeFinder::update_encoder() finished.");
