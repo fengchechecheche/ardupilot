@@ -88,6 +88,10 @@ extern AP_Vehicle& vehicle;
 /*
   setup is called when the sketch starts
  */
+
+// 此处要做一个编码器的指针
+// AP_Encoder* encoder;
+
 void AP_Vehicle::setup()
 {
     // load the default values of variables listed in var_info[]
@@ -152,6 +156,9 @@ void AP_Vehicle::setup()
 #endif
 
     // init_ardupilot is where the vehicle does most of its initialisation.
+    // 在setup()函数中new一个编码器对象，并且要执行初始化编码器的代码
+    // 初始化编码器的代码 encoder->init() 考虑放在init_ardupilot()中调用
+    // encoder = new AP_Encoder();
     init_ardupilot();
 
 #if AP_AIRSPEED_ENABLED
@@ -211,6 +218,7 @@ void AP_Vehicle::setup()
 
 void AP_Vehicle::loop()
 {
+    // 在loop()中调用读取编码器数据的函数
     scheduler.loop();
     G_Dt = scheduler.get_loop_period_s();
 

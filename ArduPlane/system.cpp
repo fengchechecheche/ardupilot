@@ -61,6 +61,10 @@ void Plane::init_ardupilot()
     // 此处是测距模块的初始化函数
     rangefinder.set_log_rfnd_bit(MASK_LOG_SONAR);
     rangefinder.init(ROTATION_PITCH_270);
+    // 初始化编码器
+    // 调用了init()函数后，就通过内部指针变量_driver创建一个AP_Encoder_MT6701_I2C对象
+    // 在AP_Encoder_MT6701_I2C对象的构造函数中，就会调用驱动层的API初始化编码器硬件
+    // encoder.init();
 
     // initialise battery monitoring
     battery.init();

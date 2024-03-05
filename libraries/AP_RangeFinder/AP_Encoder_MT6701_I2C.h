@@ -15,7 +15,7 @@ public:
     AP_Encoder_MT6701_I2C(AP_Encoder& encoder);
     ~AP_Encoder_MT6701_I2C(){};    // 此处析构函数为空实现
 
-    virtual double read(void);
+    virtual double read(void) override;
 };
 
 

@@ -19,6 +19,8 @@ public:
     AP_Encoder_Backend(AP_Encoder& encoder);
     ~AP_Encoder_Backend(){};    // 此处析构函数为空实现
 
+    // 此处定义read()函数不用执行具体的功能，只是用于统一接口
+    // 因此把后台类中的read()函数定义为纯虚函数，要求子类中必须对这个函数进行实现
     virtual double read(void) = 0;
 private:
     // 在后台类的私有成员中，会用到前台类
