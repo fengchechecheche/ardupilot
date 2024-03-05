@@ -64,7 +64,7 @@ void Plane::init_ardupilot()
     // 初始化编码器
     // 调用了init()函数后，就通过内部指针变量_driver创建一个AP_Encoder_MT6701_I2C对象
     // 在AP_Encoder_MT6701_I2C对象的构造函数中，就会调用驱动层的API初始化编码器硬件
-    // encoder.init();
+    encoder.init();
 
     // initialise battery monitoring
     battery.init();

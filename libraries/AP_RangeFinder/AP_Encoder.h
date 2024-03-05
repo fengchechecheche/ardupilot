@@ -22,6 +22,7 @@ public:
 
     void init(void);    // 希望应用层调用一下初始化函数，就能够把相应的硬件初始化掉
     double read(void);  // 希望能够读取到编码器中的数据，以double数据类型返回一个值
+    void update(void);
 private:
     // 前台类通过后台类的这个指针，就可以和后台类进行交流
     AP_Encoder_Backend* _driver;

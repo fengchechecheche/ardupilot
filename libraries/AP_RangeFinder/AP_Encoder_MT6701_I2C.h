@@ -7,6 +7,7 @@
  */
 
 #include "AP_Encoder_Backend.h"
+#include <AP_HAL/I2CDevice.h>
 
 class AP_Encoder_MT6701_I2C : public AP_Encoder_Backend{
 public:
@@ -16,6 +17,10 @@ public:
     ~AP_Encoder_MT6701_I2C(){};    // 此处析构函数为空实现
 
     virtual double read(void) override;
+private:
+    void encoder_timer(void);
+    void get_reading(void);
+    AP_HAL::OwnPtr<AP_HAL::I2CDevice> _dev;
 };
 
 

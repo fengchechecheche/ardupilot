@@ -321,6 +321,7 @@ protected:
     AP_Button button;
 #endif
     RangeFinder rangefinder;
+    AP_Encoder encoder;
 
     AP_RSSI rssi;
 #if HAL_RUNCAM_ENABLED
