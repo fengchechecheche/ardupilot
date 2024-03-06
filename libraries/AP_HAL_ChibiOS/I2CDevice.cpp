@@ -382,13 +382,12 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
         return false;
     }
 
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[9] enter for loop, _retries: %d.", _retries);
+    hal.scheduler->delay(10);
     // 循环中，代码尝试执行数据传输，最大重试次数由 _retries 定义。
     for(uint8_t i=0 ; i <= _retries; i++) {
-        hal.scheduler->delay(10);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[9] _retries: %d.", _retries);
-        hal.scheduler->delay(10);
-
-        int ret;
+        int ret = 66;
         // calculate a timeout as twice the expected transfer time, and set as min of 4ms
         // timeout_ms 计算了传输的超时时间，这是基于预期的传输时间和一个最小超时值（4ms）来确定的。
         uint32_t timeout_ms = 1+2*(((8*1000000UL/bus.busclock)*(send_len+recv_len))/1000);
@@ -410,18 +409,39 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
         osalSysUnlock();
 
         // 执行带有超时的主设备接收或发送操作。
-        if(send_len == 0) {
-            ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
-            hal.scheduler->delay(10);
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1] recv---->ret: %d.", ret);
-            hal.scheduler->delay(10);
-        } else {
-            ret = i2cMasterTransmitTimeout(I2CD[bus.busnum].i2c, _address, send, send_len,
-                                           recv, recv_len, chTimeMS2I(timeout_ms));
-            hal.scheduler->delay(10);
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2] send---->ret: %d.", ret);
-            hal.scheduler->delay(10);
-            continue;
+        if(_split_transfers)
+        {
+            if(ret == 66)
+            {
+                ret = i2cMasterTransmitTimeout(I2CD[bus.busnum].i2c, _address, send, send_len,
+                                            recv, recv_len, chTimeMS2I(timeout_ms));
+                hal.scheduler->delay(10);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-2] send---->ret: %d.", ret);
+                hal.scheduler->delay(10);
+                continue;
+            }
+            else
+            {
+                ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
+                hal.scheduler->delay(10);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-1] recv---->ret: %d.", ret);
+                hal.scheduler->delay(10);
+            }
+        }
+        else
+        {
+            if(send_len == 0) {
+                ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
+                hal.scheduler->delay(10);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-1] recv---->ret: %d.", ret);
+                hal.scheduler->delay(10);
+            } else {
+                ret = i2cMasterTransmitTimeout(I2CD[bus.busnum].i2c, _address, send, send_len,
+                                            recv, recv_len, chTimeMS2I(timeout_ms));
+                hal.scheduler->delay(10);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-2] send---->ret: %d.", ret);
+                hal.scheduler->delay(10);
+            }
         }
 
         // 执行 I2C 总线的软停止。
