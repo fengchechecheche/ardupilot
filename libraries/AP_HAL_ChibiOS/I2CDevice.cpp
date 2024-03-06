@@ -370,24 +370,38 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
 bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
                          uint8_t *recv, uint32_t recv_len)
 {
+    // 获取对 I2C 总线的访问权。
     i2cAcquireBus(I2CD[bus.busnum].i2c);
 
+    // 设置用于数据传输的缓冲区。如果设置失败，释放总线并返回 false。
     if (!bus.bouncebuffer_setup(send, send_len, recv, recv_len)) {
         i2cReleaseBus(I2CD[bus.busnum].i2c);
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[8] setup bouncebuffer failed.");
+        hal.scheduler->delay(10);
         return false;
     }
 
+    // 循环中，代码尝试执行数据传输，最大重试次数由 _retries 定义。
     for(uint8_t i=0 ; i <= _retries; i++) {
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[9] _retries: %d.", _retries);
+        hal.scheduler->delay(10);
+
         int ret;
         // calculate a timeout as twice the expected transfer time, and set as min of 4ms
+        // timeout_ms 计算了传输的超时时间，这是基于预期的传输时间和一个最小超时值（4ms）来确定的。
         uint32_t timeout_ms = 1+2*(((8*1000000UL/bus.busclock)*(send_len+recv_len))/1000);
         timeout_ms = MAX(timeout_ms, _timeout_ms);
 
         // we get the lock and start the bus inside the retry loop to
         // allow us to give up the DMA channel to an SPI device on
         // retries
+        // 使用 bus.dma_handle->lock() 获取 DMA（直接内存访问）通道的锁，
+        // 这对于某些硬件上的高效数据传输是必要的。
         bus.dma_handle->lock();
 
+        // 启动 I2C 总线。
         i2cStart(I2CD[bus.busnum].i2c, &bus.i2ccfg);
         osalDbgAssert(I2CD[bus.busnum].i2c->state == I2C_READY, "i2cStart state");
 
@@ -395,6 +409,7 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
         hal.util->persistent_data.i2c_count++;
         osalSysUnlock();
 
+        // 执行带有超时的主设备接收或发送操作。
         if(send_len == 0) {
             ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
         } else {
@@ -402,11 +417,14 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
                                            recv, recv_len, chTimeMS2I(timeout_ms));
         }
 
+        // 执行 I2C 总线的软停止。
         i2cSoftStop(I2CD[bus.busnum].i2c);
         osalDbgAssert(I2CD[bus.busnum].i2c->state == I2C_STOP, "i2cStart state");
 
+        // 释放 DMA 通道的锁。
         bus.dma_handle->unlock();
 
+        // 如果在传输过程中发生错误（如 I2C_ISR_LIMIT），则记录内部错误并跳出循环。
         if (I2CD[bus.busnum].i2c->errors & I2C_ISR_LIMIT) {
             INTERNAL_ERROR(AP_InternalError::error_t::i2c_isr);
             break;
@@ -417,17 +435,23 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
         pd.i2c_isr_count += I2CD[bus.busnum].i2c->isr_count;
 #endif
 
+        // 如果传输成功（ret == MSG_OK），则清理缓冲区并释放总线，返回 true。
         if (ret == MSG_OK) {
             bus.bouncebuffer_finish(send, recv, recv_len);
             i2cReleaseBus(I2CD[bus.busnum].i2c);
             return true;
         }
 #if HAL_I2C_CLEAR_ON_TIMEOUT
+        // 如果传输超时且总线处于空闲状态（I2CBus::read_sda(bus.busnum) == 0），则清除总线。
         if (ret == MSG_TIMEOUT && I2CBus::read_sda(bus.busnum) == 0) {
             I2CBus::clear_bus(bus.busnum);
         }
 #endif
     }
+
+    // 错误处理和重试：
+    // 如果在传输过程中发生错误，代码会尝试重新执行传输，直到达到最大重试次数 _retries。
+    // 如果所有重试都失败，则清理缓冲区，释放总线，并返回 false。
     bus.bouncebuffer_finish(send, recv, recv_len);
     i2cReleaseBus(I2CD[bus.busnum].i2c);
     return false;
