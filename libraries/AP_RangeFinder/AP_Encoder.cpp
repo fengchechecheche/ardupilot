@@ -10,7 +10,8 @@
  */
 
 extern const AP_HAL::HAL &hal;
-#define SlaveAddress    0X0C        //MT6701 地址
+// #define SlaveAddress    0X0C        //MT6701 地址
+#define SlaveAddress    0X06        //MT6701 地址
 // 此处要做一个编码器的指针
 // AP_Encoder* encoder;
 

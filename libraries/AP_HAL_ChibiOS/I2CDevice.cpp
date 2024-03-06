@@ -19,6 +19,7 @@
 
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Math/AP_Math.h>
+#include <GCS_MAVLink/GCS.h>
 #include "Util.h"
 #include "GPIO.h"
 
@@ -301,6 +302,9 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
 {
     if (!bus.semaphore.check_owner()) {
         hal.console->printf("I2C: not owner of 0x%x for addr 0x%02x\n", (unsigned)get_bus_id(), _address);
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-1] I2C: not owner of 0x%x for addr 0x%02x.\n", (unsigned)get_bus_id(), _address);
+        hal.scheduler->delay(10);
         return false;
     }
 
@@ -319,24 +323,43 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
 #endif
 
     if (_split_transfers) {
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2] _split_transfers == true.");
+        hal.scheduler->delay(10);
         /*
           splitting the transfer() into two pieces avoids a stop condition
           with SCL low which is not supported on some devices (such as
           LidarLite blue label)
         */
         if (send && send_len) {
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-1] run _transfer(send).");
+            hal.scheduler->delay(10);
             if (!_transfer(send, send_len, nullptr, 0)) {
+                hal.scheduler->delay(10);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-1-1] run _transfer(send) failed.");
+                hal.scheduler->delay(10);
                 return false;
             }
         }
         if (recv && recv_len) {
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-2] run _transfer(recv).");
             if (!_transfer(nullptr, 0, recv, recv_len)) {
+                hal.scheduler->delay(10);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-2-1] run _transfer(recv) failed.");
+                hal.scheduler->delay(10);
                 return false;
             }
         }
     } else {
         // combined transfer
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-3] _split_transfers == false.");
+        hal.scheduler->delay(10);
         if (!_transfer(send, send_len, recv, recv_len)) {
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-3-1] run _transfer(send and recv) failed.");
+            hal.scheduler->delay(10);
             return false;
         }
     }
