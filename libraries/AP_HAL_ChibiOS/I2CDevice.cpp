@@ -412,9 +412,16 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
         // 执行带有超时的主设备接收或发送操作。
         if(send_len == 0) {
             ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1] recv---->ret: %d.", ret);
+            hal.scheduler->delay(10);
         } else {
             ret = i2cMasterTransmitTimeout(I2CD[bus.busnum].i2c, _address, send, send_len,
                                            recv, recv_len, chTimeMS2I(timeout_ms));
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2] send---->ret: %d.", ret);
+            hal.scheduler->delay(10);
+            continue;
         }
 
         // 执行 I2C 总线的软停止。
