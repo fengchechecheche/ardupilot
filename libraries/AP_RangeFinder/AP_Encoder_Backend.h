@@ -7,17 +7,25 @@
  */
 
 
-
+#include <AP_Common/AP_Common.h>
+#include <AP_HAL/AP_HAL.h>
 #include "AP_Encoder.h"
 
 class AP_Encoder_Backend{
 public:
+    /* ---------------------------------------------- suwp方案代码 ------------------------------------------------------ */
     // 后台类一般会出现对前台类的引用
     // 也就是说在后台类的构造函数里，会出现一个对前台类引用
     // 这个时候就必须包含前台类的头文件
     // 此时通过添加前台类的引用，后台类就跟前台类建立起了联系
-    AP_Encoder_Backend(AP_Encoder& encoder);
-    ~AP_Encoder_Backend(){};    // 此处析构函数为空实现
+    // AP_Encoder_Backend(AP_Encoder& encoder);
+    // ~AP_Encoder_Backend(){};    // 此处析构函数为空实现
+    /* ---------------------------------------------- suwp方案代码 ------------------------------------------------------ */
+
+    // constructor. This incorporates initialisation as well.
+	AP_Encoder_Backend(AP_Encoder& encoder);
+
+    virtual void init_serial(uint8_t serial_instance) {};
 
     // 此处定义read()函数不用执行具体的功能，只是用于统一接口
     // 因此把后台类中的read()函数定义为纯虚函数，要求子类中必须对这个函数进行实现

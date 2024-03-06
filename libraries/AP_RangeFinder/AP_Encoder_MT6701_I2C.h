@@ -16,10 +16,17 @@ public:
     AP_Encoder_MT6701_I2C(AP_Encoder& encoder);
     ~AP_Encoder_MT6701_I2C(){};    // 此处析构函数为空实现
 
+    // static detection function
+    static AP_Encoder_Backend *detect(AP_Encoder& encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev);
+
     virtual double read(void) override;
 private:
+    bool encoder_init();
     void encoder_timer(void);
-    void get_reading(void);
+    void get_reading(float &reading_m);
+    // constructor
+    AP_Encoder_MT6701_I2C(AP_Encoder& encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev);
+    bool init();
     AP_HAL::OwnPtr<AP_HAL::I2CDevice> _dev;
 };
 

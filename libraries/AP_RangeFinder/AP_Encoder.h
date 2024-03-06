@@ -5,13 +5,14 @@
  * 前台类对应用层负责，因此在写前台类时，应该考虑如何能让应用层方便调用。
  * C++语言在写类时，几个基本的要素(搭建框架)如下：
  * 1.先写类的构造函数和析构函数。
- * 
- * 
  */
 
 // 在ardupilot的前后台架构中，前台类里面一般都会有后台类的前置声明
 // 因为这里使用了[前置声明]，所以就不再需要在AP_Encoder.h头文件中包含后台类的头文件
 // 同时会有一个后台类的指针_driver
+#ifndef ENCODER_MAX_INSTANCES
+#define ENCODER_MAX_INSTANCES 2
+#endif
 class AP_Encoder_Backend;
 
 class AP_Encoder{
@@ -25,7 +26,10 @@ public:
     void update(void);
 private:
     // 前台类通过后台类的这个指针，就可以和后台类进行交流
+    uint8_t num_instances;
     AP_Encoder_Backend* _driver;
+    AP_Encoder_Backend *drivers[ENCODER_MAX_INSTANCES];
+    bool _add_backend(AP_Encoder_Backend *backend, uint8_t instance, uint8_t serial_instance);
 };
 
 
