@@ -1,6 +1,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include <GCS_MAVLink/GCS.h>
 #include <AP_HAL/utility/sparse-endian.h>
+#include <AP_Scheduler/AP_Scheduler.h>
 #include "AP_Encoder_MT6701_I2C.h"
 // #include "ssd1306.h"
 
@@ -11,6 +12,7 @@
  */
 
 extern const AP_HAL::HAL &hal;
+#define SlaveAddress 0X0C //MT6701 地址
 #define ReadAddress1 0X03 // 数据高位寄存器地址
 #define ReadAddress2 0X04 // 数据低位寄存器地址
 
@@ -72,7 +74,9 @@ bool AP_Encoder_MT6701_I2C::init()
 
 bool AP_Encoder_MT6701_I2C::encoder_init()
 {
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3] run AP_Encoder_MT6701_I2C::encoder_init() start.\n");
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1] run AP_Encoder_MT6701_I2C::encoder_init() start.\n");
+    hal.scheduler->delay(10);
     union
     {
         be16_t be16_val;
@@ -80,14 +84,30 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
     } timeout;
 
     // Retrieve lost signal timeout register
-    const uint8_t read_reg = ReadAddress1;
-    if (!_dev->transfer(&read_reg, 1, timeout.bytes, 2))
+    const uint8_t read_reg1[2] = {SlaveAddress, ReadAddress1};
+    const uint8_t read_reg2[2] = {SlaveAddress, ReadAddress2};
+
+    if (((_dev->transfer(read_reg1, 2, timeout.bytes, 2)) && (_dev->transfer(read_reg2, 2, timeout.bytes, 2))) == false)
     {
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] run AP_Encoder_MT6701_I2C::encoder_init() failed.\n");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-1] timeout.bytes[0]: %d.\n", timeout.bytes[0]);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-2] timeout.bytes[1]: %d.\n", timeout.bytes[1]);
+        hal.scheduler->delay(10);
         return false;
     }
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-1] timeout.bytes[0]: %d.\n", timeout.bytes[0]);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-2] timeout.bytes[1]: %d.\n", timeout.bytes[1]);
+    hal.scheduler->delay(10);
 
-    // call timer() at 20Hz
-    _dev->register_periodic_callback(50000, FUNCTOR_BIND_MEMBER(&AP_Encoder_MT6701_I2C::encoder_timer, void));
+    // call timer() at 20Hz.        50,000 us = 0.05 s 
+    // call timer() at 2Hz.         500,000 us = 0.5 s 
+    // call timer() at 2s.          2,000,000 us = 2 s 
+    _dev->register_periodic_callback(2000000, FUNCTOR_BIND_MEMBER(&AP_Encoder_MT6701_I2C::encoder_timer, void));
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-4] run AP_Encoder_MT6701_I2C::encoder_init() success.\n");
+    hal.scheduler->delay(10);
 
     return true;
 }
@@ -102,42 +122,78 @@ AP_Encoder_MT6701_I2C::read(void)
 
 void AP_Encoder_MT6701_I2C::encoder_timer(void)
 {
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "run AP_Encoder_MT6701_I2C::encoder_timer() start.");
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-1] run AP_Encoder_MT6701_I2C::encoder_timer() start.");
+    hal.scheduler->delay(10);
 
-    float reading_m;
+    float angle_f;
 
-    get_reading(reading_m);
-    // if (legacy_get_reading(state.distance_m)) {
-    //     // update range_valid state based on distance measured
-    //     update_status();
-    // } else {
-    //     set_status(RangeFinder::Status::NoData);
-    // }
+    get_reading(angle_f);
+    
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %f.", angle_f);
+    hal.scheduler->delay(10);
 }
 
 void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
 {
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "run get_reading().");
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-1] run get_reading() start.");
+    hal.scheduler->delay(10);
 
-    be16_t val;
+    uint32_t angle = 0;
+    float angle_f = 0;
+    uint8_t ReadBuffer[2];
 
-    const uint8_t read_reg = ReadAddress1;
+    const uint8_t read_reg1[2] = {SlaveAddress, ReadAddress1};
+    const uint8_t read_reg2[2] = {SlaveAddress, ReadAddress2};
 
     // read the high and low byte distance registers
-    if (_dev->transfer(&read_reg, 1, (uint8_t *)&val, sizeof(val)))
+    if (_dev->transfer(read_reg1, 2, ReadBuffer, sizeof(ReadBuffer)))
     {
-        int16_t signed_val = int16_t(be16toh(val));
-        if (signed_val < 0)
-        {
-            // some lidar firmwares will return 65436 for out of range
-            // reading_m = uint16_t(max_distance_cm() + LIGHTWARE_OUT_OF_RANGE_ADD_CM) * 0.01f;
-            reading_m = signed_val;
-        }
-        else
-        {
-            reading_m = uint16_t(signed_val) * 0.01f;
-        }
-        // return true;
+        angle = ReadBuffer[1];
+        angle <<= 8;
+        
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-2] read register 0x03 success.");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-2-1] ReadBuffer[0]: %d.", ReadBuffer[0]);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-2-2] ReadBuffer[1]: %d.", ReadBuffer[1]);
+        hal.scheduler->delay(10);
     }
-    // return false;
+    else{
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3] read register 0x03 failed.");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-1] ReadBuffer[0]: %d.", ReadBuffer[0]);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-2] ReadBuffer[1]: %d.", ReadBuffer[1]);
+        hal.scheduler->delay(10);
+    }
+    if (_dev->transfer(read_reg2, 2, ReadBuffer, sizeof(ReadBuffer)))
+    {
+        angle += ReadBuffer[1];
+        angle >>= 2;
+        angle_f = (float)(angle * 360.0) / 16384.0;
+        reading_m = angle_f;
+        
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-4] read register 0x04 success.");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-4-1] ReadBuffer[0]: %d.", ReadBuffer[0]);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-4-2] ReadBuffer[1]: %d.", ReadBuffer[1]);
+        hal.scheduler->delay(10);
+    }
+    else{
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5] read register 0x04 failed.");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5-1] ReadBuffer[0]: %d.", ReadBuffer[0]);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5-2] ReadBuffer[1]: %d.", ReadBuffer[1]);
+        hal.scheduler->delay(10);
+    }
 }
+
+/*
+   update the state of the sensor
+*/
+void AP_Encoder_MT6701_I2C::update(void)
+{
+    // nothing to do - its all done in the timer()
+}
+

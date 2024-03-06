@@ -20,6 +20,8 @@ public:
     static AP_Encoder_Backend *detect(AP_Encoder& encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev);
 
     virtual double read(void) override;
+    // update state
+    void update(void) override;
 private:
     bool encoder_init();
     void encoder_timer(void);

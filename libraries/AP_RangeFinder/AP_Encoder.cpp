@@ -93,6 +93,6 @@ void AP_Encoder::update(void)
 //     Log_RFND();
 // #endif
 
-    _driver->read();
+    drivers[0]->update();
     
 }

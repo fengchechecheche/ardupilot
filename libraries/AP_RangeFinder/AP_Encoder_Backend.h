@@ -25,6 +25,8 @@ public:
     // constructor. This incorporates initialisation as well.
 	AP_Encoder_Backend(AP_Encoder& encoder);
 
+    // update the state structure
+    virtual void update() = 0;
     virtual void init_serial(uint8_t serial_instance) {};
 
     // 此处定义read()函数不用执行具体的功能，只是用于统一接口
