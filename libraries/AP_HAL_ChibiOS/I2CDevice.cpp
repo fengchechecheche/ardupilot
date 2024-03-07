@@ -92,6 +92,8 @@ I2CBus I2CDeviceManager::businfo[ARRAY_SIZE(I2CD)];
 #define HAL_I2C_CLEAR_ON_TIMEOUT 1
 #endif
 
+#define SEND_TEST_MESSAGE false
+
 // get a handle for DMA sharing DMA channels with other subsystems
 void I2CBus::dma_init(void)
 {
@@ -302,9 +304,12 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
 {
     if (!bus.semaphore.check_owner()) {
         hal.console->printf("I2C: not owner of 0x%x for addr 0x%02x\n", (unsigned)get_bus_id(), _address);
-        hal.scheduler->delay(10);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-1] I2C: not owner of 0x%x for addr 0x%02x.\n", (unsigned)get_bus_id(), _address);
-        hal.scheduler->delay(10);
+        if(SEND_TEST_MESSAGE)
+        {
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-1] I2C: not owner of 0x%x for addr 0x%02x.\n", (unsigned)get_bus_id(), _address);
+            hal.scheduler->delay(10);
+        }       
         return false;
     }
 
@@ -323,43 +328,67 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
 #endif
 
     if (_split_transfers) {
-        hal.scheduler->delay(10);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2] _split_transfers == true.");
-        hal.scheduler->delay(10);
+        if(SEND_TEST_MESSAGE)
+        {
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2] _split_transfers == true.");
+            hal.scheduler->delay(10);
+        }
+        
         /*
           splitting the transfer() into two pieces avoids a stop condition
           with SCL low which is not supported on some devices (such as
           LidarLite blue label)
         */
         if (send && send_len) {
-            hal.scheduler->delay(10);
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-1] run _transfer(send).");
-            hal.scheduler->delay(10);
+            if(SEND_TEST_MESSAGE)
+            {
+                hal.scheduler->delay(10);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-1] run _transfer(send).");
+                hal.scheduler->delay(10);
+            }          
             if (!_transfer(send, send_len, nullptr, 0)) {
-                hal.scheduler->delay(10);
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-1-1] run _transfer(send) failed.");
-                hal.scheduler->delay(10);
+                if(SEND_TEST_MESSAGE)
+                {
+                    hal.scheduler->delay(10);
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-1-1] run _transfer(send) failed.");
+                    hal.scheduler->delay(10);
+                }                
                 return false;
             }
         }
         if (recv && recv_len) {
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-2] run _transfer(recv).");
+            if(SEND_TEST_MESSAGE)
+            {
+                hal.scheduler->delay(10);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-2] run _transfer(recv).");
+                hal.scheduler->delay(10);
+            }            
             if (!_transfer(nullptr, 0, recv, recv_len)) {
-                hal.scheduler->delay(10);
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-2-1] run _transfer(recv) failed.");
-                hal.scheduler->delay(10);
+                if(SEND_TEST_MESSAGE)
+                {
+                    hal.scheduler->delay(10);
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-2-2-1] run _transfer(recv) failed.");
+                    hal.scheduler->delay(10);
+                }                
                 return false;
             }
         }
     } else {
         // combined transfer
-        hal.scheduler->delay(10);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-3] _split_transfers == false.");
-        hal.scheduler->delay(10);
+        if(SEND_TEST_MESSAGE)
+        {
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-3] _split_transfers == false.");
+            hal.scheduler->delay(10);
+        }        
         if (!_transfer(send, send_len, recv, recv_len)) {
-            hal.scheduler->delay(10);
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-3-1] run _transfer(send and recv) failed.");
-            hal.scheduler->delay(10);
+            if(SEND_TEST_MESSAGE)
+            {
+                hal.scheduler->delay(10);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[7-3-1] run _transfer(send and recv) failed.");
+                hal.scheduler->delay(10);
+            }            
             return false;
         }
     }
@@ -376,9 +405,12 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
     // 设置用于数据传输的缓冲区。如果设置失败，释放总线并返回 false。
     if (!bus.bouncebuffer_setup(send, send_len, recv, recv_len)) {
         i2cReleaseBus(I2CD[bus.busnum].i2c);
-        hal.scheduler->delay(10);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[8] setup bouncebuffer failed.");
-        hal.scheduler->delay(10);
+        if(SEND_TEST_MESSAGE)
+        {
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[8] setup bouncebuffer failed.");
+            hal.scheduler->delay(10);
+        }        
         return false;
     }
 
@@ -415,18 +447,24 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
                 ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
                 if(((_retries == 10) && (i >= 8)) || ((_retries == 2) && (i <= 2)))
                 {
-                    hal.scheduler->delay(10);
-                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-1] _retries(%d) recv---->ret: %d.", _retries, ret);
-                    hal.scheduler->delay(10);
+                    if(SEND_TEST_MESSAGE)
+                    {
+                        hal.scheduler->delay(10);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-1] _retries(%d) recv---->ret: %d.", _retries, ret);
+                        hal.scheduler->delay(10);
+                    }                    
                 }                
             } else {
                 ret = i2cMasterTransmitTimeout(I2CD[bus.busnum].i2c, _address, send, send_len,
                                             recv, recv_len, chTimeMS2I(timeout_ms));
                 if(((_retries == 10) && (i >= 8)) || ((_retries == 2) && (i <= 2)))
                 {
-                    hal.scheduler->delay(10);
-                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-2] _retries(%d) send---->ret: %d.", _retries, ret);
-                    hal.scheduler->delay(10);
+                    if(SEND_TEST_MESSAGE)
+                    {
+                        hal.scheduler->delay(10);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-2] _retries(%d) send---->ret: %d.", _retries, ret);
+                        hal.scheduler->delay(10);
+                    }                    
                 }
             }
         }
@@ -437,9 +475,12 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
                 ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
                 if(((_retries == 10) && (i >= 8)) || ((_retries == 2) && (i <= 2)))
                 {
-                    hal.scheduler->delay(10);
-                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-1] _retries(%d) recv---->ret: %d.", _retries, ret);
-                    hal.scheduler->delay(10);
+                    if(SEND_TEST_MESSAGE)
+                    {
+                        hal.scheduler->delay(10);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-1] _retries(%d) recv---->ret: %d.", _retries, ret);
+                        hal.scheduler->delay(10);
+                    }                    
                 }
                 // ret = 66;                                       
             }
@@ -449,9 +490,12 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
                                             recv, recv_len, chTimeMS2I(timeout_ms));
                 if(((_retries == 10) && (i >= 8)) || ((_retries == 2) && (i <= 2)))
                 {
-                    hal.scheduler->delay(10);
-                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-2] _retries(%d) send---->ret: %d.", _retries, ret);
-                    hal.scheduler->delay(10);
+                    if(SEND_TEST_MESSAGE)
+                    {
+                        hal.scheduler->delay(10);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-2] _retries(%d) send---->ret: %d.", _retries, ret);
+                        hal.scheduler->delay(10);
+                    }                    
                 }      
                 // continue;
             }
