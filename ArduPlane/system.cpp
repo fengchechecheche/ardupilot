@@ -62,6 +62,9 @@ void Plane::init_ardupilot()
     rangefinder.set_log_rfnd_bit(MASK_LOG_SONAR);
     rangefinder.init(ROTATION_PITCH_270);
 
+    // initialise encoder
+    encoder.init();
+
     // initialise battery monitoring
     battery.init();
 

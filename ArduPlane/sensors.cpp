@@ -33,3 +33,8 @@ void Plane::read_rangefinder(void)
 
     rangefinder_height_update();
 }
+
+void Plane::read_recoder(void)
+{
+    encoder.update();
+}
