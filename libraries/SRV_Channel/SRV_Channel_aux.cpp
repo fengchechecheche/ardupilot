@@ -20,6 +20,8 @@
 #include <AP_Math/AP_Math.h>
 #include <AP_HAL/AP_HAL.h>
 #include <RC_Channel/RC_Channel.h>
+#include <GCS_MAVLink/GCS.h>
+#include "AP_RangeFinder/AP_Encoder_MT6701_I2C.h"
 
 #if NUM_SERVO_CHANNELS == 0
 #pragma GCC diagnostic ignored "-Wtype-limits"
@@ -85,7 +87,7 @@ void SRV_Channel::output_ch(void)
 
         current_time_3_us = AP_HAL::micros64();
         current_time_4_us = AP_HAL::micros64();
-        if(ch_num == 0 || ch_num == 1 || ch_num == 2 || ch_num == 3 || ch_num == 8)
+        if(ch_num == 0 || ch_num == 1 || ch_num == 2 || ch_num == 8)
         {
             /*
              * 此处可能可以切断输入通道与输出通道的关系
@@ -101,6 +103,14 @@ void SRV_Channel::output_ch(void)
                 }
             }
             hal.rcout->write(ch_num, ch8_pwm);
+        }
+        else if(ch_num == 3)
+        {
+            // angle_MT6701 = angle_MT6701 + 1;
+            // hal.scheduler->delay(10);
+            // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
+            // hal.scheduler->delay(10);
+            ch8_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
         }
         else
         {
