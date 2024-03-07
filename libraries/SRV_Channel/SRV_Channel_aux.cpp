@@ -29,12 +29,13 @@
 
 extern const AP_HAL::HAL& hal;
 
-static uint64_t current_time_3_us;
-static uint64_t stored_time_3_us;
-static uint8_t sendtext_flag_3;
-static uint64_t current_time_4_us;
-static uint64_t stored_time_4_us;
-static uint16_t ch8_pwm = 1000;
+// static uint64_t current_time_3_us;
+// static uint64_t stored_time_3_us;
+// static uint8_t sendtext_flag_3;
+// static uint64_t current_time_4_us;
+// static uint64_t stored_time_4_us;
+static uint16_t ch4_pwm = 1300;
+// static uint16_t ch8_pwm = 1000;
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
@@ -85,58 +86,72 @@ void SRV_Channel::output_ch(void)
          * 可以通过ch8_pwm变量修改通道9的PWM输出值，并且在MP中观察到通道9PWM输出值的变化情况。
          */
 
-        current_time_3_us = AP_HAL::micros64();
-        current_time_4_us = AP_HAL::micros64();
-        if(ch_num == 0 || ch_num == 1 || ch_num == 2 || ch_num == 8)
-        {
-            /*
-             * 此处可能可以切断输入通道与输出通道的关系
-             * 不管输入通道的值是多少，输出通道的值都只能由代码控制
-             */
-            if(current_time_4_us - stored_time_4_us > 200000)
-            {
-                stored_time_4_us = current_time_4_us;
-                ch8_pwm += 10;
-                if(ch8_pwm >= 1900)
-                {
-                    ch8_pwm = 1100;
-                }
-            }
-            hal.rcout->write(ch_num, ch8_pwm);
-        }
-        else if(ch_num == 3)
+        // current_time_3_us = AP_HAL::micros64();
+        // current_time_4_us = AP_HAL::micros64();
+        // if(ch_num == 0 || ch_num == 1 || ch_num == 2 || ch_num == 8)
+        // {
+        //     /*
+        //      * 此处可能可以切断输入通道与输出通道的关系
+        //      * 不管输入通道的值是多少，输出通道的值都只能由代码控制
+        //      */
+        //     if(current_time_4_us - stored_time_4_us > 200000)
+        //     {
+        //         stored_time_4_us = current_time_4_us;
+        //         ch8_pwm += 10;
+        //         if(ch8_pwm >= 1900)
+        //         {
+        //             ch8_pwm = 1100;
+        //         }
+        //     }
+        //     hal.rcout->write(ch_num, ch8_pwm);
+        // }
+        // else if(ch_num == 3)
+        // {
+        //     // angle_MT6701 = angle_MT6701 + 1;
+        //     // hal.scheduler->delay(10);
+        //     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
+        //     // hal.scheduler->delay(10);
+        //     ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
+        //     hal.rcout->write(ch_num, ch4_pwm);
+        // }
+        // else
+        // {
+        //     hal.rcout->write(ch_num, output_pwm);
+        // }
+        if(ch_num == 3)
         {
             // angle_MT6701 = angle_MT6701 + 1;
             // hal.scheduler->delay(10);
             // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
             // hal.scheduler->delay(10);
-            ch8_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
+            ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
+            hal.rcout->write(ch_num, ch4_pwm);
         }
         else
         {
             hal.rcout->write(ch_num, output_pwm);
         }
 
-        if(current_time_3_us - stored_time_3_us > 5000000)
-        {
-            stored_time_3_us = current_time_3_us;
-            sendtext_flag_3 = 0;
-        }
-        if(sendtext_flag_3 == 0)
-        {
-            if(ch_num != 8)
-            {
-                hal.console->printf("hal.rcout->write(ch_num: %d, output_pwm: %d)\n", ch_num, output_pwm);
-            }
-            else
-            {
-                hal.console->printf("hal.rcout->write(ch_num: %d, output_pwm: %d)\n", ch_num, ch8_pwm);
-            }
-            if(ch_num >= 8)
-            {
-                sendtext_flag_3 = 1;
-            }
-        }
+        // if(current_time_3_us - stored_time_3_us > 5000000)
+        // {
+        //     stored_time_3_us = current_time_3_us;
+        //     sendtext_flag_3 = 0;
+        // }
+        // if(sendtext_flag_3 == 0)
+        // {
+        //     if(ch_num != 8)
+        //     {
+        //         hal.console->printf("hal.rcout->write(ch_num: %d, output_pwm: %d)\n", ch_num, output_pwm);
+        //     }
+        //     else
+        //     {
+        //         hal.console->printf("hal.rcout->write(ch_num: %d, output_pwm: %d)\n", ch_num, ch8_pwm);
+        //     }
+        //     if(ch_num >= 8)
+        //     {
+        //         sendtext_flag_3 = 1;
+        //     }
+        // }
 
          /* ---------------------------------- 测试代码 ---------------------------------------- */
     }
