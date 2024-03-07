@@ -382,12 +382,12 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
         return false;
     }
 
-    hal.scheduler->delay(10);
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[9] enter for loop, _retries: %d.", _retries);
-    hal.scheduler->delay(10);
+    // hal.scheduler->delay(10);
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[9] enter for loop, _retries: %d.", _retries);
+    // hal.scheduler->delay(10);
     // 循环中，代码尝试执行数据传输，最大重试次数由 _retries 定义。
+    int ret = 66;
     for(uint8_t i=0 ; i <= _retries; i++) {
-        int ret = 66;
         // calculate a timeout as twice the expected transfer time, and set as min of 4ms
         // timeout_ms 计算了传输的超时时间，这是基于预期的传输时间和一个最小超时值（4ms）来确定的。
         uint32_t timeout_ms = 1+2*(((8*1000000UL/bus.busclock)*(send_len+recv_len))/1000);
@@ -411,36 +411,49 @@ bool I2CDevice::_transfer(const uint8_t *send, uint32_t send_len,
         // 执行带有超时的主设备接收或发送操作。
         if(_split_transfers)
         {
-            if(ret == 66)
-            {
+            if(send_len == 0) {
+                ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
+                if(((_retries == 10) && (i >= 8)) || ((_retries == 2) && (i <= 2)))
+                {
+                    hal.scheduler->delay(10);
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-1] _retries(%d) recv---->ret: %d.", _retries, ret);
+                    hal.scheduler->delay(10);
+                }                
+            } else {
                 ret = i2cMasterTransmitTimeout(I2CD[bus.busnum].i2c, _address, send, send_len,
                                             recv, recv_len, chTimeMS2I(timeout_ms));
-                hal.scheduler->delay(10);
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-2] send---->ret: %d.", ret);
-                hal.scheduler->delay(10);
-                continue;
-            }
-            else
-            {
-                ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
-                hal.scheduler->delay(10);
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-1] recv---->ret: %d.", ret);
-                hal.scheduler->delay(10);
+                if(((_retries == 10) && (i >= 8)) || ((_retries == 2) && (i <= 2)))
+                {
+                    hal.scheduler->delay(10);
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-2] _retries(%d) send---->ret: %d.", _retries, ret);
+                    hal.scheduler->delay(10);
+                }
             }
         }
         else
         {
-            if(send_len == 0) {
+            if(send_len == 0)
+            {
                 ret = i2cMasterReceiveTimeout(I2CD[bus.busnum].i2c, _address, recv, recv_len, chTimeMS2I(timeout_ms));
-                hal.scheduler->delay(10);
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-1] recv---->ret: %d.", ret);
-                hal.scheduler->delay(10);
-            } else {
+                if(((_retries == 10) && (i >= 8)) || ((_retries == 2) && (i <= 2)))
+                {
+                    hal.scheduler->delay(10);
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-1] _retries(%d) recv---->ret: %d.", _retries, ret);
+                    hal.scheduler->delay(10);
+                }
+                // ret = 66;                                       
+            }
+            else
+            {
                 ret = i2cMasterTransmitTimeout(I2CD[bus.busnum].i2c, _address, send, send_len,
                                             recv, recv_len, chTimeMS2I(timeout_ms));
-                hal.scheduler->delay(10);
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-2-2] send---->ret: %d.", ret);
-                hal.scheduler->delay(10);
+                if(((_retries == 10) && (i >= 8)) || ((_retries == 2) && (i <= 2)))
+                {
+                    hal.scheduler->delay(10);
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "[10-1-2] _retries(%d) send---->ret: %d.", _retries, ret);
+                    hal.scheduler->delay(10);
+                }      
+                // continue;
             }
         }
 
