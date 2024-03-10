@@ -5,6 +5,7 @@
 #include "AP_Encoder_MT6701_I2C.h"
 
 float angle_MT6701 = 0;
+#define SEND_TEST_MESSAGE false
 
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
     : AP_Encoder_Backend(encoder), _dev(std::move(dev)) {}
@@ -86,9 +87,12 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
     angle_MT6701 = angle_f;
     
-    hal.scheduler->delay(10);
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
-    hal.scheduler->delay(10);
+    if(SEND_TEST_MESSAGE)
+    {
+        hal.scheduler->delay(10);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
+        hal.scheduler->delay(10);
+    }
 }
 
 void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
@@ -106,11 +110,14 @@ void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
         angle <<= 8;     
     }
     else{
-        hal.scheduler->delay(10);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3] read register 0x03 failed.");
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-1] read_reg3: %02x.", read_reg3);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-2] ReadBuffer: %d.", ReadBuffer);
-        hal.scheduler->delay(10);
+        if(SEND_TEST_MESSAGE)
+        {
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3] read register 0x03 failed.");
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-1] read_reg3: %02x.", read_reg3);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-2] ReadBuffer: %d.", ReadBuffer);
+            hal.scheduler->delay(10);
+        }
     }
     if (_dev->transfer(&read_reg4, 1, &ReadBuffer, sizeof(ReadBuffer)))
     {
@@ -120,11 +127,14 @@ void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
         reading_m = angle_f;     
     }
     else{
-        hal.scheduler->delay(10);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5] read register 0x04 failed.");
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5-1] read_reg4: %02x.", read_reg4);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5-2] ReadBuffer: %d.", ReadBuffer);
-        hal.scheduler->delay(10);
+        if(SEND_TEST_MESSAGE)
+        {
+            hal.scheduler->delay(10);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5] read register 0x04 failed.");
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5-1] read_reg4: %02x.", read_reg4);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5-2] ReadBuffer: %d.", ReadBuffer);
+            hal.scheduler->delay(10);
+        }
     }
 }
 

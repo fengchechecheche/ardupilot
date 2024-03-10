@@ -4,7 +4,10 @@
 const AP_Param::GroupInfo RCMapper::var_info[] = {
     // @Param: ROLL
     // @DisplayName: Roll channel
-    // @Description: Roll channel number. This is useful when you have a RC transmitter that can't change the channel order easily. Roll is normally on channel 1, but you can move it to any channel with this parameter.  Reboot is required for changes to take effect.
+    // @Description 1 : Roll channel number.    
+    // @Description 2 : This is useful when you have a RC transmitter that can't change the channel order easily.
+    // @Description 3 : Roll is normally on channel 1, but you can move it to any channel with this parameter.
+    // @Description 4 : Reboot is required for changes to take effect.
     // @Range: 1 8
     // @Increment: 1
     // @User: Advanced
