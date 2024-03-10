@@ -299,11 +299,21 @@ void SoaringController::init_thermalling()
     _exit_commanded = false;
 }
 
+/*
+ * 这段代码是SoaringController类中的init_cruising方法的实现。
+ * 这个方法主要用于初始化滑翔机的巡航状态。
+ * 
+ *
+ */
 void SoaringController::init_cruising()
 {
+    // 检查上次更新状态是否至少为手动模式改变  
     if (_last_update_status >= ActiveStatus::MANUAL_MODE_CHANGE) {
+        // 如果是，记录当前时间为巡航开始时间（以微秒为单位）
         _cruise_start_time_us = AP_HAL::micros64();
         // Start glide. Will be updated on the next loop.
+        // 开始滑翔。这将在下一个循环中更新。  
+        // 设置油门抑制为true，可能是为了防止或限制油门的使用，以便滑翔机能够滑翔 
         set_throttle_suppressed(true);
     }
 }

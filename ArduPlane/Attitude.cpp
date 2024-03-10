@@ -561,25 +561,40 @@ void Plane::stabilize()
 }
 
 
+/*
+ * 这段代码是飞机类（Plane）中的一个成员函数，用于计算并设置油门（throttle）的输出值。
+ * 这段代码的主要目的是根据飞机的当前状态、任务需求以及可能的外部输入来计算并设置油门输出。
+ * 这确保了飞机能够按照预期的方式飞行，无论是自主飞行还是受外部系统引导。
+ * */
 void Plane::calc_throttle()
 {
     if (aparm.throttle_cruise <= 1) {
         // user has asked for zero throttle - this may be done by a
         // mission which wants to turn off the engine for a parachute
         // landing
+        // 如果巡航油门被设置为了1或者更低（相当于关闭），  
+        // 那么可能是因为任务要求关闭发动机进行降落伞着陆  
+        // 因此，将油门输出设置为0 
         SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, 0.0);
+        // 结束函数，不再进行后续计算 
         return;
     }
 
+    // 获取TECS（总能量控制系统）控制器计算的油门需求  
+    // 这个值是基于当前飞机的飞行状态和所需的飞行轨迹来计算的。
     float commanded_throttle = TECS_controller.get_throttle_demand();
 
     // Received an external msg that guides throttle in the last 3 seconds?
+    // 检查是否处于引导模式，并且在过去3秒内收到了外部（可能是地面站或另一架飞机）消息来指导油门  
     if (control_mode->is_guided_mode() &&
             plane.guided_state.last_forced_throttle_ms > 0 &&
             millis() - plane.guided_state.last_forced_throttle_ms < 3000) {
+        // 如果满足上述条件，那么使用外部消息强制设置的油门值 
         commanded_throttle = plane.guided_state.forced_throttle;
     }
 
+    // 设置油门通道的输出为计算或强制得到的油门值
+    // 这通常是发送到飞机的油门伺服机构或电子调速器的信号。
     SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, commanded_throttle);
 }
 

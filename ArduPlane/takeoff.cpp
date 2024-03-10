@@ -118,33 +118,62 @@ no_launch:
 
 /*
   calculate desired bank angle during takeoff, setting nav_roll_cd
+  这段代码是飞行器起飞时计算期望的滚转角（bank angle）的函数，
+  它设置了nav_roll_cd变量，即导航滚转控制指令。
+  这段代码的目的是在起飞过程中逐渐放宽对滚转的限制，同时确保在起飞初期和速度较低时，
+  机翼保持水平，以防止机翼摆动或可能的损坏。随着飞行器高度和速度的增加，
+  滚转限制被放宽，以允许更大的机动性。
  */
 void Plane::takeoff_calc_roll(void)
 {
+    // 1.检查航向保持状态：
     if (steer_state.hold_course_cd == -1) {
         // we don't yet have a heading to hold - just level
         // the wings until we get up enough speed to get a GPS heading
+        // 如果还没有获得需要保持的航向（heading），则保持机翼水平  
+        // 直到我们获得足够的速度来得到GPS航向  
+        // 将nav_roll_cd设置为0，然后退出函数。
         nav_roll_cd = 0;
         return;
     }
 
+    // 2.计算基于导航的滚转
+    // 调用函数计算基于导航的滚转指令
     calc_nav_roll();
 
+    // 3.设置滚转限制
     // during takeoff use the level flight roll limit to prevent large
     // wing strike. Slowly allow for more roll as we get higher above
     // the takeoff altitude
+    // 起飞时使用水平飞行的滚转限制来防止机翼大幅摆动  
+    // 随着我们离起飞高度越来越远，慢慢允许更大的滚转
+    // roll_limit基于一个固定的限制值roll_limit_cd定义了允许的滚转范围
     float roll_limit = roll_limit_cd*0.01f;
+    // 获取气压高度 
     float baro_alt = barometer.get_altitude();
+    // 定义了两个高度阈值，用于决定滚转限制的变化。
     // below 5m use the LEVEL_ROLL_LIMIT
+    // 低于5米时使用LEVEL_ROLL_LIMIT 
     const float lim1 = 5;    
     // at 15m allow for full roll
+    // 在15米时允许完全滚转
     const float lim2 = 15;
+
+    // 4.滚转限制逻辑
+    // 如果当前气压高度低于起飞高度加上5米，或者当前最高空速低于起飞旋转速度  
     if ((baro_alt < auto_state.baro_takeoff_alt+lim1) || (auto_state.highest_airspeed < g.takeoff_rotate_speed)) {
+        // 则使用水平飞行的滚转限制
         roll_limit = g.level_roll_limit;
-    } else if (baro_alt < auto_state.baro_takeoff_alt+lim2) {
+    } 
+    // 如果当前高度在起飞高度加上5米和15米之间
+    else if (baro_alt < auto_state.baro_takeoff_alt+lim2) {
+        // 则根据当前高度与这两个阈值的比例混合滚转限制。
         float proportion = (baro_alt - (auto_state.baro_takeoff_alt+lim1)) / (lim2 - lim1);
+        // 根据比例混合滚转限制 
         roll_limit = (1-proportion) * g.level_roll_limit + proportion * roll_limit;
     }
+    // 5.限制nav_roll_cd
+    // 限制nav_roll_cd在-roll_limit*100到roll_limit*100之间，确保滚转指令不会超出安全范围。  
     nav_roll_cd = constrain_int32(nav_roll_cd, -roll_limit*100UL, roll_limit*100UL);
 }
 
