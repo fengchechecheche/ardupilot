@@ -3,6 +3,8 @@
 
 bool ModeGlide::_enter()
 {
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "enter GLIDE mode.");
+
 #if HAL_QUADPLANE_ENABLED
     // check if we should refuse auto mode due to a missing takeoff in
     // guided_wait_takeoff state
