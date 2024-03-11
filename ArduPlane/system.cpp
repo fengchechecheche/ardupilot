@@ -315,13 +315,24 @@ bool Plane::set_mode(const uint8_t new_mode, const ModeReason reason)
     return set_mode_by_number(static_cast<Mode::Number>(new_mode), reason);
 }
 
+// 这个函数的目的是根据提供的模式编号（new_mode_number）来设置飞行器的模式，
+// 并传入一个 reason（原因）参数来记录或通知为什么这个模式被设置。
 bool Plane::set_mode_by_number(const Mode::Number new_mode_number, const ModeReason reason)
 {
+    // 1.获取新模式对象
+    // 调用 plane 对象的 mode_from_mode_num 方法，传入 new_mode_number 参数，来获取对应的新模式的 Mode 对象指针，
+    // 并将其存储在 new_mode 中。这里假设 plane 是 Plane 类的一个成员变量或另一个相关对象。
     Mode *new_mode = plane.mode_from_mode_num(new_mode_number);
+    // 2.检查新模式对象是否有效
+    // 如果 new_mode 是 nullptr，这意味着根据提供的编号没有找到有效的模式。
+    // 因此，调用 notify_no_such_mode 函数来通知或记录这个错误情况，并返回 false 表示设置模式失败。
     if (new_mode == nullptr) {
         notify_no_such_mode(new_mode_number);
         return false;
     }
+    // 3.设置新模式
+    // 如果 new_mode 不是 nullptr，则解引用 new_mode 指针，并调用 set_mode 函数来设置新模式，
+    // 同时传入 reason 参数。最后，返回 set_mode 函数的返回值，通常用来指示设置操作是否成功。
     return set_mode(*new_mode, reason);
 }
 

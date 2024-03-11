@@ -294,14 +294,30 @@ private:
 
     // This is the state of the flight control system
     // There are multiple states defined such as MANUAL, FBW-A, AUTO
+    // 这段代码定义了两个指向 Mode 类型的指针，分别是 control_mode 和 previous_mode，并初始化为指向 mode_initializing。
+    // Mode *control_mode：定义一个指向 Mode 类型的指针变量 control_mode。
+    // Mode *previous_mode：定义一个指向 Mode 类型的指针变量 previous_mode。
+    // = &mode_initializing：将两个指针变量都初始化为指向 mode_initializing 的地址。
+    // 前面的英文注释说明 control_mode 和 previous_mode 变量与飞行控制系统的状态有关。
+    // 飞行控制系统有多种状态定义，例如 MANUAL（手动）、FBW-A（“Fly-By-Wire A模式”）和 AUTO（自动）。
+    // 这些状态通常会有相应的 Mode 类型的实例来表示。
     Mode *control_mode = &mode_initializing;
     Mode *previous_mode = &mode_initializing;
 
     // time of last mode change
     uint32_t last_mode_change_ms;
 
-    // Used to maintain the state of the previous control switch position
-    // This is set to 254 when we need to re-read the switch
+    // Used to maintain the state of the previous control switch position 用于维护之前控制开关位置的状态  
+    // This is set to 254 when we need to re-read the switch 当我们需要重新读取开关时，将其设置为254 
+    // 这个变量用于跟踪之前读取的控制开关位置，这在实现防抖动逻辑时非常有用。
+    // 注释说明了这个变量的用途：
+    // 它用于“维护之前控制开关位置的状态”。这意味着在读取新的开关位置之前，会先检查这个变量来比较是否有变化。
+    // “当我们需要重新读取开关时，将其设置为254”。这暗示了当 oldSwitchPosition 被设置为254时，
+    // 函数将不会基于当前 switchPosition 更改模式，而是等待下一次读取以确认开关位置是否真正改变。
+    // 在实际的 read_control_switch 函数中，这个变量会被用来与当前读取的开关位置 switchPosition 进行比较，
+    // 以判断开关是否真正改变了位置，而不是由于噪声或短暂的信号波动导致的误读。
+    // 如果 oldSwitchPosition 和 switchPosition 不同，并且 switch_debouncer 也指示需要更新，那么函数可能会更改飞行器的控制模式。
+    // 这样的设计确保了开关信号在真正改变时才会被考虑，从而减少了由于开关抖动导致的误操作。
     uint8_t oldSwitchPosition = 254;
 
     // This is used to enable the inverted flight feature
@@ -422,6 +438,10 @@ private:
         // Direction held during phases of takeoff and landing centidegrees
         // A value of -1 indicates the course has not been set/is not in use
         // this is a 0..36000 value, or -1 for disabled
+        // 这条注释说明 hold_course_cd 变量是用于存储飞机在起飞和着陆阶段需要保持的航向，单位是“centidegrees”。
+        // 这条注释解释了 -1 这个特殊值的含义。当 hold_course_cd 的值为 -1 时，它表示航向尚未设置或当前未使用。
+        // 这条注释进一步明确了变量的取值范围。
+        // hold_course_cd 可以取的值是 0 到 36000（代表0度到360度，每单位0.01度），或者 -1 表示未设置或禁用。
         int32_t hold_course_cd = -1;
 
         // locked_course and locked_course_cd are used in stabilize mode

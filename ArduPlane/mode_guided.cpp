@@ -42,7 +42,7 @@ bool ModeGuided::_enter()
 
 /*
  * 这段代码用于在引导模式下更新飞机的导航参数和控制状态。
- *
+ * 在主函数的 update_control_mode() 任务中被调用。
  * */
 void ModeGuided::update()
 {

@@ -89,20 +89,30 @@ void Plane::adjust_altitude_target()
 
 /*
   setup for a gradual glide slope to the next waypoint, if appropriate
+  这段代码用于设置飞机到下一个航点的逐渐下滑斜率。
+  整体来看，这段代码根据飞机的当前位置和高度、目标航点位置以及当前的飞行模式，
+  计算并设置飞机的下滑斜率，确保飞机能够安全、有效地到达下一个航点。
  */
 void Plane::setup_glide_slope(void)
 {
     // establish the distance we are travelling to the next waypoint,
     // for calculating out rate of change of altitude
+    // 1.计算到下一个航点的距离和比例
+    // 计算当前位置到下一个航点（`next_WP_loc`）的距离。 
     auto_state.wp_distance = current_loc.get_distance(next_WP_loc);
+    // 计算当前位置在`prev_WP_loc`和`next_WP_loc`连线上的比例。
     auto_state.wp_proportion = current_loc.line_path_proportion(prev_WP_loc, next_WP_loc);
+    // 将计算出的比例传递给TECS（Total Energy Control System，总能量控制系统）控制器。
     TECS_controller.set_path_proportion(auto_state.wp_proportion);
+    // 更新飞行阶段。
     update_flight_stage();
 
     /*
       work out if we will gradually change altitude, or try to get to
       the new altitude as quickly as possible.
+      根据当前的控制模式（control_mode），代码决定飞机是应该逐渐改变高度，还是应该尽快达到新的高度。
      */
+    // 2.确定下滑策略
     switch (control_mode->mode_number()) {
     case Mode::Number::RTL:
     case Mode::Number::AVOID_ADSB:
@@ -110,6 +120,10 @@ void Plane::setup_glide_slope(void)
         /* glide down slowly if above target altitude, but ascend more
            rapidly if below it. See
            https://github.com/ArduPilot/ardupilot/issues/39
+
+           如果飞机在这些模式下，且高于目标航点的高度，那么将逐渐下滑
+           （使用`set_offset_altitude_location`函数设置高度偏移量）。
+           如果低于目标航点的高度，则重置高度偏移量。
         */
         if (above_location_current(next_WP_loc)) {
             set_offset_altitude_location(prev_WP_loc, next_WP_loc);
@@ -124,6 +138,8 @@ void Plane::setup_glide_slope(void)
         // is basically to prevent situations where we try to slowly
         // gain height at low altitudes, potentially hitting
         // obstacles.
+        // 在AUTO模式下，如果飞机高于20米或正在下降，那么将设置高度偏移量以逐渐下滑。
+        // 否则，重置高度偏移量。这里的20米阈值是为了防止飞机在低空时缓慢上升而可能撞到障碍物。  
         if (adjusted_relative_altitude_cm() > 2000 || above_location_current(next_WP_loc)) {
             set_offset_altitude_location(prev_WP_loc, next_WP_loc);
         } else {
@@ -131,6 +147,7 @@ void Plane::setup_glide_slope(void)
         }
         break;
     default:
+        // 对于其他模式，直接重置高度偏移量。
         reset_offset_altitude();
         break;
     }
@@ -193,26 +210,38 @@ float Plane::relative_ground_altitude(bool use_rangefinder_if_available)
   set the target altitude to the current altitude. This is used when 
   setting up for altitude hold, such as when releasing elevator in
   CRUISE mode.
+  这个函数的目的是将目标高度设置为当前高度，这通常用于设置高度保持模式，
+  例如在巡航模式下释放升降舵时。
  */
 void Plane::set_target_altitude_current(void)
 {
     // record altitude above sea level at the current time as our
     // target altitude
+    // 将当前位置（current_loc）的高度（alt）赋值给目标高度的绝对海拔高度（Above Mean Sea Level，AMSL）部分（amsl_cm）。
     target_altitude.amsl_cm = current_loc.alt;
 
     // reset any glide slope offset
+    // 重置滑降斜率偏移量。
     reset_offset_altitude();
 
+// 这是一个预处理器指令，用于检查是否定义了AP_TERRAIN_AVAILABLE。如果定义了，说明地形数据是可用的。
 #if AP_TERRAIN_AVAILABLE
     // also record the terrain altitude if possible
+    // 声明一个浮点数变量terrain_altitude，用于存储地形高度。
     float terrain_altitude;
+    // terrain_enabled_in_current_mode()：检查当前模式是否启用了地形跟随。
+    // terrain.height_above_terrain(terrain_altitude, true)：获取当前位置的地形高度，并存储在terrain_altitude中。
+    // !terrain_disabled()：确保地形跟随没有被禁用。
     if (terrain_enabled_in_current_mode() && terrain.height_above_terrain(terrain_altitude, true) && !terrain_disabled()) {
+        // 如果上述条件都满足，则设置目标高度的地形跟随标志为true。
         target_altitude.terrain_following = true;
+        // 将terrain_altitude乘以100（可能是为了将单位从米转换为厘米），并赋值给目标高度的地形高度部分（terrain_alt_cm）。
         target_altitude.terrain_alt_cm = terrain_altitude*100;
     } else {
         // if terrain following is disabled, or we don't know our
         // terrain altitude when we set the altitude then don't
         // terrain follow
+        // 设置目标高度的地形跟随标志为false。
         target_altitude.terrain_following = false;        
     }
 #endif
@@ -383,6 +412,19 @@ void Plane::check_fbwb_minimum_altitude(void)
 
 /*
   reset the altitude offset used for glide slopes
+  重置用于滑降斜率的高度偏移量。
+  在飞行控制系统中，滑降斜率通常指的是飞机在接近着陆时，为了安全着陆而需要按照一定角度或斜率下降的高度变化率。
+  这个斜率通常是根据飞机的当前速度、重量、风向以及其他因素计算出来的。
+
+  当飞机处于下滑过程中，如果它偏离了预期的下滑路径，控制系统可能需要通过调整飞机的升降舵或其他控制面来修正这个偏差。
+  这个修正通常是通过调整一个高度偏移量来实现的，这个偏移量可以被加到或减去飞机的目标高度上，从而引导飞机回到正确的下滑路径上。
+
+  reset_offset_altitude() 函数的作用就是清除或重置这个高度偏移量。
+  这通常发生在飞机进入新的飞行阶段，比如从巡航模式切换到下滑模式，或者当飞行员或自动飞行系统决定重新开始下滑路径的计算时。
+  重置高度偏移量可以确保飞机从一个已知且确定的基准点开始下滑，而不是基于之前可能存在的误差或偏差。
+
+  在代码中，这个函数可能只是简单地将高度偏移量变量设置为零，或者将其重置为某个预设的初始值。
+  具体的实现方式取决于飞行控制系统的设计和要求。
  */
 void Plane::reset_offset_altitude(void)
 {

@@ -213,14 +213,20 @@ void Plane::ahrs_update()
 
 /*
   update 50Hz speed/height controller
+  这个函数的主要目的是以50Hz的频率更新飞机的速度和高度控制器。
  */
 void Plane::update_speed_height(void)
 {
+    // 1.检查自动油门状态
+    // 这行代码检查当前的 control_mode 是否具有自动油门功能。如果是，则执行下面的代码块。
     if (control_mode->does_auto_throttle())
     {
         // Call TECS 50Hz update. Note that we call this regardless of
         // throttle suppressed, as this needs to be running for
         // takeoff detection
+        // 调用 TECS_controller 的 update_50hz 方法。
+        // 这里的注释指出，无论油门是否被抑制（throttle suppressed），
+        // 这个更新都需要执行，因为这对于起飞检测是必要的。
         TECS_controller.update_50hz();
     }
 
@@ -540,17 +546,29 @@ void Plane::update_GPS_10Hz(void)
 
 /*
   main control mode dependent update code
+  它的主要目的是根据当前的 control_mode 来更新飞机的控制状态。
  */
 void Plane::update_control_mode(void)
 {
+    // 1.检查当前控制模式
+    // 这里检查当前的 control_mode 是否不等于 mode_auto 的地址。
+    // 换句话说，它检查飞机当前是否不在自动模式下。
     if (control_mode != &mode_auto)
     {
         // hold_course is only used in takeoff and landing
+        // 2.设置 hold_course_cd
+        // 如果飞机不在自动模式下，它将 steer_state 结构体（或对象）中的 hold_course_cd 成员设置为 -1。
+        // 注释说明 hold_course_cd 仅在起飞和着陆时使用，因此当飞机不在自动模式时，将其设置为 -1 意味着飞机不保持当前航向。
         steer_state.hold_course_cd = -1;
     }
 
+    // 3.更新飞行前进状态
+    // 调用 update_fly_forward 函数来更新与飞机飞行前进相关的状态或行为。
     update_fly_forward();
 
+    // 4.更新当前控制模式
+    // 调用当前 control_mode 所指向对象的 update 方法。
+    // 这意味着不同的控制模式（如自动、手动等）都有自己的 update 方法，这些方法会根据控制模式的具体需求来更新飞机的状态或行为。
     control_mode->update();
 }
 

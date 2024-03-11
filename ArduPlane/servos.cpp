@@ -1062,9 +1062,12 @@ void Plane::servos_output(void)
     }
 }
 
+// 这个函数的主要目的是以100Hz的频率更新四轴飞机（quadplane）的悬停油门。
 void Plane::update_throttle_hover() {
     // update hover throttle at 100Hz
 #if HAL_QUADPLANE_ENABLED
+    // 如果支持四轴飞机模式，这行代码会调用 quadplane 对象的 update_throttle_hover 方法来更新悬停时的油门设置。
+    // 这通常是为了确保四轴飞机在悬停时能够保持稳定，并适应可能的环境变化（如风速变化）。
     quadplane.update_throttle_hover();
 #endif
 }

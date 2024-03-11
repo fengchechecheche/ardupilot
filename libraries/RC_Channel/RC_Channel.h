@@ -399,11 +399,23 @@ public:
     static const struct AP_Param::GroupInfo var_info[];
 
     // compatability functions for Plane:
+    // 这个函数的目的是从遥控器的特定通道中获取输入值（脉冲宽度）。
+    // 这个函数是一个兼容性函数，用于从遥控器的特定通道获取输入值。
+    // 它首先尝试获取与给定通道编号对应的 RC_Channel 对象的指针，然后检查这个指针是否有效。
+    // 如果有效，则调用该对象的 get_radio_in 方法来获取输入值；否则，返回0。
+    // 这个函数可能是为了简化或统一从遥控器读取输入值的操作而设计的。
     static uint16_t get_radio_in(const uint8_t chan) {
+        // 1.获取遥控通道指针
+        // 这里，_singleton 似乎是一个指向某个单例对象的指针，这个单例对象负责管理遥控通道。
+        // channel(chan) 方法被用来获取与给定通道编号 chan 对应的 RC_Channel 对象的指针，并将其存储在 c 中。
         RC_Channel *c = _singleton->channel(chan);
+        // 2.检查指针是否为空
+        // 如果 c 是 nullptr，这意味着给定的通道编号 chan 无效或不存在，因此函数返回0，表示没有有效的输入值。
         if (c == nullptr) {
             return 0;
         }
+        // 3.获取遥控输入值
+        // 如果 c 不是 nullptr，则调用 c 指向的 RC_Channel 对象的 get_radio_in 方法来获取遥控通道的输入值（脉冲宽度），并返回这个值。
         return c->get_radio_in();
     }
     static RC_Channel *rc_channel(const uint8_t chan) {
