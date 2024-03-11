@@ -148,6 +148,7 @@ public:
     friend class ModeCruise;
     friend class ModeAutoTune;
     friend class ModeAuto;
+    friend class ModeGlide;
     friend class ModeRTL;
     friend class ModeLoiter;
     friend class ModeAvoidADSB;
@@ -267,6 +268,7 @@ private:
     ModeCruise mode_cruise;
     ModeAutoTune mode_autotune;
     ModeAuto mode_auto;
+    ModeGlide mode_glide;
     ModeRTL mode_rtl;
     ModeLoiter mode_loiter;
 #if HAL_ADSB_ENABLED

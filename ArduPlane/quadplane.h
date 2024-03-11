@@ -46,6 +46,7 @@ public:
 
     friend class Mode;
     friend class ModeAuto;
+    friend class ModeGlide;
     friend class ModeRTL;
     friend class ModeAvoidADSB;
     friend class ModeGuided;

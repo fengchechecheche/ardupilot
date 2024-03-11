@@ -53,6 +53,7 @@ public:
 #if HAL_QUADPLANE_ENABLED
         LOITER_ALT_QLAND = 25,
 #endif
+        GLIDE         = 26,     // 新增滑翔模式
     };
 
     // Constructor
@@ -194,6 +195,24 @@ protected:
     void _exit() override;
 };
 
+class ModeGlide : public Mode
+{
+public:
+    Number mode_number() const override { return Number::GLIDE; }
+    const char *name() const override { return "GLIDE"; }
+    const char *name4() const override { return "GLID"; }
+
+    bool does_automatic_thermal_switch() const override { return true; }
+    // methods that affect movement of the vehicle in this mode
+    void update() override;
+    void navigate() override;
+    bool allows_throttle_nudging() const override { return true; }
+    bool does_auto_navigation() const override;
+    bool does_auto_throttle() const override;
+protected:
+    bool _enter() override;
+    void _exit() override;
+};
 
 class ModeAutoTune : public Mode
 {

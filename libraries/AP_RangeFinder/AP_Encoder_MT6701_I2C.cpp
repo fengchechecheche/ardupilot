@@ -80,8 +80,9 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
 }
 
 void AP_Encoder_MT6701_I2C::encoder_timer(void)
-{    
-    float angle_f;
+{  
+    // 为 angle_f 赋初值，避免仿真编译报错
+    float angle_f = 0.0;
 
     get_reading(angle_f);
 
