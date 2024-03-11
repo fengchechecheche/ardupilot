@@ -92,7 +92,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     // 下面这个函数和读取测距模块的数据有关
     SCHED_TASK(read_rangefinder, 50, 100, 78),
     // 下面这个函数和读取编码器的数据有关
-    SCHED_TASK(read_recoder,     50, 100, 79),
+    // SCHED_TASK(read_recoder,     50, 100, 79),
     SCHED_TASK_CLASS(AP_ICEngine, &plane.g2.ice_control, update, 10, 100, 81),
     // 下面这个函数和读取磁罗盘的数据有关
     SCHED_TASK_CLASS(Compass, &plane.compass, cal_update, 50, 50, 84),
