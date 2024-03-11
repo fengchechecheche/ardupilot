@@ -159,6 +159,7 @@ void Plane::read_control_switch()
 
 }
 
+// 【1】这个函数用于设置遥控器通道 8 的输入与飞机的飞行模式之间的关系。
 // 它的功能是读取遥控器通道上的脉冲宽度，并根据脉冲宽度的范围来确定并返回控制开关的位置。
 uint8_t Plane::readSwitch(void) const
 {

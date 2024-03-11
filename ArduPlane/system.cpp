@@ -315,6 +315,7 @@ bool Plane::set_mode(const uint8_t new_mode, const ModeReason reason)
     return set_mode_by_number(static_cast<Mode::Number>(new_mode), reason);
 }
 
+// 【2】这个函数用于根据遥控器通道 8 的输入PWM占空比设置飞机的飞行模式。
 // 这个函数的目的是根据提供的模式编号（new_mode_number）来设置飞行器的模式，
 // 并传入一个 reason（原因）参数来记录或通知为什么这个模式被设置。
 bool Plane::set_mode_by_number(const Mode::Number new_mode_number, const ModeReason reason)
