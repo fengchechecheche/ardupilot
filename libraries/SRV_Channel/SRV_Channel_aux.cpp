@@ -89,6 +89,30 @@ void SRV_Channel::output_ch(void)
     {        
         if(Glide_Mode_Flag == true)
         {
+            /*
+             * 注意：此处必须是以下的判断形式
+             * if(舵机通道){}
+             * else if(电机通道){}
+             * else{其他通道}
+             * 或
+             * if(电机通道){}
+             * else if(舵机通道){}
+             * else{其他通道}
+             * 
+             * 错误写法【1】
+             * if(舵机通道){}
+             * if(电机通道){}
+             * else{其他通道}
+             * 错误写法【2】
+             * if(电机通道){}
+             * if(舵机通道){}
+             * else{其他通道}
+             * 如果分成一个if语句和一个if else语句来判断输入通道的话
+             * 对于错误写法【1】，当舵机通道执行output_ch()时，会进入if(舵机通道)语句
+             * 但同时也会进入else{其他通道}语句，此时舵机通道就不再受持续控制
+             * 对于错误写法【2】，当电机通道执行output_ch()时，会进入if(电机通道)语句
+             * 但同时也会进入else{其他通道}语句，此时电机通道就不再受持续控制
+             * */
             if(ch_num == 0) // 制动舵机
             {
                 if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
@@ -114,7 +138,7 @@ void SRV_Channel::output_ch(void)
                     hal.rcout->write(ch_num, MOTOR_STOP_VALUE);                                   
                 }                
             }            
-            else
+            else    // 其他PWM通道
             {
                 hal.rcout->write(ch_num, output_pwm);
             }
