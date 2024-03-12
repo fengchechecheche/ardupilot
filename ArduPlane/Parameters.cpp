@@ -5,6 +5,19 @@
  *
  */
 
+// 这段代码定义了一个宏（macro）GSCALAR，它用于在C或C++程序中创建一个特定的数据结构或初始化代码。宏是预处理器指令，它会在编译之前替换代码中的宏调用
+// 宏GSCALAR接受三个参数：
+// v: 变量名，通常是一个成员变量的名称。
+// name: 字符串，通常用于标识或显示这个变量。
+// def: 默认值，当变量没有显式设置时使用的值。
+// 宏展开后，它生成了一个初始化列表或结构体初始化代码，这取决于宏定义中使用的上下文。
+// plane.g.v.vtype: 这可能是获取变量v的类型信息。
+// name: 直接使用传入的字符串作为名称。
+// Parameters::k_param_ ## v: 这里使用了C预处理器中的字符串连接（##）操作，它将k_param_和变量名v连接成一个新的标识符。例如，如果v是flight_mode1，那么结果将是Parameters::k_param_flight_mode1。
+// &plane.g.v: 这是一个指向plane.g.v的指针。
+// {def_value : def}: 这似乎是一个初始化列表，它有一个名为def_value的字段，并使用传入的默认值def来初始化。
+// 需要注意的是，这段代码只是宏定义，要完全理解其目的和功能，你需要查看GSCALAR宏是如何被使用的，以及plane、Parameters等相关的上下文代码。
+// 通常，这样的宏用于创建配置参数列表或初始化数组，这些参数可以在运行时被查询或修改，以控制飞行器的行为。在飞行控制器软件中，这样的配置参数是非常常见的，它们允许用户调整飞行器的各种设置和飞行模式。
 #define GSCALAR(v, name, def) { plane.g.v.vtype, name, Parameters::k_param_ ## v, &plane.g.v, {def_value : def} }
 #define ASCALAR(v, name, def) { plane.aparm.v.vtype, name, Parameters::k_param_ ## v, (const void *)&plane.aparm.v, {def_value : def} }
 #define GGROUP(v, name, class) { AP_PARAM_GROUP, name, Parameters::k_param_ ## v, &plane.g.v, {group_info : class::var_info} }
@@ -455,6 +468,7 @@ const AP_Param::Info Plane::var_info[] = {
     // @Description: Flight mode for switch position 1 (910 to 1230 and above 2049)
     // @Values: 0:Manual,1:CIRCLE,2:STABILIZE,3:TRAINING,4:ACRO,5:FBWA,6:FBWB,7:CRUISE,8:AUTOTUNE,10:Auto,11:RTL,12:Loiter,13:TAKEOFF,14:AVOID_ADSB,15:Guided,17:QSTABILIZE,18:QHOVER,19:QLOITER,20:QLAND,21:QRTL,22:QAUTOTUNE,23:QACRO,24:THERMAL,25:Loiter to QLand
     // @User: Standard
+    // 这个配置参数FLTMODE1可以被用户通过地面控制站或其他配置工具来设置，以指定当某个开关或拨杆处于特定位置时，飞行控制器应该切换到哪个飞行模式。飞行模式决定了飞行器的行为和控制方式，例如手动控制、稳定模式、自动飞行等。
     GSCALAR(flight_mode1,           "FLTMODE1",       FLIGHT_MODE_1),
 
     // @Param: FLTMODE2

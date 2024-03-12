@@ -8,20 +8,35 @@ class Parameters {
 public:
 
     /*
+     *  这段代码是一个注释，用于解释k_format_version这个值的重要性以及何时应该修改它。
+     *  简而言之，这段注释强调了k_format_version的重要性，并说明了在何种情况下应该修改它。
+     *  它警告开发者不要随意更改这个值，因为这可能会导致所有用户需要重新加载他们的参数，这是一个应该尽量避免的情况。
+     *  同时，它也提供了如何确定是否需要更改k_format_version的方法，即检查现有的EEPROM参数或k_param_*枚举值是否发生了变化。
+     * 
+     *  k_format_version的值决定了现有的EEPROM（电可擦可编程只读存储器，常用于存储参数或配置信息）数据是否有效。
+     *  你只有在以下情况下才应该修改这个值：
      *  The value of k_format_version determines whether the existing
      *  eeprom data is considered valid. You should only change this
      *  value under the following circumstances:
      *
+     *  1) 当现有EEPROM参数的含义发生变化时。
      *  1) the meaning of an existing eeprom parameter changes
      *
+     *  2) 当现有的k_param_*枚举值发生变化时。
      *  2) the value of an existing k_param_* enum value changes
      *
+     *  除特殊情况外，添加新参数不应要求更改k_format_version。
+     *  如果你无论如何都更改了它，那么所有ArduPlane用户都需要重新加载他们的所有参数。
+     *  我们希望这成为极其罕见的事情。
+     *  请不要只是“以防万一”就更改它。
      *  Adding a new parameter should _not_ require a change to
      *  k_format_version except under special circumstances. If you
      *  change it anyway then all ArduPlane users will need to reload all
      *  their parameters. We want that to be an extremely rare
      *  thing. Please do not just change it "just in case".
      *
+     *  要确定k_param_*的值是否已更改，请使用C++枚举的规则来计算出相邻枚举值。
+     *  如果你不知道C++枚举的规则，请寻求帮助。
      *  To determine if a k_param_* value has changed, use the rules of
      *  C++ enums to work out the value of the neighboring enum
      *  values. If you don't know the C++ enum rules then please ask for

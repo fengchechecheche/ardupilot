@@ -2,6 +2,7 @@
 
 #include "quadplane.h"
 #include "qautotune.h"
+#include <GCS_MAVLink/GCS.h>
 
 Mode *Plane::mode_from_mode_num(const enum Mode::Number num)
 {
@@ -150,7 +151,7 @@ void Plane::read_control_switch()
         // 如果 switch_debouncer 为 true，则根据开关位置 switchPosition 设置飞行器的控制模式。
         // 这里假定 flight_modes 是一个数组，用于存储不同开关位置对应的控制模式。
         set_mode_by_number((enum Mode::Number)flight_modes[switchPosition].get(), ModeReason::RC_COMMAND);
-
+ 
         // 8.更新旧的开关位置
         // 更新 oldSwitchPosition 变量，使其存储当前读取的开关位置。
         oldSwitchPosition = switchPosition;
@@ -179,11 +180,21 @@ uint8_t Plane::readSwitch(void) const
 
     // 3.确定开关位置
     // 接下来的几个 if 语句根据脉冲宽度的范围来确定并返回开关的位置：
+    /*----------------------- 下面是原本的规定范围 ----------------------*/
+    // if (pulsewidth <= 1230) return 0;
+    // if (pulsewidth <= 1360) return 1;
+    // if (pulsewidth <= 1490) return 2;
+    // if (pulsewidth <= 1620) return 3;
+    // if (pulsewidth <= 1749) return 4;              // Software Manual
+    /*----------------------- 上面是原本的规定范围 ----------------------*/
+
+    /*----------------------- 下面是自定义的规定范围 ----------------------*/
     if (pulsewidth <= 1230) return 0;
     if (pulsewidth <= 1360) return 1;
     if (pulsewidth <= 1490) return 2;
     if (pulsewidth <= 1620) return 3;
     if (pulsewidth <= 1749) return 4;              // Software Manual
+    /*----------------------- 上面是自定义的规定范围 ----------------------*/
 
     // 4.默认返回
     // 如果脉冲宽度大于1749（即没有满足前面的任何条件），函数返回5。
