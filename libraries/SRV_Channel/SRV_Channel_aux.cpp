@@ -22,6 +22,8 @@
 #include <RC_Channel/RC_Channel.h>
 #include <GCS_MAVLink/GCS.h>
 #include "AP_RangeFinder/AP_Encoder_MT6701_I2C.h"
+// 这里引用了和 libraries 同级目录下其他文件夹中的头文件，所以用 "../"来指代
+#include "../ArduPlane/Plane.h"
 
 #if NUM_SERVO_CHANNELS == 0
 #pragma GCC diagnostic ignored "-Wtype-limits"
@@ -29,13 +31,23 @@
 
 extern const AP_HAL::HAL& hal;
 
+#define MOTOR_STOP_VALUE 1100
+#define SERVO_BRAKE_VALUE 1900
+#define SERVO_RELEASE_VALUE 1100
+#define MOTOR_STOP false
+#define MOTOR_RUN true
+#define SERVO_BRAKE true
+#define SERVO_RELEASE false
 // static uint64_t current_time_3_us;
 // static uint64_t stored_time_3_us;
 // static uint8_t sendtext_flag_3;
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
-static uint16_t ch4_pwm = 1300;
+// static uint16_t ch1_pwm = 1100;
+// static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
+static bool Motor = true;    // true:电机正在运行，false:电机停止运行
+static bool Servo = false;   // true:舵机正在刹车，false:舵机停止刹车
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
@@ -78,82 +90,69 @@ void SRV_Channel::output_ch(void)
 
     
 
-    if (!(SRV_Channels::disabled_mask & (1U<<ch_num))) {
-
-        /* ---------------------------------- 测试代码 ---------------------------------------- */
-        /*
-         * 此处代码测试成功！
-         * 可以通过ch8_pwm变量修改通道9的PWM输出值，并且在MP中观察到通道9PWM输出值的变化情况。
-         */
-
-        // current_time_3_us = AP_HAL::micros64();
-        // current_time_4_us = AP_HAL::micros64();
-        // if(ch_num == 0 || ch_num == 1 || ch_num == 2 || ch_num == 8)
-        // {
-        //     /*
-        //      * 此处可能可以切断输入通道与输出通道的关系
-        //      * 不管输入通道的值是多少，输出通道的值都只能由代码控制
-        //      */
-        //     if(current_time_4_us - stored_time_4_us > 200000)
-        //     {
-        //         stored_time_4_us = current_time_4_us;
-        //         ch8_pwm += 10;
-        //         if(ch8_pwm >= 1900)
-        //         {
-        //             ch8_pwm = 1100;
-        //         }
-        //     }
-        //     hal.rcout->write(ch_num, ch8_pwm);
-        // }
-        // else if(ch_num == 3)
-        // {
-        //     // angle_MT6701 = angle_MT6701 + 1;
-        //     // hal.scheduler->delay(10);
-        //     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
-        //     // hal.scheduler->delay(10);
-        //     ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
-        //     hal.rcout->write(ch_num, ch4_pwm);
-        // }
-        // else
-        // {
-        //     hal.rcout->write(ch_num, output_pwm);
-        // }
-        if(ch_num == 3)
+    if (!(SRV_Channels::disabled_mask & (1U<<ch_num))) 
+    {
+        if(Glide_Mode_Flag == true)
         {
-            // angle_MT6701 = angle_MT6701 + 1;
+            if(ch_num == 2) // 驱动电机
+            {
+                if((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
+                {
+                    Motor = MOTOR_STOP;
+                    // angle_MT6701 = angle_MT6701 + 1;
+                    // hal.scheduler->delay(10);
+                    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
+                    // hal.scheduler->delay(10);
+                    hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
+                }                
+            }
+            if(ch_num == 3) // 制动舵机
+            {
+                if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
+                {
+                    Servo = SERVO_BRAKE;
+                    // angle_MT6701 = angle_MT6701 + 1;
+                    // hal.scheduler->delay(10);
+                    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
+                    // hal.scheduler->delay(10);
+                    // ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
+                    hal.rcout->write(ch_num, SERVO_BRAKE_VALUE);
+                }                
+            }
+            else
+            {
+                hal.rcout->write(ch_num, output_pwm);
+            }
             // hal.scheduler->delay(10);
-            // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
-            // hal.scheduler->delay(10);
-            ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
-            hal.rcout->write(ch_num, ch4_pwm);
         }
         else
         {
-            hal.rcout->write(ch_num, output_pwm);
+            if(ch_num == 2) // 驱动电机
+            {
+                if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
+                {
+                    Motor = MOTOR_RUN;
+                    hal.rcout->write(ch_num, output_pwm);
+                }
+                else if((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
+                {
+                    hal.rcout->write(ch_num, output_pwm);
+                }
+            }
+            if(ch_num == 3) // 制动舵机
+            {
+                if((Motor == MOTOR_STOP) && (Servo == SERVO_BRAKE))
+                {
+                    Servo = SERVO_RELEASE;
+                    hal.rcout->write(ch_num, SERVO_RELEASE_VALUE);
+                }                
+            }
+            else
+            {
+                hal.rcout->write(ch_num, output_pwm);
+            }
+            // hal.scheduler->delay(10);            
         }
-
-        // if(current_time_3_us - stored_time_3_us > 5000000)
-        // {
-        //     stored_time_3_us = current_time_3_us;
-        //     sendtext_flag_3 = 0;
-        // }
-        // if(sendtext_flag_3 == 0)
-        // {
-        //     if(ch_num != 8)
-        //     {
-        //         hal.console->printf("hal.rcout->write(ch_num: %d, output_pwm: %d)\n", ch_num, output_pwm);
-        //     }
-        //     else
-        //     {
-        //         hal.console->printf("hal.rcout->write(ch_num: %d, output_pwm: %d)\n", ch_num, ch8_pwm);
-        //     }
-        //     if(ch_num >= 8)
-        //     {
-        //         sendtext_flag_3 = 1;
-        //     }
-        // }
-
-         /* ---------------------------------- 测试代码 ---------------------------------------- */
     }
 }
 

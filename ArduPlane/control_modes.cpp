@@ -4,6 +4,11 @@
 #include "qautotune.h"
 #include <GCS_MAVLink/GCS.h>
 
+////////////////////////////////////////////////////////////////////////////////
+// variable define
+////////////////////////////////////////////////////////////////////////////////
+bool Glide_Mode_Flag = false;
+
 Mode *Plane::mode_from_mode_num(const enum Mode::Number num)
 {
     Mode *ret = nullptr;
@@ -176,7 +181,11 @@ uint8_t Plane::readSwitch(void) const
     // 2.检查错误条件
     // 如果脉冲宽度小于或等于900，或者大于或等于2200，函数返回255，表示这是一个错误条件。
     // 这可能是因为这些脉冲宽度范围超出了预期的开关位置范围。
-    if (pulsewidth <= 900 || pulsewidth >= 2200) return 255;            // This is an error condition
+    if (pulsewidth <= 900 || pulsewidth >= 2200) 
+    {
+        Glide_Mode_Flag = false;
+        return 255;            // This is an error condition
+    }
 
     // 3.确定开关位置
     // 接下来的几个 if 语句根据脉冲宽度的范围来确定并返回开关的位置：
@@ -189,13 +198,23 @@ uint8_t Plane::readSwitch(void) const
     /*----------------------- 上面是原本的规定范围 ----------------------*/
 
     /*----------------------- 下面是自定义的规定范围 ----------------------*/
-    if (pulsewidth <= 1360) return 0;
-    if (pulsewidth <= 1749) return 2;              
+    // 此时飞行模式和飞行方式（扑翼/滑翔）是同时切换的
+    if (pulsewidth <= 1360) 
+    {
+        Glide_Mode_Flag = false;
+        return 0;
+    }
+    if (pulsewidth <= 1749) 
+    {
+        Glide_Mode_Flag  =true;
+        return 2;        
+    }      
     /*----------------------- 上面是自定义的规定范围 ----------------------*/
 
     // 4.默认返回
     // 如果脉冲宽度大于1749（即没有满足前面的任何条件），函数返回5。
     // 这可能表示一个默认的开关位置，或者与某种硬件手册中定义的开关位置相对应。
+    Glide_Mode_Flag = false;
     return 5;                                      // Hardware Manual
 }
 

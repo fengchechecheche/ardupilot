@@ -65,6 +65,7 @@
  # error XXX
 #endif
 
+// 此处定义了地面站飞行模式窗口中的6个选项对应的实际飞行模式
 #if !defined(FLIGHT_MODE_1)
  # define FLIGHT_MODE_1                  Mode::Number::RTL
 #endif
@@ -72,10 +73,10 @@
  # define FLIGHT_MODE_2                  Mode::Number::RTL
 #endif
 #if !defined(FLIGHT_MODE_3)
- # define FLIGHT_MODE_3                  Mode::Number::FLY_BY_WIRE_A
+ # define FLIGHT_MODE_3                  Mode::Number::GLIDE
 #endif
 #if !defined(FLIGHT_MODE_4)
- # define FLIGHT_MODE_4                  Mode::Number::FLY_BY_WIRE_A
+ # define FLIGHT_MODE_4                  Mode::Number::GLIDE
 #endif
 #if !defined(FLIGHT_MODE_5)
  # define FLIGHT_MODE_5                  Mode::Number::MANUAL
