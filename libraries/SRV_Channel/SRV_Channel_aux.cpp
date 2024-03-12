@@ -38,8 +38,6 @@ extern const AP_HAL::HAL& hal;
 #define MOTOR_RUN true
 #define SERVO_BRAKE true
 #define SERVO_RELEASE false
-static uint64_t stored_time_us = 0;
-static bool send_text_flag = false;
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
 // static uint16_t ch1_pwm = 1100;
@@ -86,19 +84,9 @@ void SRV_Channel::output_ch(void)
         }
     }
 #endif // HAL_BUILD_AP_PERIPH
-
     
-    if(AP_HAL::micros64() - stored_time_us > 5000000)
-    {
-        stored_time_us = AP_HAL::micros64();
-        send_text_flag = true;
-    }   
-
     if (!(SRV_Channels::disabled_mask & (1U<<ch_num))) 
-    {
-        if(send_text_flag){
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1]enter output_ch(), Moter=%d, Servo=%d.", Motor, Servo);
-        }   
+    {        
         if(Glide_Mode_Flag == true)
         {
             if(ch_num == 0) // 制动舵机
@@ -111,13 +99,10 @@ void SRV_Channel::output_ch(void)
                     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
                     // hal.scheduler->delay(10);
                     // ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
-                    hal.rcout->write(ch_num, SERVO_BRAKE_VALUE);
-                    if(send_text_flag){
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[2]drive servo: ch_num(%d)-pwm(%d)", ch_num, SERVO_BRAKE_VALUE);
-                    }   
+                    hal.rcout->write(ch_num, SERVO_BRAKE_VALUE);                                      
                 }                
             }
-            if(ch_num == 2) // 驱动电机
+            else if(ch_num == 2) // 驱动电机
             {
                 if((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {
@@ -126,10 +111,7 @@ void SRV_Channel::output_ch(void)
                     // hal.scheduler->delay(10);
                     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
                     // hal.scheduler->delay(10);
-                    hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
-                    if(send_text_flag){
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[3]stop motor: ch_num(%d)-pwm(%d).", ch_num, MOTOR_STOP_VALUE);
-                    }  
+                    hal.rcout->write(ch_num, MOTOR_STOP_VALUE);                                   
                 }                
             }            
             else
@@ -145,28 +127,19 @@ void SRV_Channel::output_ch(void)
                 if((Motor == MOTOR_STOP) && (Servo == SERVO_BRAKE))
                 {
                     Servo = SERVO_RELEASE;
-                    hal.rcout->write(ch_num, SERVO_RELEASE_VALUE);
-                    if(send_text_flag){
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[4]release servo: ch_num(%d)-pwm(%d).", ch_num, SERVO_RELEASE_VALUE);
-                    }  
+                    hal.rcout->write(ch_num, SERVO_RELEASE_VALUE);                                    
                 }                
             }
-            if(ch_num == 2) // 驱动电机
+            else if(ch_num == 2) // 驱动电机
             {
                 if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
                     Motor = MOTOR_RUN;
-                    hal.rcout->write(ch_num, output_pwm);
-                    if(send_text_flag){
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[5]start motor: ch_num(%d)-pwm(%d).", ch_num, output_pwm);
-                    }  
+                    hal.rcout->write(ch_num, output_pwm);                                 
                 }
                 else if((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {
-                    hal.rcout->write(ch_num, output_pwm);
-                    if(send_text_flag){
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[6]start motor: ch_num(%d)-pwm(%d).", ch_num, output_pwm);
-                    }  
+                    hal.rcout->write(ch_num, output_pwm);                              
                 }
             }            
             else
@@ -174,11 +147,7 @@ void SRV_Channel::output_ch(void)
                 hal.rcout->write(ch_num, output_pwm);
             }
             // hal.scheduler->delay(10);            
-        }
-        if(send_text_flag){
-            send_text_flag = false;
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "[7]enter output_ch(), Moter=%d, Servo=%d.", Motor, Servo);
-        }   
+        }      
     }
 }
 
