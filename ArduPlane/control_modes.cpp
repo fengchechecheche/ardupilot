@@ -189,17 +189,14 @@ uint8_t Plane::readSwitch(void) const
     /*----------------------- 上面是原本的规定范围 ----------------------*/
 
     /*----------------------- 下面是自定义的规定范围 ----------------------*/
-    if (pulsewidth <= 1230) return 0;
-    if (pulsewidth <= 1360) return 1;
-    if (pulsewidth <= 1490) return 2;
-    if (pulsewidth <= 1620) return 3;
-    if (pulsewidth <= 1749) return 4;              // Software Manual
+    if (pulsewidth <= 1360) return 0;
+    if (pulsewidth <= 1749) return 2;              
     /*----------------------- 上面是自定义的规定范围 ----------------------*/
 
     // 4.默认返回
     // 如果脉冲宽度大于1749（即没有满足前面的任何条件），函数返回5。
     // 这可能表示一个默认的开关位置，或者与某种硬件手册中定义的开关位置相对应。
-    return 5;                                                           // Hardware Manual
+    return 5;                                      // Hardware Manual
 }
 
 void Plane::reset_control_switch()
