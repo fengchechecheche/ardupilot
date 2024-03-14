@@ -16,14 +16,26 @@ int8_t RC_Channels_Plane::flight_mode_channel_number() const
     return plane.g.flight_mode_channel.get();
 }
 
+// 这个函数用于检查是否有有效的遥控输入。
 bool RC_Channels_Plane::has_valid_input() const
 {
+    // 1.检查遥控失效保护是否激活:
+    // 这里首先调用 plane.rc_failsafe_active() 函数来检查遥控失效保护是否处于激活状态。
+    // 如果是，函数返回 false。
+    // 此外，它还检查 plane.failsafe.rc_failsafe 是否为真，这通常表示遥控失效保护的另一种状态或条件。
+    // 如果任一条件为真，函数都返回 false，表示没有有效的遥控输入。
     if (plane.rc_failsafe_active() || plane.failsafe.rc_failsafe) {
         return false;
     }
+    // 2.检查油门计数器是否为零:
+    // 这里检查 plane.failsafe.throttle_counter 是否不等于零。
+    // 这个计数器可能用于跟踪油门信号的状态或变化。
+    // 如果计数器不为零，函数返回 false，表示油门信号可能存在问题，因此没有有效的遥控输入。
     if (plane.failsafe.throttle_counter != 0) {
         return false;
     }
+    // 3.返回有效输入标志:
+    // 如果以上所有检查都通过，函数返回 true，表示有有效的遥控输入。
     return true;
 }
 

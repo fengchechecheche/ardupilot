@@ -369,31 +369,58 @@ void Plane::trim_radio()
 
 /*
   check if throttle value is within allowed range
+  这个函数用于检查油门值是否在允许的范围内。
  */
 bool Plane::rc_throttle_value_ok(void) const
 {
+    // 1.检查油门失效保护是否禁用:
+    // 这里调用 ThrFailsafe 函数，传入 g.throttle_fs_enabled.get() 的返回值，
+    // 并检查其是否等于 ThrFailsafe::Disabled。
+    // 如果油门失效保护被禁用，函数立即返回 true，表示油门值有效，无需进一步检查。
     if (ThrFailsafe(g.throttle_fs_enabled.get()) == ThrFailsafe::Disabled) {
         return true;
     }
+    // 2.检查油门通道是否反转:
+    // 这里检查油门通道是否设置了反转，如果设置了反转，
+    // 则检查当前接收到的油门值（channel_throttle->get_radio_in()）是否小于失效保护的阈值（g.throttle_fs_value）。
+    // 默认的失效保护阈值 g.throttle_fs_value = 950
+    // 如果小于阈值，则返回 true，表示油门值有效；
+    // 否则，如果油门值大于或等于阈值，由于设置了反转，这里不会返回 true。
     if (channel_throttle->get_reverse()) {
         return channel_throttle->get_radio_in() < g.throttle_fs_value;
     }
+    // 3.检查油门值是否大于失效保护阈值:
+    // 如果油门通道没有设置反转，那么直接检查当前接收到的油门值是否大于失效保护的阈值。
+    // 如果大于阈值，则返回 true，表示油门值有效；否则返回 false。
     return channel_throttle->get_radio_in() > g.throttle_fs_value;
 }
 
 /*
   return true if throttle level is below throttle failsafe threshold
   or RC input is invalid
+  这个函数用于检查遥控失效保护是否激活。
+  如果油门级别低于“油门失效保护”的阈值，或者遥控输入无效，函数将返回 true。
  */
 bool Plane::rc_failsafe_active(void) const
 {
+    // 1.检查油门值是否有效:
+    // 这里调用 rc_throttle_value_ok() 函数来检查油门值是否有效。
+    // 如果这个函数返回 false（即油门值无效或低于阈值），
+    // 则 rc_failsafe_active 函数会立即返回 true，表示遥控失效保护是激活的。
     if (!rc_throttle_value_ok()) {
         return true;
     }
+    // 2.检查最近的有效遥控帧时间:
+    // 这里计算从最近一次有效遥控帧接收时间 failsafe.last_valid_rc_ms 到现在的时间差。
+    // 如果这个时间差超过1000毫秒（即1秒），则函数返回 true，表示遥控失效保护是激活的。
     if (millis() - failsafe.last_valid_rc_ms > 1000) {
         // we haven't had a valid RC frame for 1 seconds
+        // 我们已经超过1秒没有收到有效的遥控帧了
         return true;
     }
+    // 3.返回遥控失效保护未激活标志:
+    // 如果以上两个检查都未通过，即油门值有效且最近1秒内收到了有效的遥控帧，
+    // 函数返回 false，表示遥控失效保护没有激活。
     return false;
 }
 

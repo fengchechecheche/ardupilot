@@ -137,16 +137,33 @@ bool RC_Channel::get_reverse(void) const
 }
 
 // read input from hal.rcin or overrides
+// 这个函数用于更新遥控通道的值，并可能涉及读取来自硬件的输入或处理覆盖值。
 bool RC_Channel::update(void)
 {
+    // 1.检查是否有覆盖值:
+    // 首先，函数检查是否设置了覆盖值（通过 has_override() 函数），
+    // 并且没有忽略覆盖值（通过 rc().ignore_overrides()）。
+    // 如果这两个条件都满足，那么将覆盖值（override_value）赋给 radio_in。
     if (has_override() && !rc().ignore_overrides()) {
         radio_in = override_value;
-    } else if (rc().has_had_rc_receiver() && !rc().ignore_receiver()) {
+    } 
+    // 2.读取硬件输入:
+    // 如果前面没有覆盖值，那么函数检查是否有可用的遥控接收器（通过 rc().has_had_rc_receiver()），
+    // 并且没有忽略接收器输入（通过 rc().ignore_receiver()）。
+    // 如果这两个条件都满足，那么从硬件输入读取遥控通道的值，并将其赋给 radio_in。
+    else if (rc().has_had_rc_receiver() && !rc().ignore_receiver()) {
         radio_in = hal.rcin->read(ch_in);
-    } else {
+    } 
+    // 3.处理失败情况:
+    // 如果以上两个条件都不满足，即没有覆盖值且没有硬件输入可用，函数返回 false，表示更新失败。
+    else {
         return false;
     }
 
+    // 4.转换输入值:
+    // 根据 type_in 的值，函数将 radio_in 转换为对应的控制值。
+    // 如果 type_in 是 ControlType::RANGE，那么调用 pwm_to_range() 函数进行转换；
+    // 否则，假设它是 ControlType::ANGLE，调用 pwm_to_angle() 函数进行转换。
     if (type_in == ControlType::RANGE) {
         control_in = pwm_to_range();
     } else {
@@ -154,6 +171,8 @@ bool RC_Channel::update(void)
         control_in = pwm_to_angle();
     }
 
+    // 5.返回成功标志:
+    // 如果函数能够成功读取输入并进行了转换，它返回 true，表示更新成功。
     return true;
 }
 
@@ -337,14 +356,29 @@ bool RC_Channel::within_min_dz() const
     return radio_in < radio_min + dead_zone;
 }
 
+// 这个函数用于设置遥控通道的覆盖值，并更新相关的状态。
+// 这个函数接受两个参数：v（覆盖值）和 timestamp_ms（时间戳，以毫秒为单位）。
 void RC_Channel::set_override(const uint16_t v, const uint32_t timestamp_ms)
 {
+    // 1.检查GCS覆盖是否启用:
+    // 函数首先检查地面控制站（GCS）的覆盖是否已启用。
+    // 这是通过调用 rc().gcs_overrides_enabled() 来完成的。
+    // 如果GCS覆盖未启用，函数直接返回并不执行任何操作。
     if (!rc().gcs_overrides_enabled()) {
         return;
     }
 
+    // 2.设置覆盖时间戳:
+    // 这里使用条件运算符（ternary operator）来设置 last_override_time。
+    // 如果传入的 timestamp_ms 不为0，那么它将被用作覆盖时间戳；
+    // 否则，将使用当前时间（通过调用 AP_HAL::millis() 获取）作为时间戳。
     last_override_time = timestamp_ms != 0 ? timestamp_ms : AP_HAL::millis();
+    // 3.设置覆盖值:
+    // 将传入的覆盖值 v 赋给 override_value。
     override_value = v;
+    // 4.通知接收到新的覆盖值:
+    // 调用 rc().new_override_received() 函数来通知系统已经接收到一个新的覆盖值。
+    // 这可能会触发其他相关的处理或更新。
     rc().new_override_received();
 }
 
@@ -354,23 +388,37 @@ void RC_Channel::clear_override()
     override_value = 0;
 }
 
+// 这个函数的目的是检查遥控通道是否有有效的覆盖值。
 bool RC_Channel::has_override() const
 {
+    // 1.检查覆盖值是否为0:
+    // 如果覆盖值 override_value 为0，那么函数直接返回 false，因为0通常表示没有设置覆盖值。
     if (override_value == 0) {
         return false;
     }
 
+    // 2.获取覆盖超时时间:
+    // 这里尝试通过调用 rc().get_override_timeout_ms(override_timeout_ms) 获取覆盖的超时时间（以毫秒为单位）。
+    // 如果调用失败（返回 false），这意味着超时是禁用的，因此覆盖值始终有效，函数返回 true。
     uint32_t override_timeout_ms;
     if (!rc().get_override_timeout_ms(override_timeout_ms)) {
         // timeouts are disabled
         return true;
     }
 
+    // 3.检查覆盖是否被禁用:
+    // 如果覆盖超时时间 override_timeout_ms 被设置为0，这意味着覆盖被明确禁用了，函数返回 false。
     if (override_timeout_ms == 0) {
         // overrides are explicitly disabled by a zero value
         return false;
     }
 
+    // 4.检查覆盖是否超时:
+    // 最后，函数计算从上次覆盖时间 last_override_time 到现在的时间差，
+    // 并与覆盖超时时间 override_timeout_ms 进行比较。
+    // 如果时间差小于超时时间，那么覆盖仍然有效，函数返回 true；
+    // 否则，覆盖已经超时，但在这个函数中并没有明确返回 false（因为前面的条件已经处理了这种情况），
+    // 但在逻辑上，如果前面的条件都不满足，那么最终将隐含地返回 false。
     return (AP_HAL::millis() - last_override_time < override_timeout_ms);
 }
 
@@ -595,15 +643,24 @@ const char *RC_Channel::string_for_aux_function(AUX_FUNC function) const
 
 /*
   read an aux channel. Return true if a switch has changed
+  这个函数主要用于读取辅助通道的状态，并在开关状态改变时返回 true。
  */
 bool RC_Channel::read_aux()
 {
+    // 1.获取辅助通道的功能选项:
+    // 从 option 中获取当前辅助通道的功能选项，并将其转换为 aux_func_t 类型。
     const aux_func_t _option = (aux_func_t)option.get();
+    // 2.处理 "DO_NOTHING" 选项:
     if (_option == AUX_FUNC::DO_NOTHING) {
         // may wish to add special cases for other "AUXSW" things
         // here e.g. RCMAP_ROLL etc once they become options
+        // 如果选项是 "DO_NOTHING"，则直接返回 false，表示没有发生任何操作。
         return false;
-    } else if (_option == AUX_FUNC::VTX_POWER) {
+    } 
+    // 3.处理 "VTX_POWER" 选项:
+    // 如果选项是 "VTX_POWER"，则尝试读取一个6位置开关的状态，
+    // 并据此改变视频发射器的功率。如果读取成功，则返回 true；否则返回 false。
+    else if (_option == AUX_FUNC::VTX_POWER) {
         int8_t position;
         if (read_6pos_switch(position)) {
             AP::vtx().change_power(position);
@@ -612,17 +669,24 @@ bool RC_Channel::read_aux()
         return false;
     }
 
+    // 4.读取3位置开关状态:
+    // 尝试读取一个3位置开关的状态。如果读取失败，返回 false。
     AuxSwitchPos new_position;
     if (!read_3pos_switch(new_position)) {
         return false;
     }
 
+    // 5.检查去抖动是否完成:
+    // 如果开关状态的去抖动没有完成，则返回 false。
     if (!debounce_completed((int8_t)new_position)) {
         return false;
     }
 
 #if !HAL_MINIMIZE_FEATURES
     // announce the change to the GCS:
+    // 6.通知GCS开关状态变化 (仅在未最小化功能时):
+    // 这部分代码用于向地面控制站（GCS）发送关于辅助通道状态变化的消息。
+    // 它首先获取当前选项的字符串描述，然后基于开关的位置发送一个包含选项和位置信息的文本消息。
     const char *aux_string = string_for_aux_function(_option);
     if (aux_string != nullptr) {
         const char *temp =  nullptr;
@@ -642,6 +706,8 @@ bool RC_Channel::read_aux()
 #endif
 
     // debounced; undertake the action:
+    // 8.执行辅助功能:
+    // 根据当前选项和新的开关位置，执行相应的辅助功能。
     run_aux_function(_option, new_position, AuxFuncTriggerSource::RC);
     return true;
 }

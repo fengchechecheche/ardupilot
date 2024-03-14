@@ -135,6 +135,11 @@ const AP_Param::Info Plane::var_info[] = {
     // @Param: TKOFF_THR_MINACC
     // @DisplayName: Takeoff throttle min acceleration
     // @Description: Minimum forward acceleration in m/s/s before arming the ground speed check in auto-takeoff. This is meant to be used for hand launches. Setting this value to 0 disables the acceleration test which means the ground speed check will always be armed which could allow GPS velocity jumps to start the engine. For hand launches and bungee launches this should be set to around 15. Also see TKOFF_ACCEL_CNT paramter for control of full "shake to arm".
+    // @Description: 在自动起飞中启用地面速度检查之前所需的最小前向加速度（m/s/s）。这主要用于手抛起飞。将此值设置为0会禁用加速度测试，这意味着地面速度检查将始终启用，这可能会导致GPS速度跳变时启动发动机。对于手抛起飞和弹力绳发射，此值应设置为大约15。另请参阅TKOFF_ACCEL_CNT参数，以控制完整的“摇动以启用”功能。
+    // 最小前向加速度：指的是无人机在起飞前需要达到的最小加速度值，以判断无人机是否已经开始了有效的起飞动作。
+    // 地面速度检查：无人机在起飞过程中，为了确保安全，需要对其地面速度进行监测。如果地面速度过快，可能不适合起飞；如果地面速度达到或超过某个阈值，则可以认为无人机已经处于起飞状态。
+    // 禁用加速度测试：如果设置该参数为0，那么无人机在起飞时不会进行加速度测试，这可能导致无人机在没有有效起飞的情况下就启动了地面速度检查，从而可能因GPS速度数据的误差而误触发发动机启动。
+    // TKOFF_ACCEL_CNT参数：这个参数用于控制“摇动以启用”功能的完整逻辑。这可能意味着，除了达到一定的加速度之外，还需要满足其他条件（如摇动次数或模式）才能完全启用起飞功能，提高起飞过程的安全性和可靠性。
     // @Units: m/s/s
     // @Range: 0 30
     // @Increment: 0.1
@@ -144,6 +149,11 @@ const AP_Param::Info Plane::var_info[] = {
     // @Param: TKOFF_THR_DELAY
     // @DisplayName: Takeoff throttle delay
     // @Description: This parameter sets the time delay (in 1/10ths of a second) that the ground speed check is delayed after the forward acceleration check controlled by TKOFF_THR_MINACC has passed. For hand launches with pusher propellers it is essential that this is set to a value of no less than 2 (0.2 seconds) to ensure that the aircraft is safely clear of the throwers arm before the motor can start. For bungee launches a larger value can be used (such as 30) to give time for the bungee to release from the aircraft before the motor is started.
+    // 这段注释描述了一个参数，该参数用于设置地面速度检查在通过由TKOFF_THR_MINACC控制的前向加速度检查后的延迟时间（以十分之一秒为单位）。
+    // @Description: 此参数设置地面速度检查在通过由TKOFF_THR_MINACC控制的前向加速度检查后的延迟时间（以十分之一秒为单位）。对于带有推进式螺旋桨的手抛起飞，该值必须设置为不小于2（即0.2秒），以确保在电机启动之前，飞行器已经安全地离开了投掷者的手臂。对于弹力绳发射，可以使用更大的值（如30），以便在电机启动之前给弹力绳足够的时间从飞行器上释放。
+    // TKOFF_THR_MINACC：这是一个与起飞相关的参数，通常用于控制无人机起飞时所需的最小前向加速度。
+    // 地面速度检查：在无人机起飞过程中，一旦达到了一定的前向加速度，地面速度检查就会开始。这个检查是为了确保无人机已经安全地离开了起飞点，并且具有足够的速度进行飞行。
+    // 延迟时间：为了安全起见，在地面速度检查开始之前，需要设置一个延迟时间。这个延迟可以确保无人机在电机启动之前已经离开了投掷者的手臂或弹力绳，避免了可能的危险。
     // @Units: ds
     // @Range: 0 127
     // @Increment: 1

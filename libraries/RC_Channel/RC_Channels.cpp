@@ -158,23 +158,34 @@ bool RC_Channels::receiver_bind(const int dsmMode)
 
 // support for auxillary switches:
 // read_aux_switches - checks aux switch positions and invokes configured actions
+// 这个函数的主要目的是读取辅助开关（auxillary switches）的位置，并根据配置执行相应的动作。
 void RC_Channels::read_aux_all()
 {
+    // 1.检查是否有有效的输入:
     if (!has_valid_input()) {
         // exit immediately when no RC input
+        // 如果没有RC输入，则立即退出
         return;
     }
+    // 2.初始化日志需求标志:
     bool need_log = false;
 
+    // 3.遍历所有的RC通道:
+    // 这里使用一个for循环来遍历所有的遥控通道。
+    // 对于每个通道，它首先获取该通道的指针，并检查该指针是否为 nullptr（空指针）。
+    // 如果是空指针，它会跳过当前迭代并继续下一个通道。
+    // 否则，它会调用 read_aux() 函数来读取辅助开关的状态，并根据返回值更新 need_log 标志。
     for (uint8_t i=0; i<NUM_RC_CHANNELS; i++) {
         RC_Channel *c = channel(i);
         if (c == nullptr) {
-            continue;
+            continue; 
         }
         need_log |= c->read_aux();
     }
+    // 4.检查是否需要记录日志:
     if (need_log) {
         // guarantee that we log when a switch changes
+        // 保证当开关状态发生变化时记录日志 
         AP::logger().Write_RCIN();
     }
 }

@@ -1043,6 +1043,18 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @DisplayName: Flight mode options
     // @Description: Flight mode specific options
     // @Bitmask: 0:Disable thrust loss check, 1:Disable yaw imbalance warning, 2:Release gripper on thrust loss
+    // 这段代码和注释描述了一个位掩码（bitmask）系统，用于控制某些飞行或机器人操作的特定行为。
+    // 位掩码是一种用单个整数值来表示多个布尔选项的方法，每个选项对应整数值中的一个位。
+    // 下面是位掩码中每个位的解释：
+    // 位 0（最低位）：禁用推力损失检查（Disable thrust loss check）
+    // 如果该位被设置（值为1），则禁用推力损失检查。
+    // 如果该位未被设置（值为0），则启用推力损失检查。
+    // 位 1：禁用偏航不平衡警告（Disable yaw imbalance warning）
+    // 如果该位被设置（值为1），则禁用偏航不平衡警告。
+    // 如果该位未被设置（值为0），则启用偏航不平衡警告。
+    // 位 2：推力损失时释放抓手（Release gripper on thrust loss）
+    // 如果该位被设置（值为1），则在发生推力损失时释放抓手。
+    // 如果该位未被设置（值为0），则在推力损失时不会释放抓手。
     // @User: Advanced
     AP_GROUPINFO("FLIGHT_OPTIONS", 44, ParametersG2, flight_options, 0),
 
