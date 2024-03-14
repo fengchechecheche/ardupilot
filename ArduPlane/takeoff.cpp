@@ -8,21 +8,42 @@
  *   5) If the GPS speed and attitude within limits has not been achieved after 2.5 seconds, return false and reset the timer
  *   6) If the time lapsed since the last timecheck is greater than 0.2 seconds, return false and reset the timer
  *   NOTE : This function relies on the TECS 50Hz processing for its acceleration measure.
+ * 
+ *   检查是否满足自动起飞条件，按照以下顺序进行：
+ *   1.检查GPS锁定是否充足 - 如果不足则返回false
+ *   2.检查重力补偿的纵向加速度是否达到阈值，如果达到则启动计时器
+ *   3.等待直到计时器达到指定值（以0.1秒为单位递增），然后检查GPS速度是否达到阈值
+ *   4.如果GPS速度超过阈值且姿态在限定范围内，则返回true并重置计时器
+ *   5.如果在2.5秒内GPS速度和姿态均未达到限定范围，则返回false并重置计时器
+ *   6.如果自上次时间检查以来经过的时间大于0.2秒，则返回false并重置计时器
+ *   注意：此函数依赖于TECS 50Hz处理进行加速度测量。
  */
 bool Plane::auto_takeoff_check(void)
 {
     // this is a more advanced check that relies on TECS
+    // 这是一个更高级别的检查，它依赖于TECS（总能量控制系统） 
     uint32_t now = millis();
+    // 计算等待时间（毫秒）。它基于g.takeoff_throttle_delay的值（乘以100，将其从秒转换为毫秒），
+    // 代表起飞时油门延迟的秒数, 但最大不超过12700毫秒（约12.7秒）
+    // 其中wait_time_ms变量可能用于后续的逻辑，例如，等待特定的时间间隔来确保无人机在起飞前处于稳定状态。
     uint16_t wait_time_ms = MIN(uint16_t(g.takeoff_throttle_delay)*100,12700);
 
     // reset all takeoff state if disarmed
+    // 如果飞行器未处于解锁状态，则重置所有起飞状态
     if (!hal.util->get_soft_armed()) {
+        // 使用memset函数将takeoff_state结构体的所有字节设置为0，从而重置起飞状态  
         memset(&takeoff_state, 0, sizeof(takeoff_state));
+        // 获取当前的气压高度（可能是相对于海平面的高度），
+        // 并将其赋值给auto_state结构体中的baro_takeoff_alt成员  
         auto_state.baro_takeoff_alt = barometer.get_altitude();
+        // 返回false，表示当前不满足起飞条件或无法进行起飞
         return false;
     }
 
-    // Reset states if process has been interrupted
+    // 这段代码用于检查起飞状态处理过程是否已被中断，并在中断的情况下重置起飞状态。
+    // 如果处理过程中断并超过了特定的时间阈值（这里设置为200毫秒），
+    // 则代码会重置起飞状态并返回false，以避免使用可能过时或不一致的起飞状态信息。
+    // 如果 takeoff_state.last_check_ms 的值为0，则表示还没有进行过检查。
     if (takeoff_state.last_check_ms && (now - takeoff_state.last_check_ms) > 200) {
         memset(&takeoff_state, 0, sizeof(takeoff_state));
         return false;
@@ -31,87 +52,170 @@ bool Plane::auto_takeoff_check(void)
     takeoff_state.last_check_ms = now;
 
     // Check for bad GPS
+    // 这段代码是检查GPS状态是否良好的一部分，用于确保在尝试自动起飞之前GPS信号是稳定和可靠的。
+    // gps.status()：这是一个函数调用，它返回当前GPS的状态。
+    // 状态通常是一个枚举值或整数，表示GPS接收器的锁定质量或类型。
+    // GPS_OK_FIX_3D是一个常量，它表示GPS接收器已经获得了3D定位锁定，即提供了经度、纬度和高度的准确信息。
     if (gps.status() < AP_GPS::GPS_OK_FIX_3D) {
         // no auto takeoff without GPS lock
+        // 如果没有3D定位锁定，则不进行自动起飞，2D定位锁定都不行
         return false;
     }
 
+    // 这段代码主要执行了起飞姿态检查的条件判断。
+    // 这行代码定义了一个布尔变量do_takeoff_attitude_check，用于确定是否需要进行起飞姿态检查。
+    // 它使用按位与操作（&）来检查g2.flight_options中是否设置了FlightOptions::DISABLE_TOFF_ATTITUDE_CHK标志。
+    // 如果设置了该标志，那么g2.flight_options & FlightOptions::DISABLE_TOFF_ATTITUDE_CHK的结果将非零，
+    // 而!运算符会将其转换为false，表示不进行起飞姿态检查。
+    // 如果没有设置该标志，则结果为true，表示需要进行起飞姿态检查。
     bool do_takeoff_attitude_check = !(g2.flight_options & FlightOptions::DISABLE_TOFF_ATTITUDE_CHK);
 #if HAL_QUADPLANE_ENABLED
     // disable attitude check on tailsitters
     do_takeoff_attitude_check = !quadplane.tailsitter.enabled();
 #endif
 
+    // 这段代码是处理无人机起飞逻辑的一部分，特别是在需要检测特定加速度事件以触发起飞时。
+    // 下面这个条件判断确保起飞计时器尚未启动（!takeoff_state.launchTimerStarted），
+    // 并且最小起飞加速度（g.takeoff_throttle_min_accel）不是零。
     if (!takeoff_state.launchTimerStarted && !is_zero(g.takeoff_throttle_min_accel)) {
         // we are requiring an X acceleration event to launch
+        // 从TECS_controller获取水平方向的加速度（可能是X轴方向的加速度），并将其存储在xaccel变量中。
         float xaccel = TECS_controller.get_VXdot();
+        // 接下来的逻辑分支取决于g2.takeoff_throttle_accel_count的值，这个值表示需要检测到的加速度事件的次数。
+        // 如果g2.takeoff_throttle_accel_count <= 1，这意味着只需要一个加速度事件就可以触发起飞。
         if (g2.takeoff_throttle_accel_count <= 1) {
+            // 检查当前的X轴加速度是否小于最小起飞加速度。
+            // 如果是，则跳转到no_launch标签，意味着不满足起飞条件。
             if (xaccel < g.takeoff_throttle_min_accel) {
                 goto no_launch;
             }
-        } else {
+        } 
+        // 如果g2.takeoff_throttle_accel_count大于1：
+        // 这意味着需要多个加速度事件才能触发起飞。
+        else {
             // we need multiple accel events
+            // 检查自上次加速度事件以来是否已经过去了500毫秒。如果是，则重置加速度事件计数器。
             if (now - takeoff_state.accel_event_ms > 500) {
                 takeoff_state.accel_event_counter = 0;
             }
+            // 使用位运算判断当前的加速度事件是否为奇数事件。
             bool odd_event = ((takeoff_state.accel_event_counter & 1) != 0);
+            // 对于奇数事件，检查X轴加速度是否小于负的最小起飞加速度；
+            // 对于偶数事件，检查X轴加速度是否大于最小起飞加速度。
             bool got_event = (odd_event?xaccel < -g.takeoff_throttle_min_accel : xaccel > g.takeoff_throttle_min_accel);
+            // 如果检测到了满足条件的加速度事件，则增加加速度事件计数器，并更新加速度事件的时间戳。
             if (got_event) {
                 takeoff_state.accel_event_counter++;
                 takeoff_state.accel_event_ms = now;
             }
+            // 如果当前的加速度事件计数器还未达到所需的次数，则跳转到no_launch标签。
             if (takeoff_state.accel_event_counter < g2.takeoff_throttle_accel_count) {
                 goto no_launch;
             }
         }
     }
 
+    // 这段代码是无人机起飞逻辑的一部分，特别是与启动起飞计时器相关的部分。
+    // 总的来说，这段代码在无人机达到起飞所需的加速度阈值后，启动起飞计时器，
+    // 并通过地面控制系统发送一条通知信息，告知用户无人机已经处于自动武装状态并提供了相关的状态信息。
     // we've reached the acceleration threshold, so start the timer
+    // 这个条件检查起飞状态中的launchTimerStarted标志。如果该标志为false（即计时器尚未启动），则执行以下的代码块。
     if (!takeoff_state.launchTimerStarted) {
+        // 将launchTimerStarted标志设置为true，表示起飞计时器已经开始。
         takeoff_state.launchTimerStarted = true;
+        // 更新last_tkoff_arm_time变量，存储当前时间（now）。这通常用于记录起飞计时器启动的确切时间。
         takeoff_state.last_tkoff_arm_time = now;
+        // 下面是一个时间检查，看从上一次报告发送到现在是否已经过去超过2000毫秒（即2秒）。
         if (now - takeoff_state.last_report_ms > 2000) {
+            // 如果满足上述时间条件，则通过地面控制系统（gcs()）发送一条文本信息。
+            // 这条信息通知用户或操作者无人机已经处于自动武装状态，
+            // 并给出了当前的X轴加速度（xaccel）和还需要等待的时间（以秒为单位）。
             gcs().send_text(MAV_SEVERITY_INFO, "Armed AUTO, xaccel = %.1f m/s/s, waiting %.1f sec",
                               (double)TECS_controller.get_VXdot(), (double)(wait_time_ms*0.001f));
+            // 更新last_report_ms变量，存储当前时间（now）。这用于记录上一条报告发送的时间，以便下次检查是否应该再次发送报告。
             takeoff_state.last_report_ms = now;
         }
     }
 
+    // 这段代码是无人机起飞逻辑的一部分，主要检查起飞计时器是否超时，并在超时的情况下发送警告信息并跳转到不执行起飞的标签。
     // Only perform velocity check if not timed out
+    // 下面这个条件检查当前时间（now）与起飞计时器启动的时间（takeoff_state.last_tkoff_arm_time）之间的差值是否超过了预定的等待时间（wait_time_ms）加上额外的100毫秒。
+    // +100U是一个固定的延时，可能用于处理时间测量中的误差或用于确保有足够的时间来检测起飞状态。
     if ((now - takeoff_state.last_tkoff_arm_time) > wait_time_ms+100U) {
+        // 这个条件检查自上次报告发送以来是否已经过去了超过2000毫秒（即2秒）。
         if (now - takeoff_state.last_report_ms > 2000) {
+            // 如果上述时间条件为真，则通过地面控制系统（gcs()）发送一条警告级别的文本信息，通知用户或操作者起飞过程已超时。
             gcs().send_text(MAV_SEVERITY_WARNING, "Timeout AUTO");
+            // 更新last_report_ms变量，存储当前时间（now）。
+            // 这用于记录上一条报告发送的时间，确保在下一次循环迭代中不会再次发送相同的警告信息，除非再过了2秒。
             takeoff_state.last_report_ms = now;
         }
+        // 这是一个无条件跳转语句，将程序的执行流直接跳转到标记为no_launch的代码部分。
+        // 由于此处没有给出no_launch标签的具体内容，我们可以推测该部分代码负责处理不执行起飞逻辑的情况，可能是因为起飞计时器超时或其他原因。
         goto no_launch;
     }
 
+    // 这段代码是无人机起飞逻辑中的一部分，它执行起飞姿态检查以确保无人机在起飞时的姿态是安全的。
+    // 这个条件检查是否应该执行起飞姿态检查。如果do_takeoff_attitude_check为真，则执行以下代码块。
     if (do_takeoff_attitude_check) {
         // Check aircraft attitude for bad launch
+        // ahrs.pitch_sensor：这是无人机俯仰角的传感器读数，通常以微度（microdegrees）为单位。
+        // ahrs.roll_sensor：这是无人机滚转角的传感器读数，同样通常以微度为单位。
+        // 下面的条件检查无人机的姿态是否在安全范围内。它包含三个条件：
+        // ahrs.pitch_sensor <= -3000：检查无人机是否俯仰得太低（即向下倾斜太多）。
+        // ahrs.pitch_sensor >= 4500：检查无人机是否俯仰得太高（即向上倾斜太多）。
+        // (!fly_inverted() && labs(ahrs.roll_sensor) > 3000)：
+        // 如果无人机不是倒飞状态（fly_inverted()返回假），则检查无人机的滚转角是否过大。
+        // labs()函数返回绝对值，确保无论滚转是左是右，只要绝对值超过3000微度，条件就为真。
         if (ahrs.pitch_sensor <= -3000 || ahrs.pitch_sensor >= 4500 ||
             (!fly_inverted() && labs(ahrs.roll_sensor) > 3000)) {
-            gcs().send_text(MAV_SEVERITY_WARNING, "Bad launch AUTO");
-            takeoff_state.accel_event_counter = 0;
-            goto no_launch;
+                // 如果上述任何一个姿态条件不满足（即无人机姿态异常），则执行以下操作：
+                // 通过地面控制系统发送一条警告级别的文本信息，通知用户或操作者起飞姿态异常。
+                gcs().send_text(MAV_SEVERITY_WARNING, "Bad launch AUTO");
+                // 将accel_event_counter（可能用于记录加速度事件的计数器）重置为0。
+                takeoff_state.accel_event_counter = 0;
+                // 无条件跳转到标记为no_launch的代码部分，处理不执行起飞的情况。
+                goto no_launch;
         }
     }
 
     // Check ground speed and time delay
+    // 这段代码检查无人机的地面速度以及时间延迟，以决定是否触发起飞。
+    // 下面这个条件语句由两个主要部分组成，第一个部分是地面速度检查：
+    // gps.ground_speed()：获取当前无人机的地面速度。
+    // g.takeoff_throttle_min_speed：这是起飞所需的最小地面速度设置。
+    // gps.ground_speed() > g.takeoff_throttle_min_speed：检查当前地面速度是否大于设定的最小起飞速度。
+    // is_zero(g.takeoff_throttle_min_speed)：检查最小起飞速度设置是否为零。如果为零，意味着没有设置最小速度要求。
+    // 第二个部分是时间延迟检查：
+    // now - takeoff_state.last_tkoff_arm_time：计算从最后一次解锁（准备起飞）到现在的时间差。
+    // >= wait_time_ms：检查这个时间差是否大于或等于设定的等待时间（wait_time_ms）。
     if (((gps.ground_speed() > g.takeoff_throttle_min_speed || is_zero(g.takeoff_throttle_min_speed))) &&
         ((now - takeoff_state.last_tkoff_arm_time) >= wait_time_ms)) {
-        gcs().send_text(MAV_SEVERITY_INFO, "Triggered AUTO. GPS speed = %.1f", (double)gps.ground_speed());
-        takeoff_state.launchTimerStarted = false;
-        takeoff_state.last_tkoff_arm_time = 0;
-        takeoff_state.start_time_ms = now;
-        steer_state.locked_course_err = 0; // use current heading without any error offset
-        return true;
+            // 如果上述条件为真，则执行以下操作：
+            // 通过地面控制系统发送一条信息级别的文本，通知用户或操作者起飞已经被触发，并附带当前的地面速度。
+            gcs().send_text(MAV_SEVERITY_INFO, "Triggered AUTO. GPS speed = %.1f", (double)gps.ground_speed());
+            // 将起飞状态的launchTimerStarted标志设置为假，可能表示尚未开始起飞计时。
+            takeoff_state.launchTimerStarted = false;
+            // 重置最后一次解锁时间为0，可能表示当前起飞流程已经开始。
+            takeoff_state.last_tkoff_arm_time = 0;
+            // takeoff_state.start_time_ms = now;：记录起飞开始的当前时间为start_time_ms，以便后续进行时间相关的计算或监控。
+            takeoff_state.start_time_ms = now;
+            // steer_state.locked_course_err = 0;：将steer_state（可能是控制或导航状态）中的locked_course_err（锁定航向误差）设置为0，表示当前使用的航向没有误差偏移。
+            steer_state.locked_course_err = 0; // use current heading without any error offset
+            // return true;：返回真值，表示起飞检查成功，并且起飞流程可以继续进行
+            return true;
     }
 
     // we're not launching yet, but the timer is still going
+    // 这段代码是一个简单的返回语句，它表明当前的执行路径并未达到触发起飞的条件，但是计时器可能仍在运行。
     return false;
 
 no_launch:
+    // 将 takeoff_state 结构体或类中的 launchTimerStarted 成员变量设置为 false。
+    // 这通常表示起飞计时器尚未开始或已被重置。
     takeoff_state.launchTimerStarted = false;
+    // 这行代码将 takeoff_state 中的 last_tkoff_arm_time 成员变量设置为0。
+    // 这个变量可能用于记录最后一次解锁（准备起飞）的时间。将其设置为0可能表示重置或清除这个时间戳。
     takeoff_state.last_tkoff_arm_time = 0;
     return false;
 }
