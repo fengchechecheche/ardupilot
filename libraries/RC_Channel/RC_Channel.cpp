@@ -1305,16 +1305,27 @@ void RC_Channel::init_aux()
 }
 
 // read_3pos_switch
+// 这个函数返回一个布尔值（bool），表示是否成功读取了开关状态。
+// 它接受一个对AuxSwitchPos类型的引用参数ret，用于返回读取到的开关位置。
 bool RC_Channel::read_3pos_switch(RC_Channel::AuxSwitchPos &ret) const
 {
+    // 调用get_radio_in()函数获取当前的无线电输入值，并将其存储在变量in中。
     const uint16_t in = get_radio_in();
+    // 如果输入值in小于或等于最小限制值RC_MIN_LIMIT_PWM，
+    // 或者大于或等于最大限制值RC_MAX_LIMIT_PWM，则函数返回false，表示没有读取到有效的开关状态。
     if (in <= RC_MIN_LIMIT_PWM || in >= RC_MAX_LIMIT_PWM) {
         return false;
     }
     
     // switch is reversed if 'reversed' option set on channel and switches reverse is allowed by RC_OPTIONS
+    // 这里定义了一个布尔变量switch_reversed，它取决于两个条件：
+    // 当前通道是否设置为反转（reversed）以及是否允许开关反转（rc().switch_reverse_allowed()）。
+    // 如果两个条件都满足，则switch_reversed为true。
     bool switch_reversed = reversed && rc().switch_reverse_allowed();
     
+    // 根据输入值in与预定义的阈值AUX_SWITCH_PWM_TRIGGER_LOW和AUX_SWITCH_PWM_TRIGGER_HIGH的比较，确定开关的位置。
+    // 如果in小于AUX_SWITCH_PWM_TRIGGER_LOW，则开关处于低位置或高位置（取决于switch_reversed的值）。
+    // 如果in大于AUX_SWITCH_PWM_TRIGGER_HIGH，则情况相反。如果in位于这两个阈值之间，则开关处于中间位置。
     if (in < AUX_SWITCH_PWM_TRIGGER_LOW) {
         ret = switch_reversed ? AuxSwitchPos::HIGH : AuxSwitchPos::LOW;
     } else if (in > AUX_SWITCH_PWM_TRIGGER_HIGH) {

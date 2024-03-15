@@ -100,6 +100,7 @@ public:
     bool read_aux();
 
     // Aux Switch enumeration
+    // 这里的功能是为飞控板配置的？还是为地面站配置的？还是为遥控器配置的？
     enum class AUX_FUNC {
         DO_NOTHING =           0, // aux switch disabled
         FLIP =                 2, // flip

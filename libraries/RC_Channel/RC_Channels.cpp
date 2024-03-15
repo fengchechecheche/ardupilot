@@ -54,8 +54,8 @@ void RC_Channels::init(void)
 
     /* ----------------------------------- AP_HAL::RCOutput test ------------------------------------ */
 
-    hal.rcout->enable_ch(8);    //初始化了9通道（输入和输出通道都是从0开始索引），用于输出不同占空比的PWM波
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "channel-8 enabled.\n");
+    // hal.rcout->enable_ch(8);    //初始化了9通道（输入和输出通道都是从0开始索引），用于输出不同占空比的PWM波
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "channel-8 enabled.\n");
 
     /* ----------------------------------- AP_HAL::RCOutput test ------------------------------------ */
 

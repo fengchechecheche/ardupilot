@@ -1,9 +1,15 @@
 #include "mode.h"
 #include "Plane.h"
 
+/*
+ * 此滑翔模式基于AUTO模式修改而来
+ * 进入该模式后，立即执行滑翔动作；退出该模式后，立即执行扑翼动作。
+ * 暂时不考虑编码器数据。
+ * */
+
 bool ModeGlide::_enter()
 {
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "enter GLIDE mode.");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "enter GLIDE_v1 mode.");
 
 #if HAL_QUADPLANE_ENABLED
     // check if we should refuse auto mode due to a missing takeoff in
