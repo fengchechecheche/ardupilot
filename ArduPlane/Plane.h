@@ -989,7 +989,9 @@ private:
 
     // control_modes.cpp
     void read_control_switch();
+    void read_glide_switch();
     uint8_t readSwitch(void) const;
+    uint8_t readGlideSwitch(void) const;
     void reset_control_switch();
     void autotune_start(void);
     void autotune_restore(void);

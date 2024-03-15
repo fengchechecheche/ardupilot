@@ -8,6 +8,8 @@
 // variable define
 ////////////////////////////////////////////////////////////////////////////////
 bool Glide_Mode_Flag = false;
+static uint64_t stored_time1_us = 0;
+static uint64_t stored_time2_us = 0;
 
 Mode *Plane::mode_from_mode_num(const enum Mode::Number num)
 {
@@ -201,12 +203,10 @@ uint8_t Plane::readSwitch(void) const
     // 此时飞行模式和飞行方式（扑翼/滑翔）是同时切换的
     if (pulsewidth <= 1360) 
     {
-        Glide_Mode_Flag = false;
         return 0;
     }
     if (pulsewidth <= 1749) 
     {
-        Glide_Mode_Flag  =true;
         return 2;        
     }      
     /*----------------------- 上面是自定义的规定范围 ----------------------*/
@@ -214,7 +214,6 @@ uint8_t Plane::readSwitch(void) const
     // 4.默认返回
     // 如果脉冲宽度大于1749（即没有满足前面的任何条件），函数返回5。
     // 这可能表示一个默认的开关位置，或者与某种硬件手册中定义的开关位置相对应。
-    Glide_Mode_Flag = false;
     return 5;                                      // Hardware Manual
 }
 
@@ -274,4 +273,113 @@ bool Plane::fly_inverted(void)
         return true;
     }
     return false;
+}
+
+void Plane::read_glide_switch()
+{
+    // 一个静态布尔变量，用于消除开关信号的抖动。
+    static bool switch_debouncer;
+    // 一个无符号8位整数变量，用于存储从 readSwitch 函数读取的开关位置。
+    // 1.读取开关位置
+    uint8_t switchPosition = readGlideSwitch();
+
+    // If switchPosition = 255 this indicates that the mode control channel input was out of range
+    // If we get this value we do not want to change modes.
+    // 2.检查开关位置是否有效
+    // 如果 switchPosition 为 255，表示开关控制通道输入超出范围，函数直接返回，不执行任何操作。
+    if(switchPosition == 255) return;
+
+    // 3.检查是否有有效的遥控输入
+    // 如果没有有效的遥控输入，函数直接返回。
+    if (!rc().has_valid_input()) {
+        // ignore the mode switch channel if there is no valid RC input
+        return;
+    }
+
+    // 4.检查遥控输入是否过时
+    // 如果当前的遥控输入信号比最近一次有效信号老超过0.1秒（100毫秒），则函数直接返回。
+    if (millis() - failsafe.last_valid_rc_ms > 100) {
+        // only use signals that are less than 0.1s old.
+        return;
+    }
+
+    // 5.检查开关位置是否变化
+    // 如果当前读取的开关位置与上一次的不同，则执行下面的代码块。
+    // oldSwitchPosition：在代码中没有直接声明，但可以推测这是类的一个成员变量或全局变量，用于存储上一次读取的开关位置。
+    if (oldSwitchPosition != switchPosition) {
+        // 6.开关抖动消除
+        // 如果 switch_debouncer 为 false，则将其设置为 true 并返回。
+        // 这是为了确保只有当开关状态连续两次读取不同时，才进行模式切换，从而防止由于开关信号的短暂波动而导致的误操作。
+        if (switch_debouncer == false) {
+            // this ensures that mode switches only happen if the
+            // switch changes for 2 reads. This prevents momentary
+            // spikes in the mode control channel from causing a mode
+            // switch
+            switch_debouncer = true;
+            return;
+        }
+
+        // 7.设置飞行方式
+        // 如果 switch_debouncer 为 true，则根据开关位置 switchPosition 设置飞行器的飞行方式
+        if(switchPosition == 2)
+        {
+            if(AP_HAL::micros64() - stored_time2_us > 5000000)
+            {
+                stored_time2_us = AP_HAL::micros64();
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ start glide ++++++++++");
+            }            
+            Glide_Mode_Flag  =true;  
+        }
+        else
+        {
+            if(AP_HAL::micros64() - stored_time1_us > 5000000)
+            {
+                stored_time1_us = AP_HAL::micros64();
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop glide ++++++++++");
+            }
+            Glide_Mode_Flag = false;
+        }
+
+        // 8.更新旧的开关位置
+        // 更新 oldSwitchPosition 变量，使其存储当前读取的开关位置。
+        oldSwitchPosition = switchPosition;
+    }
+
+    // 9.重置开关抖动消除器
+    // 在函数的最后，将 switch_debouncer 重置为 false，以便在下一次读取开关位置时重新开始抖动消除过程。
+    switch_debouncer = false;
+}
+
+uint8_t Plane::readGlideSwitch(void) const
+{
+    // 1.读取脉冲宽度
+    // 调用 RC_Channels::get_radio_in 函数来读取遥控器指定通道的脉冲宽度，并将其存储在 pulsewidth 变量中。
+    // 这里 g.flight_mode_channel - 1 是通道的索引，可能是因为数组或类似数据结构是从0开始索引，而配置可能是从1开始计数。
+    // 在 config.h 中定义了GLIDE_MODE_CHANNEL = 6
+    uint16_t pulsewidth = RC_Channels::get_radio_in(GLIDE_MODE_CHANNEL - 1);
+
+    // 2.检查错误条件
+    // 如果脉冲宽度小于或等于900，或者大于或等于2200，函数返回255，表示这是一个错误条件。
+    // 这可能是因为这些脉冲宽度范围超出了预期的开关位置范围。
+    if (pulsewidth <= 900 || pulsewidth >= 2200) 
+    {
+        Glide_Mode_Flag = false;
+        return 255;            // This is an error condition
+    }
+
+    /*----------------------- 下面是自定义的规定范围 ----------------------*/
+    // 此时飞行模式和飞行方式（扑翼/滑翔）是同时切换的
+    if (pulsewidth <= 1360) 
+    {
+        return 0;
+    }
+    if (pulsewidth <= 1749) 
+    {
+        return 2;        
+    }      
+    /*----------------------- 上面是自定义的规定范围 ----------------------*/
+
+    // 4.默认返回
+    // 如果脉冲宽度大于1749（即没有满足前面的任何条件），函数返回5。
+    return 5;
 }

@@ -64,6 +64,13 @@
  # error XXX You must set FLIGHT_MODE_CHANNEL to 5, 6, 7 or 8
  # error XXX
 #endif
+//////////////////////////////////////////////////////////////////////////////
+// GLIDE_MODE
+// GLIDE_MODE_CHANNEL
+//
+#ifndef GLIDE_MODE_CHANNEL
+ # define GLIDE_MODE_CHANNEL     6
+#endif
 
 // 此处定义了地面站飞行模式窗口中的6个选项对应的实际飞行模式
 #if !defined(FLIGHT_MODE_1)
@@ -73,10 +80,10 @@
  # define FLIGHT_MODE_2                  Mode::Number::RTL
 #endif
 #if !defined(FLIGHT_MODE_3)
- # define FLIGHT_MODE_3                  Mode::Number::GLIDE
+ # define FLIGHT_MODE_3                  Mode::Number::AUTO
 #endif
 #if !defined(FLIGHT_MODE_4)
- # define FLIGHT_MODE_4                  Mode::Number::GLIDE
+ # define FLIGHT_MODE_4                  Mode::Number::AUTO
 #endif
 #if !defined(FLIGHT_MODE_5)
  # define FLIGHT_MODE_5                  Mode::Number::MANUAL
