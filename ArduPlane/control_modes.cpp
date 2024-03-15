@@ -185,7 +185,6 @@ uint8_t Plane::readSwitch(void) const
     // 这可能是因为这些脉冲宽度范围超出了预期的开关位置范围。
     if (pulsewidth <= 900 || pulsewidth >= 2200) 
     {
-        Glide_Mode_Flag = false;
         return 255;            // This is an error condition
     }
 
@@ -373,13 +372,13 @@ uint8_t Plane::readGlideSwitch(void) const
     {
         return 0;
     }
-    if (pulsewidth <= 1749) 
+    if (pulsewidth <= 2100) 
     {
         return 2;        
     }      
     /*----------------------- 上面是自定义的规定范围 ----------------------*/
 
     // 4.默认返回
-    // 如果脉冲宽度大于1749（即没有满足前面的任何条件），函数返回5。
+    // 如果脉冲宽度大于2100（即没有满足前面的任何条件），函数返回5。
     return 5;
 }
