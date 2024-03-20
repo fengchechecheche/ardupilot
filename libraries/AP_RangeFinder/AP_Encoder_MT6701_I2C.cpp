@@ -88,12 +88,16 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
     angle_MT6701 = angle_f;
     
-    if(SEND_TEST_MESSAGE)
-    {
-        hal.scheduler->delay(10);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
-        hal.scheduler->delay(10);
-    }
+    // if(SEND_TEST_MESSAGE)
+    // {
+    //     hal.scheduler->delay(10);
+    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
+    //     hal.scheduler->delay(10);
+    // }
+    
+    hal.scheduler->delay(10);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
+    hal.scheduler->delay(10);
 }
 
 void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
