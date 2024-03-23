@@ -4,7 +4,9 @@
 #include <AP_Scheduler/AP_Scheduler.h>
 #include "AP_Encoder_MT6701_I2C.h"
 
-float angle_MT6701 = 0;
+float angle_MT6701 = 0.0;
+static float old_angle_MT6701;
+float relative_gear_rev = 0.0;
 #define SEND_TEST_MESSAGE false
 
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
@@ -87,6 +89,22 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     get_reading(angle_f);
 
     angle_MT6701 = angle_f;
+
+    if(angle_MT6701 - old_angle_MT6701 > 0.0)
+    {
+        relative_gear_rev = (angle_MT6701 - old_angle_MT6701) / 360.0 / 0.05 ;
+        old_angle_MT6701 = angle_MT6701;
+    }
+    else if(angle_MT6701 - old_angle_MT6701 < 0.0)
+    {
+        relative_gear_rev = (360 - old_angle_MT6701 + angle_MT6701) / 360.0 / 0.05 ;
+        old_angle_MT6701 = angle_MT6701;
+    }
+    else
+    {
+        relative_gear_rev = 0.0;
+    }
+    
     
     // if(SEND_TEST_MESSAGE)
     // {
@@ -97,6 +115,7 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     
     hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-3] gear_rev: %.4f.", relative_gear_rev);
     hal.scheduler->delay(10);
 }
 
