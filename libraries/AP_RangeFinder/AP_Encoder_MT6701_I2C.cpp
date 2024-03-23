@@ -6,9 +6,10 @@
 
 float angle_MT6701 = 0.0;
 float old_angle_MT6701 = 0.0;
+float angle_MT6701_error = 0.0;
 float relative_gear_rev = 0.0;
 #define SEND_TEST_MESSAGE false
-#define SAMPLE_FREQUENCY 0.005
+#define SAMPLE_FREQUENCY 0.002
 
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
     : AP_Encoder_Backend(encoder), _dev(std::move(dev)) {}
@@ -70,7 +71,8 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-2] timeout.bytes[1]: %d.\n", timeout.bytes[1]);
     hal.scheduler->delay(10);
 
-    // call timer() at 200Hz.       10,000 us = 0.005 s 
+    // call timer() at 500Hz.       2,000 us = 0.002 s 
+    // call timer() at 200Hz.       5,000 us = 0.005 s 
     // call timer() at 100Hz.       10,000 us = 0.01 s 
     // call timer() at 20Hz.        50,000 us = 0.05 s 
     // call timer() at 2Hz.         500,000 us = 0.5 s 
@@ -95,12 +97,14 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
     if(angle_MT6701 - old_angle_MT6701 > 0.0)
     {
-        relative_gear_rev = (angle_MT6701 - old_angle_MT6701) / 360.0 / SAMPLE_FREQUENCY ;
+        angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
+        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ;
         old_angle_MT6701 = angle_MT6701;
     }
     else if(angle_MT6701 - old_angle_MT6701 < 0.0)
     {
-        relative_gear_rev = (360 - old_angle_MT6701 + angle_MT6701) / 360.0 / SAMPLE_FREQUENCY ;
+        angle_MT6701_error = 360 - old_angle_MT6701 + angle_MT6701;
+        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ;
         old_angle_MT6701 = angle_MT6701;
     }
     else

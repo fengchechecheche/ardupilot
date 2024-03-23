@@ -67,7 +67,7 @@ struct PACKED log_Encoder
     LOG_PACKET_HEADER;
     uint64_t time_us;
     float mag_angle_degree;
-    float old_mag_angle_degree;
+    float mag_angle_error_degree;
     float gear_rev_rps;
 };
 
@@ -77,7 +77,7 @@ void Plane::Log_Write_Encoder()
         LOG_PACKET_HEADER_INIT(LOG_ENCODER_MSG),
         time_us     : AP_HAL::micros64(),
         mag_angle_degree        : angle_MT6701,
-        old_mag_angle_degree    : old_angle_MT6701,
+        mag_angle_error_degree  : angle_MT6701_error,
         gear_rev_rps            : relative_gear_rev
     };
     logger.WriteCriticalBlock(&pkt, sizeof(pkt));
@@ -490,7 +490,7 @@ const struct LogStructure Plane::log_structure[] = {
 // @Description: 
 // @Field: TimeUS: Time since system startup
     { LOG_ENCODER_MSG, sizeof(log_Encoder),     
-      "ENCO", "Qfff",    "TimeUS,MagAngle,OldMagAngle,GearRev", "shhQ", "F---" },
+      "ENCO", "Qfff",    "TimeUS,MagAngle,MagAngleErr,GearRev", "shhQ", "F---" },
 };
 
 
