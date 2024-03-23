@@ -98,14 +98,14 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     if(angle_MT6701 - old_angle_MT6701 > 0.0)
     {
         angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
-        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ;
         old_angle_MT6701 = angle_MT6701;
+        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ;
     }
     else if(angle_MT6701 - old_angle_MT6701 < 0.0)
     {
         angle_MT6701_error = 360 - old_angle_MT6701 + angle_MT6701;
-        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ;
         old_angle_MT6701 = angle_MT6701;
+        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ; 
     }
     else
     {
