@@ -6,6 +6,7 @@
 
 extern const AP_HAL::HAL &hal;
 extern float angle_MT6701;
+extern float old_angle_MT6701;
 extern float relative_gear_rev;
 #define SlaveAddress 0X06 //MT6701 地址
 #define ReadAddress1 0X03 // 数据高位寄存器地址
