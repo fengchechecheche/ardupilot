@@ -99,16 +99,33 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     {
         angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
         old_angle_MT6701 = angle_MT6701;
-        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ;
+        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
     }
     else if(angle_MT6701 - old_angle_MT6701 < 0.0)
     {
+        // 磁场角度从360度跨到0度的情况
         angle_MT6701_error = 360 - old_angle_MT6701 + angle_MT6701;
-        old_angle_MT6701 = angle_MT6701;
-        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ; 
+
+        // 如果磁场角度的偏差在20度以内，则更新齿轮转速
+        // 否则考虑读取到的是异常数据，直接丢弃掉
+        /*
+         * 限幅滤波法
+         * 1.方法限幅滤波法又称嵌位滤波法,或程序判断滤波法。这种滤波法的思路是:
+         * 先根据经验判断,确定两次采样允许的最大偏差值(设为A)每次检测到新采样值时进行判断:
+         * (1)如果本次新采样值与上次滤波结果之差<A,则本次采样值有效,令本次滤波结果=新采样值;
+         * (2)如果本次采样值与上次滤波结果之差>A,则本次采样值无效,放弃本次值,令本次滤波结果=上次滤波结果。
+         * 2.优点：能有效克服因偶然因素引起的脉冲干扰。
+         * 3.缺点：无法抑制那种周期性的干扰,且平滑度差
+         * */
+        if(angle_MT6701_error - 20 < 0.0)
+        {
+            old_angle_MT6701 = angle_MT6701;
+            relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
+        }      
     }
     else
     {
+        angle_MT6701_error = 0.0;
         relative_gear_rev = 0.0;
     }
     
