@@ -103,11 +103,19 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     if(angle_MT6701 - old_angle_MT6701 > 0.0)
     {
         angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
-        old_angle_MT6701 = angle_MT6701;
-        // 对末端齿轮转速进行一阶低通滤波
-        new_relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
-        relative_gear_rev = ((255 - LPF_factor) * new_relative_gear_rev + LPF_factor * old_relative_gear_rev) / 255;
-        old_relative_gear_rev = relative_gear_rev;
+        if(angle_MT6701_error - 20 < 0.0)
+        {
+            old_angle_MT6701 = angle_MT6701;
+            // 对末端齿轮转速进行一阶低通滤波
+            new_relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
+            relative_gear_rev = ((255 - LPF_factor) * new_relative_gear_rev + LPF_factor * old_relative_gear_rev) / 255;
+            old_relative_gear_rev = relative_gear_rev;
+        }
+        else
+        {
+            angle_MT6701_error = 0.0;
+            relative_gear_rev = 0.0;
+        }
     }
     // 磁场角度从360度跨到0度的情况
     else if(angle_MT6701 - old_angle_MT6701 < 0.0)
