@@ -11,7 +11,7 @@ float relative_gear_rev = 0.0;
 float new_relative_gear_rev = 0.0;
 float old_relative_gear_rev = 0.0;
 #define SEND_TEST_MESSAGE false
-#define SAMPLE_FREQUENCY 0.00125
+#define SAMPLE_FREQUENCY 0.5
 #define LPF_factor 200
 
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)

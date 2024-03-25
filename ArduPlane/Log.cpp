@@ -48,6 +48,7 @@ void Plane::Log_Write_Attitude(void)
 // do fast logging for plane
 void Plane::Log_Write_Fast(void)
 {
+    Log_Write_Encoder();
     if (!should_log(MASK_LOG_ATTITUDE_FULLRATE)) {
         uint32_t now = AP_HAL::millis();
         if (now - last_log_fast_ms < 40) {
