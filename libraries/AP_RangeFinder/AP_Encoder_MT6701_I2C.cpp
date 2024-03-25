@@ -4,15 +4,22 @@
 #include <AP_Scheduler/AP_Scheduler.h>
 #include "AP_Encoder_MT6701_I2C.h"
 
+#define SEND_TEST_MESSAGE false
+#define SAMPLE_FREQUENCY 0.01
+#define MAX_LIMIT_factor 80
+#define LPF_factor 200
+#define Buff_Num 20
+
 float angle_MT6701 = 0.0;
 float old_angle_MT6701 = 0.0;
 float angle_MT6701_error = 0.0;
 float relative_gear_rev = 0.0;
 float new_relative_gear_rev = 0.0;
 float old_relative_gear_rev = 0.0;
-#define SEND_TEST_MESSAGE false
-#define SAMPLE_FREQUENCY 0.01
-#define LPF_factor 200
+float avg_relative_gear_rev = 0.0;
+float sum_relative_gear_rev = 0.0;
+float relative_gear_rev_buff[Buff_Num] = {};
+
 
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
     : AP_Encoder_Backend(encoder), _dev(std::move(dev)) {}
@@ -103,13 +110,23 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     if(angle_MT6701 - old_angle_MT6701 > 0.0)
     {
         angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
-        if(angle_MT6701_error - 20 < 0.0)
+        if(angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
             new_relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
             relative_gear_rev = ((255 - LPF_factor) * new_relative_gear_rev + LPF_factor * old_relative_gear_rev) / 255;
             old_relative_gear_rev = relative_gear_rev;
+
+            sum_relative_gear_rev = 0.0;
+            for(uint8_t i = 0; i<Buff_Num-1; i++)
+            {
+                relative_gear_rev_buff[i] = relative_gear_rev_buff[i+1];
+                sum_relative_gear_rev += relative_gear_rev_buff[i];
+            }
+            relative_gear_rev_buff[Buff_Num-1] = relative_gear_rev;
+            sum_relative_gear_rev += relative_gear_rev_buff[Buff_Num-1];
+            avg_relative_gear_rev = sum_relative_gear_rev / Buff_Num;
         }
         else
         {
@@ -133,13 +150,23 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
          * 2.优点：能有效克服因偶然因素引起的脉冲干扰。
          * 3.缺点：无法抑制那种周期性的干扰,且平滑度差
          * */
-        if(angle_MT6701_error - 20 < 0.0)
+        if(angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
             new_relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
             relative_gear_rev = ((255 - LPF_factor) * new_relative_gear_rev + LPF_factor * old_relative_gear_rev) / 255;
             old_relative_gear_rev = relative_gear_rev;
+
+            sum_relative_gear_rev = 0.0;
+            for(uint8_t j = 0; j<Buff_Num-1; j++)
+            {
+                relative_gear_rev_buff[j] = relative_gear_rev_buff[j+1];
+                sum_relative_gear_rev += relative_gear_rev_buff[j];
+            }
+            relative_gear_rev_buff[Buff_Num-1] = relative_gear_rev;
+            sum_relative_gear_rev += relative_gear_rev_buff[Buff_Num-1];
+            avg_relative_gear_rev = sum_relative_gear_rev / Buff_Num;
         }
         else
         {

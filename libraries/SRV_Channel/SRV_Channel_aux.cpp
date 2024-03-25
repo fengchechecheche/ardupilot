@@ -170,39 +170,26 @@ void SRV_Channel::output_ch(void)
                     Motor = MOTOR_RUN;
                     switch(Switch_Num)
                     {
-                        case 1:
-                            ch3_pwm = 1100;
-                        break;
-                        case 2:
-                            ch3_pwm == 1200;
-                        break;
-                        case 3:
-                            ch3_pwm == 1300;
-                        break;
-                        case 4:
-                            ch3_pwm == 1400;
-                        break;
-                        case 5:
-                            ch3_pwm == 1500;
-                        break;
-                        case 6:
-                            ch3_pwm == 1600;
-                        break;
-                        case 7:
-                            ch3_pwm == 1700;
-                        break;
-                        case 8:
-                            ch3_pwm == 1800;
-                        break;
-                        case 9:
-                            ch3_pwm == 1900;
-                        break;
-                        case 10:
-                            ch3_pwm == 2000;
-                        break;
-                        default:
-                            ch3_pwm == 1000;
-                        break;
+                        case 1:  ch3_pwm = 1100; break;
+                        case 2:  ch3_pwm = 1150; break;
+                        case 3:  ch3_pwm = 1200; break;
+                        case 4:  ch3_pwm = 1250; break;
+                        case 5:  ch3_pwm = 1300; break;
+                        case 6:  ch3_pwm = 1350; break;
+                        case 7:  ch3_pwm = 1400; break;
+                        case 8:  ch3_pwm = 1450; break;
+                        case 9:  ch3_pwm = 1500; break;
+                        case 10: ch3_pwm = 1550; break;
+                        case 11: ch3_pwm = 1600; break;
+                        case 12: ch3_pwm = 1650; break;
+                        case 13: ch3_pwm = 1700; break;
+                        case 14: ch3_pwm = 1750; break;
+                        case 15: ch3_pwm = 1800; break;
+                        case 16: ch3_pwm = 1850; break;
+                        case 17: ch3_pwm = 1900; break;
+                        case 18: ch3_pwm = 1950; break;
+                        case 19: ch3_pwm = 2000; break;
+                        default: ch3_pwm = 1000; break;
                     }
                     hal.rcout->write(ch_num, ch3_pwm);                                 
                 }
@@ -210,39 +197,26 @@ void SRV_Channel::output_ch(void)
                 {
                     switch(Switch_Num)
                     {
-                        case 1:
-                            ch3_pwm = 1100;
-                        break;
-                        case 2:
-                            ch3_pwm == 1200;
-                        break;
-                        case 3:
-                            ch3_pwm == 1300;
-                        break;
-                        case 4:
-                            ch3_pwm == 1400;
-                        break;
-                        case 5:
-                            ch3_pwm == 1500;
-                        break;
-                        case 6:
-                            ch3_pwm == 1600;
-                        break;
-                        case 7:
-                            ch3_pwm == 1700;
-                        break;
-                        case 8:
-                            ch3_pwm == 1800;
-                        break;
-                        case 9:
-                            ch3_pwm == 1900;
-                        break;
-                        case 10:
-                            ch3_pwm == 2000;
-                        break;
-                        default:
-                            ch3_pwm == 1000;
-                        break;
+                        case 1:  ch3_pwm = 1100; break;
+                        case 2:  ch3_pwm = 1150; break;
+                        case 3:  ch3_pwm = 1200; break;
+                        case 4:  ch3_pwm = 1250; break;
+                        case 5:  ch3_pwm = 1300; break;
+                        case 6:  ch3_pwm = 1350; break;
+                        case 7:  ch3_pwm = 1400; break;
+                        case 8:  ch3_pwm = 1450; break;
+                        case 9:  ch3_pwm = 1500; break;
+                        case 10: ch3_pwm = 1550; break;
+                        case 11: ch3_pwm = 1600; break;
+                        case 12: ch3_pwm = 1650; break;
+                        case 13: ch3_pwm = 1700; break;
+                        case 14: ch3_pwm = 1750; break;
+                        case 15: ch3_pwm = 1800; break;
+                        case 16: ch3_pwm = 1850; break;
+                        case 17: ch3_pwm = 1900; break;
+                        case 18: ch3_pwm = 1950; break;
+                        case 19: ch3_pwm = 2000; break;
+                        default: ch3_pwm = 1000; break;
                     }
                     hal.rcout->write(ch_num, ch3_pwm);                              
                 }
