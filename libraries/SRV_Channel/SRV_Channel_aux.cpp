@@ -40,11 +40,13 @@ extern const AP_HAL::HAL& hal;
 #define SERVO_RELEASE false
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
-// static uint16_t ch1_pwm = 1100;
+static uint16_t ch3_pwm = 1100;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
 static bool Motor = true;    // true:电机正在运行，false:电机停止运行
 static bool Servo = false;   // true:舵机正在刹车，false:舵机停止刹车
+static bool old_Glide_Mode_Flag = false;
+static uint8_t Switch_Num = 0;
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
@@ -89,6 +91,12 @@ void SRV_Channel::output_ch(void)
     {        
         if(Glide_Mode_Flag == true)
         {
+            if(old_Glide_Mode_Flag == false)
+            {
+                old_Glide_Mode_Flag = true;
+                Switch_Num++;
+                gcs().send_text(MAV_SEVERITY_CRITICAL, ">>>>Switch_Num: %d.", Switch_Num);
+            }
             /*
              * 注意：此处必须是以下的判断形式
              * if(舵机通道){}
@@ -146,6 +154,7 @@ void SRV_Channel::output_ch(void)
         }
         else
         {
+            old_Glide_Mode_Flag = Glide_Mode_Flag;
             if(ch_num == 0) // 制动舵机
             {
                 if((Motor == MOTOR_STOP) && (Servo == SERVO_BRAKE))
@@ -159,11 +168,83 @@ void SRV_Channel::output_ch(void)
                 if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
                     Motor = MOTOR_RUN;
-                    hal.rcout->write(ch_num, output_pwm);                                 
+                    switch(Switch_Num)
+                    {
+                        case 1:
+                            ch3_pwm = 1100;
+                        break;
+                        case 2:
+                            ch3_pwm == 1200;
+                        break;
+                        case 3:
+                            ch3_pwm == 1300;
+                        break;
+                        case 4:
+                            ch3_pwm == 1400;
+                        break;
+                        case 5:
+                            ch3_pwm == 1500;
+                        break;
+                        case 6:
+                            ch3_pwm == 1600;
+                        break;
+                        case 7:
+                            ch3_pwm == 1700;
+                        break;
+                        case 8:
+                            ch3_pwm == 1800;
+                        break;
+                        case 9:
+                            ch3_pwm == 1900;
+                        break;
+                        case 10:
+                            ch3_pwm == 2000;
+                        break;
+                        default:
+                            ch3_pwm == 1000;
+                        break;
+                    }
+                    hal.rcout->write(ch_num, ch3_pwm);                                 
                 }
                 else if((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {
-                    hal.rcout->write(ch_num, output_pwm);                              
+                    switch(Switch_Num)
+                    {
+                        case 1:
+                            ch3_pwm = 1100;
+                        break;
+                        case 2:
+                            ch3_pwm == 1200;
+                        break;
+                        case 3:
+                            ch3_pwm == 1300;
+                        break;
+                        case 4:
+                            ch3_pwm == 1400;
+                        break;
+                        case 5:
+                            ch3_pwm == 1500;
+                        break;
+                        case 6:
+                            ch3_pwm == 1600;
+                        break;
+                        case 7:
+                            ch3_pwm == 1700;
+                        break;
+                        case 8:
+                            ch3_pwm == 1800;
+                        break;
+                        case 9:
+                            ch3_pwm == 1900;
+                        break;
+                        case 10:
+                            ch3_pwm == 2000;
+                        break;
+                        default:
+                            ch3_pwm == 1000;
+                        break;
+                    }
+                    hal.rcout->write(ch_num, ch3_pwm);                              
                 }
             }            
             else
