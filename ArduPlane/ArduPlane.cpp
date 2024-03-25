@@ -93,7 +93,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     // 下面这个函数和读取测距模块的数据有关
     SCHED_TASK(read_rangefinder, 50, 100, 78),
     // 下面这个函数和读取编码器的数据有关
-    SCHED_TASK(read_recoder,     50, 50, 79),
+    SCHED_TASK(read_recoder,     100, 50, 79),
     SCHED_TASK_CLASS(AP_ICEngine, &plane.g2.ice_control, update, 10, 100, 81),
     // 下面这个函数和读取磁罗盘的数据有关
     SCHED_TASK_CLASS(Compass, &plane.compass, cal_update, 50, 50, 84),
@@ -127,6 +127,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
 #endif // AP_TERRAIN_AVAILABLE
     SCHED_TASK(update_is_flying_5Hz, 5, 100, 135),
 #if LOGGING_ENABLED == ENABLED
+    // 日志的读写频率并不是通过这个地方的50Hz来控制的。
     SCHED_TASK_CLASS(AP_Logger, &plane.logger, periodic_tasks, 50, 400, 138),
 #endif
     SCHED_TASK_CLASS(AP_InertialSensor, &plane.ins, periodic, 50, 50, 141),

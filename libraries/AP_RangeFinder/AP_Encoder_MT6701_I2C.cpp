@@ -11,7 +11,7 @@ float relative_gear_rev = 0.0;
 float new_relative_gear_rev = 0.0;
 float old_relative_gear_rev = 0.0;
 #define SEND_TEST_MESSAGE false
-#define SAMPLE_FREQUENCY 0.5
+#define SAMPLE_FREQUENCY 0.01
 #define LPF_factor 200
 
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
@@ -78,6 +78,7 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
     // call timer() at 500Hz.       2,000 us = 0.002 s 
     // call timer() at 200Hz.       5,000 us = 0.005 s 
     // call timer() at 100Hz.       10,000 us = 0.01 s 
+    // call timer() at 50Hz.        20,000 us = 0.02 s 
     // call timer() at 20Hz.        50,000 us = 0.05 s 
     // call timer() at 2Hz.         500,000 us = 0.5 s 
     // call timer() at 2s.          2,000,000 us = 2 s 
