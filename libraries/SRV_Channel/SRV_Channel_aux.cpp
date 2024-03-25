@@ -47,6 +47,10 @@ static bool Motor = true;    // true:电机正在运行，false:电机停止运�
 static bool Servo = false;   // true:舵机正在刹车，false:舵机停止刹车
 static bool old_Glide_Mode_Flag = false;
 static uint8_t Switch_Num = 0;
+float target_angle_MT6701 = 100;
+uint16_t break_delay_time_ms = 120;
+uint16_t mag_angle_delay_time_ms = 0;
+uint16_t total_delay_time_ms = 0;
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
@@ -94,6 +98,7 @@ void SRV_Channel::output_ch(void)
             if(old_Glide_Mode_Flag == false)
             {
                 old_Glide_Mode_Flag = true;
+                break_angle_MT6701_flag = true;
                 Switch_Num++;
                 gcs().send_text(MAV_SEVERITY_CRITICAL, ">>>>Switch_Num: %d.", Switch_Num);
             }
@@ -125,6 +130,19 @@ void SRV_Channel::output_ch(void)
             {
                 if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
+                    // // 情况一
+                    // if((target_angle_MT6701 - break_angle_MT6701) >= 0)
+                    // {
+                    //     mag_angle_delay_time_ms = (int16_t)((target_angle_MT6701 - break_angle_MT6701) / 360 / avg_relative_gear_rev);
+                    //     total_delay_time_ms = break_delay_time_ms + mag_angle_delay_time_ms;
+                        
+                    // }
+                    // // 情况四
+                    // else
+                    // {
+
+                    // }
+                    // hal.scheduler->delay(120);
                     Servo = SERVO_BRAKE;
                     // angle_MT6701 = angle_MT6701 + 1;
                     // hal.scheduler->delay(10);

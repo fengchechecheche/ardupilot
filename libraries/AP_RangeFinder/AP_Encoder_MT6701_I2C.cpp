@@ -11,6 +11,8 @@
 #define Buff_Num 20
 
 float angle_MT6701 = 0.0;
+float break_angle_MT6701 = 0.0;
+bool break_angle_MT6701_flag = false;
 float old_angle_MT6701 = 0.0;
 float angle_MT6701_error = 0.0;
 float relative_gear_rev = 0.0;
@@ -19,6 +21,7 @@ float old_relative_gear_rev = 0.0;
 float avg_relative_gear_rev = 0.0;
 float sum_relative_gear_rev = 0.0;
 float relative_gear_rev_buff[Buff_Num] = {};
+float gear_travel_angle = 0.0;
 
 
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
@@ -106,10 +109,26 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
     angle_MT6701 = angle_f;
 
+    if((break_angle_MT6701_flag == true))
+    {
+        break_angle_MT6701_flag = false;
+        break_angle_MT6701 = angle_MT6701;       
+    }
+
     // 磁场角度没有从360度跨到0度的情况
     if(angle_MT6701 - old_angle_MT6701 > 0.0)
     {
         angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
+
+         if((break_angle_MT6701_flag == true) && (relative_gear_rev != 0))
+         {
+            gear_travel_angle+= angle_MT6701_error;
+         }
+         else
+         {
+            gear_travel_angle = 0;
+         }
+
         if(angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
             old_angle_MT6701 = angle_MT6701;
@@ -118,6 +137,8 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
             relative_gear_rev = ((255 - LPF_factor) * new_relative_gear_rev + LPF_factor * old_relative_gear_rev) / 255;
             old_relative_gear_rev = relative_gear_rev;
 
+            // 存储齿轮转速平均值的变量 avg_relative_gear_rev 只有在齿轮转动的时候才会更新
+            // 当限幅滤波不通过或齿轮停转转动时，变量 avg_relative_gear_rev 的值不会被更新。
             sum_relative_gear_rev = 0.0;
             for(uint8_t i = 0; i<Buff_Num-1; i++)
             {
