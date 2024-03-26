@@ -23,7 +23,6 @@ float sum_relative_gear_rev = 0.0;
 float relative_gear_rev_buff[Buff_Num] = {};
 float gear_travel_angle = 0.0;
 
-
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
     : AP_Encoder_Backend(encoder), _dev(std::move(dev)) {}
 
@@ -84,14 +83,14 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-2] timeout.bytes[1]: %d.\n", timeout.bytes[1]);
     hal.scheduler->delay(10);
 
-    // call timer() at 800Hz.       1,250 us = 0.00125 s 
-    // call timer() at 500Hz.       2,000 us = 0.002 s 
-    // call timer() at 200Hz.       5,000 us = 0.005 s 
-    // call timer() at 100Hz.       10,000 us = 0.01 s 
-    // call timer() at 20Hz.        50,000 us = 0.05 s 
-    // call timer() at 2Hz.         500,000 us = 0.5 s 
-    // call timer() at 2s.          2,000,000 us = 2 s 
-    // call timer() at 2s.          5,000,000 us = 5 s 
+    // call timer() at 800Hz.       1,250 us = 0.00125 s
+    // call timer() at 500Hz.       2,000 us = 0.002 s
+    // call timer() at 200Hz.       5,000 us = 0.005 s
+    // call timer() at 100Hz.       10,000 us = 0.01 s
+    // call timer() at 20Hz.        50,000 us = 0.05 s
+    // call timer() at 2Hz.         500,000 us = 0.5 s
+    // call timer() at 2s.          2,000,000 us = 2 s
+    // call timer() at 2s.          5,000,000 us = 5 s
     _dev->register_periodic_callback(SAMPLE_FREQUENCY * 1000000, FUNCTOR_BIND_MEMBER(&AP_Encoder_MT6701_I2C::encoder_timer, void));
     hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-4] run AP_Encoder_MT6701_I2C::encoder_init() success.\n");
@@ -101,7 +100,7 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
 }
 
 void AP_Encoder_MT6701_I2C::encoder_timer(void)
-{  
+{
     // 为 angle_f 赋初值，避免仿真编译报错
     float angle_f = 0.0;
 
@@ -109,27 +108,27 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
     angle_MT6701 = angle_f;
 
-    if((break_angle_MT6701_flag == true))
+    if ((break_angle_MT6701_flag == true))
     {
         break_angle_MT6701_flag = false;
-        break_angle_MT6701 = angle_MT6701;       
+        break_angle_MT6701 = angle_MT6701;
     }
 
     // 磁场角度没有从360度跨到0度的情况
-    if(angle_MT6701 - old_angle_MT6701 > 0.0)
+    if (angle_MT6701 - old_angle_MT6701 > 0.0)
     {
         angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
 
-         if((break_angle_MT6701_flag == true) && (relative_gear_rev != 0))
-         {
-            gear_travel_angle+= angle_MT6701_error;
-         }
-         else
-         {
+        if ((break_angle_MT6701_flag == true) && (relative_gear_rev != 0))
+        {
+            gear_travel_angle += angle_MT6701_error;
+        }
+        else
+        {
             gear_travel_angle = 0;
-         }
+        }
 
-        if(angle_MT6701_error - MAX_LIMIT_factor < 0.0)
+        if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
@@ -140,13 +139,13 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
             // 存储齿轮转速平均值的变量 avg_relative_gear_rev 只有在齿轮转动的时候才会更新
             // 当限幅滤波不通过或齿轮停转转动时，变量 avg_relative_gear_rev 的值不会被更新。
             sum_relative_gear_rev = 0.0;
-            for(uint8_t i = 0; i<Buff_Num-1; i++)
+            for (uint8_t i = 0; i < Buff_Num - 1; i++)
             {
-                relative_gear_rev_buff[i] = relative_gear_rev_buff[i+1];
+                relative_gear_rev_buff[i] = relative_gear_rev_buff[i + 1];
                 sum_relative_gear_rev += relative_gear_rev_buff[i];
             }
-            relative_gear_rev_buff[Buff_Num-1] = relative_gear_rev;
-            sum_relative_gear_rev += relative_gear_rev_buff[Buff_Num-1];
+            relative_gear_rev_buff[Buff_Num - 1] = relative_gear_rev;
+            sum_relative_gear_rev += relative_gear_rev_buff[Buff_Num - 1];
             avg_relative_gear_rev = sum_relative_gear_rev / Buff_Num;
         }
         else
@@ -156,7 +155,7 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
         }
     }
     // 磁场角度从360度跨到0度的情况
-    else if(angle_MT6701 - old_angle_MT6701 < 0.0)
+    else if (angle_MT6701 - old_angle_MT6701 < 0.0)
     {
         angle_MT6701_error = 360 - old_angle_MT6701 + angle_MT6701;
 
@@ -171,7 +170,7 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
          * 2.优点：能有效克服因偶然因素引起的脉冲干扰。
          * 3.缺点：无法抑制那种周期性的干扰,且平滑度差
          * */
-        if(angle_MT6701_error - MAX_LIMIT_factor < 0.0)
+        if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
@@ -180,35 +179,34 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
             old_relative_gear_rev = relative_gear_rev;
 
             sum_relative_gear_rev = 0.0;
-            for(uint8_t j = 0; j<Buff_Num-1; j++)
+            for (uint8_t j = 0; j < Buff_Num - 1; j++)
             {
-                relative_gear_rev_buff[j] = relative_gear_rev_buff[j+1];
+                relative_gear_rev_buff[j] = relative_gear_rev_buff[j + 1];
                 sum_relative_gear_rev += relative_gear_rev_buff[j];
             }
-            relative_gear_rev_buff[Buff_Num-1] = relative_gear_rev;
-            sum_relative_gear_rev += relative_gear_rev_buff[Buff_Num-1];
+            relative_gear_rev_buff[Buff_Num - 1] = relative_gear_rev;
+            sum_relative_gear_rev += relative_gear_rev_buff[Buff_Num - 1];
             avg_relative_gear_rev = sum_relative_gear_rev / Buff_Num;
         }
         else
         {
             angle_MT6701_error = 0.0;
             relative_gear_rev = 0.0;
-        }      
+        }
     }
     else
     {
         angle_MT6701_error = 0.0;
         relative_gear_rev = 0.0;
     }
-    
-    
+
     // if(SEND_TEST_MESSAGE)
     // {
     //     hal.scheduler->delay(10);
     //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
     //     hal.scheduler->delay(10);
     // }
-    
+
     // hal.scheduler->delay(10);
     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-3] gear_rev: %.4f.", relative_gear_rev);
@@ -227,10 +225,11 @@ void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
     if (_dev->transfer(&read_reg3, 1, &ReadBuffer, sizeof(ReadBuffer)))
     {
         angle = ReadBuffer;
-        angle <<= 8;     
+        angle <<= 8;
     }
-    else{
-        if(SEND_TEST_MESSAGE)
+    else
+    {
+        if (SEND_TEST_MESSAGE)
         {
             hal.scheduler->delay(10);
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3] read register 0x03 failed.");
@@ -244,10 +243,11 @@ void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
         angle += ReadBuffer;
         angle >>= 2;
         angle_f = (float)(angle * 360.0) / 16384.0;
-        reading_m = angle_f;     
+        reading_m = angle_f;
     }
-    else{
-        if(SEND_TEST_MESSAGE)
+    else
+    {
+        if (SEND_TEST_MESSAGE)
         {
             hal.scheduler->delay(10);
             gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-5] read register 0x04 failed.");
@@ -265,6 +265,3 @@ void AP_Encoder_MT6701_I2C::update(void)
 {
     // nothing to do - its all done in the timer()
 }
-
-
-

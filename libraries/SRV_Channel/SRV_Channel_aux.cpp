@@ -130,6 +130,8 @@ void SRV_Channel::output_ch(void)
             {
                 if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
+                    // 尝试通过 ch3_pwm 的值、测量到的齿轮转速、之前存储的齿轮转过的角度对等待延时时间和减速延时时间进行修正。
+                    // 先用1100到1400的 ch3_pwm 值进行测试，更高的值可以先暂时不用测。
                     // // 情况一
                     // if((target_angle_MT6701 - break_angle_MT6701) >= 0)
                     // {
