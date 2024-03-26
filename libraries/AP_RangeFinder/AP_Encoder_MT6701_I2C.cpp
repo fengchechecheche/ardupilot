@@ -12,7 +12,7 @@
 
 float angle_MT6701 = 0.0;
 float break_angle_MT6701 = 0.0;
-bool break_angle_MT6701_flag = false;
+bool  break_angle_MT6701_flag = false;
 float old_angle_MT6701 = 0.0;
 float angle_MT6701_error = 0.0;
 float relative_gear_rev = 0.0;
@@ -22,6 +22,7 @@ float avg_relative_gear_rev = 0.0;
 float sum_relative_gear_rev = 0.0;
 float relative_gear_rev_buff[Buff_Num] = {};
 float gear_travel_angle = 0.0;
+bool  gear_travel_angle_flag = false;
 
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
     : AP_Encoder_Backend(encoder), _dev(std::move(dev)) {}
@@ -121,12 +122,13 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
         if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
-            if ((break_angle_MT6701_flag == true) && (abs(relative_gear_rev - 0) > 0.0))
+            if ((gear_travel_angle_flag == true) && (relative_gear_rev - 0 > 0.0))
             {
                 gear_travel_angle += angle_MT6701_error;
             }
             else
             {
+                gear_travel_angle_flag = false;
                 gear_travel_angle = 0;
             }
 
@@ -172,12 +174,13 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
          * */
         if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
-            if ((break_angle_MT6701_flag == true) && (abs(relative_gear_rev - 0) > 0.0))
+            if ((gear_travel_angle_flag == true) && (relative_gear_rev - 0 > 0.0))
             {
                 gear_travel_angle += angle_MT6701_error;
             }
             else
             {
+                gear_travel_angle_flag = false;
                 gear_travel_angle = 0;
             }
 
@@ -216,10 +219,10 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     //     hal.scheduler->delay(10);
     // }
 
-    hal.scheduler->delay(10);
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-3] gear_rev: %.4f.", relative_gear_rev);
-    hal.scheduler->delay(10);
+    // hal.scheduler->delay(10);
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-3] gear_rev: %.4f.", relative_gear_rev);
+    // hal.scheduler->delay(10);
 }
 
 void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)

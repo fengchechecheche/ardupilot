@@ -69,7 +69,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(set_servos, 400, 100, 21),
     SCHED_TASK(update_throttle_hover, 100, 90, 24),
     SCHED_TASK(read_control_switch, 7, 100, 27),
-    SCHED_TASK(read_glide_switch, 7, 100, 28),
+    SCHED_TASK(read_glide_switch, 100, 100, 28),
     SCHED_TASK(update_GPS_50Hz, 50, 300, 30),
     SCHED_TASK(update_GPS_10Hz, 10, 400, 33),
     SCHED_TASK(navigate, 10, 150, 36),

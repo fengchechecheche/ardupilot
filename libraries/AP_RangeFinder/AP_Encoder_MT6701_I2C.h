@@ -7,13 +7,14 @@
 extern const AP_HAL::HAL &hal;
 extern float angle_MT6701;
 extern float break_angle_MT6701;
-extern bool break_angle_MT6701_flag;
+extern bool  break_angle_MT6701_flag;
 extern float angle_MT6701_error;
 extern float relative_gear_rev;
 extern float new_relative_gear_rev;
 extern float old_relative_gear_rev;
 extern float avg_relative_gear_rev;
 extern float gear_travel_angle;
+extern bool  gear_travel_angle_flag;
 #define SlaveAddress 0X06 //MT6701 地址
 #define ReadAddress1 0X03 // 数据高位寄存器地址
 #define ReadAddress2 0X04 // 数据低位寄存器地址

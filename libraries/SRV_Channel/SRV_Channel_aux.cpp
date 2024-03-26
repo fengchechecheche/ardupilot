@@ -32,7 +32,7 @@
 extern const AP_HAL::HAL& hal;
 
 #define MOTOR_STOP_VALUE 1000
-#define SERVO_BRAKE_VALUE 1900
+#define SERVO_BRAKE_VALUE 1850
 #define SERVO_RELEASE_VALUE 1100
 #define MOTOR_STOP false
 #define MOTOR_RUN true
@@ -48,7 +48,8 @@ static bool Servo = false;   // true:舵机正在刹车，false:舵机停止刹�
 static bool old_Glide_Mode_Flag = false;
 static uint8_t Switch_Num = 0;
 float target_angle_MT6701 = 100;
-uint16_t break_delay_time_ms = 120;
+float breaking_angle = 0.0;
+uint16_t break_delay_time_ms = 0;
 uint16_t mag_angle_delay_time_ms = 0;
 uint16_t total_delay_time_ms = 0;
 
@@ -99,6 +100,7 @@ void SRV_Channel::output_ch(void)
             {
                 old_Glide_Mode_Flag = true;
                 break_angle_MT6701_flag = true;
+                gear_travel_angle_flag = true;
                 Switch_Num++;
                 gcs().send_text(MAV_SEVERITY_CRITICAL, ">>>>Switch_Num: %d.", Switch_Num);
             }
@@ -130,20 +132,53 @@ void SRV_Channel::output_ch(void)
             {
                 if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
+                    // breaking_angle 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需角度
+                    // 不同转速下的 breaking_angle 值应该是不同的
+                    // break_delay_time_ms 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需时间
+                    // 不同转速下的 break_delay_time_ms 值应该是不同的
+                    breaking_angle = 60;
+                    break_delay_time_ms = 120;
+
                     // 尝试通过 ch3_pwm 的值、测量到的齿轮转速、之前存储的齿轮转过的角度对等待延时时间和减速延时时间进行修正。
                     // 先用1100到1400的 ch3_pwm 值进行测试，更高的值可以先暂时不用测。
-                    // // 情况一
-                    // if((target_angle_MT6701 - break_angle_MT6701) >= 0)
-                    // {
-                    //     mag_angle_delay_time_ms = (int16_t)((target_angle_MT6701 - break_angle_MT6701) / 360 / avg_relative_gear_rev);
-                    //     total_delay_time_ms = break_delay_time_ms + mag_angle_delay_time_ms;
-                        
-                    // }
-                    // // 情况四
-                    // else
-                    // {
-
-                    // }
+                    // 情况一
+                    if((target_angle_MT6701 - break_angle_MT6701) >= 0)
+                    {
+                        // 情况二
+                        // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
+                        // 说明需要让齿轮保持当前速度并等待一定时间
+                        if((target_angle_MT6701 - (break_angle_MT6701 + breaking_angle)) > 0)
+                        {
+                            mag_angle_delay_time_ms = (int16_t)((target_angle_MT6701 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev);
+                        }  
+                        // 情况三
+                        // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
+                        // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
+                        else
+                        {
+                            mag_angle_delay_time_ms = (int16_t)((target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle)) / 360 / avg_relative_gear_rev;
+                        }
+                        total_delay_time_ms = break_delay_time_ms + mag_angle_delay_time_ms;
+                    }
+                    // 情况四
+                    else
+                    {
+                        // 情况五
+                        // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
+                        // 说明需要让齿轮保持当前速度并等待一定时间
+                        if((360 - break_angle_MT6701 + target_angle_MT6701 - breaking_angle) > 0)
+                        {
+                            mag_angle_delay_time_ms = (int16_t)(target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
+                        }  
+                        // 情况六
+                        // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
+                        // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
+                        else
+                        {
+                            mag_angle_delay_time_ms = (int16_t)(target_angle_MT6701 + 720 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
+                        }
+                        total_delay_time_ms = break_delay_time_ms + mag_angle_delay_time_ms;
+                    }
                     // hal.scheduler->delay(120);
                     Servo = SERVO_BRAKE;
                     // angle_MT6701 = angle_MT6701 + 1;
