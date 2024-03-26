@@ -102,6 +102,10 @@ void SRV_Channel::output_ch(void)
                 break_angle_MT6701_flag = true;
                 gear_travel_angle_flag = true;
                 Switch_Num++;
+                if(Switch_Num == 5)
+                {
+                    Switch_Num = 1;
+                }
                 gcs().send_text(MAV_SEVERITY_CRITICAL, ">>>>Switch_Num: %d.", Switch_Num);
             }
             /*
@@ -136,8 +140,16 @@ void SRV_Channel::output_ch(void)
                     // 不同转速下的 breaking_angle 值应该是不同的
                     // break_delay_time_ms 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需时间
                     // 不同转速下的 break_delay_time_ms 值应该是不同的
-                    breaking_angle = 60;
-                    break_delay_time_ms = 120;
+                    if(abs(avg_relative_gear_rev - 2) < 0.5)
+                    {
+                        breaking_angle = 54.08;
+                        break_delay_time_ms = 152;
+                    }
+                    else if(abs(avg_relative_gear_rev - 5)< 0.5)
+                    {
+                        breaking_angle = 147.10;
+                        break_delay_time_ms = 152;
+                    }
 
                     // 尝试通过 ch3_pwm 的值、测量到的齿轮转速、之前存储的齿轮转过的角度对等待延时时间和减速延时时间进行修正。
                     // 先用1100到1400的 ch3_pwm 值进行测试，更高的值可以先暂时不用测。
@@ -179,7 +191,7 @@ void SRV_Channel::output_ch(void)
                         }
                         total_delay_time_ms = break_delay_time_ms + mag_angle_delay_time_ms;
                     }
-                    // hal.scheduler->delay(120);
+                    // hal.scheduler->delay(total_delay_time_ms);
                     Servo = SERVO_BRAKE;
                     // angle_MT6701 = angle_MT6701 + 1;
                     // hal.scheduler->delay(10);
@@ -228,21 +240,21 @@ void SRV_Channel::output_ch(void)
                         case 2:  ch3_pwm = 1150; break;
                         case 3:  ch3_pwm = 1200; break;
                         case 4:  ch3_pwm = 1250; break;
-                        case 5:  ch3_pwm = 1300; break;
-                        case 6:  ch3_pwm = 1350; break;
-                        case 7:  ch3_pwm = 1400; break;
-                        case 8:  ch3_pwm = 1450; break;
-                        case 9:  ch3_pwm = 1500; break;
-                        case 10: ch3_pwm = 1550; break;
-                        case 11: ch3_pwm = 1600; break;
-                        case 12: ch3_pwm = 1650; break;
-                        case 13: ch3_pwm = 1700; break;
-                        case 14: ch3_pwm = 1750; break;
-                        case 15: ch3_pwm = 1800; break;
-                        case 16: ch3_pwm = 1850; break;
-                        case 17: ch3_pwm = 1900; break;
-                        case 18: ch3_pwm = 1950; break;
-                        case 19: ch3_pwm = 2000; break;
+                        // case 5:  ch3_pwm = 1300; break;
+                        // case 6:  ch3_pwm = 1350; break;
+                        // case 7:  ch3_pwm = 1400; break;
+                        // case 8:  ch3_pwm = 1450; break;
+                        // case 9:  ch3_pwm = 1500; break;
+                        // case 10: ch3_pwm = 1550; break;
+                        // case 11: ch3_pwm = 1600; break;
+                        // case 12: ch3_pwm = 1650; break;
+                        // case 13: ch3_pwm = 1700; break;
+                        // case 14: ch3_pwm = 1750; break;
+                        // case 15: ch3_pwm = 1800; break;
+                        // case 16: ch3_pwm = 1850; break;
+                        // case 17: ch3_pwm = 1900; break;
+                        // case 18: ch3_pwm = 1950; break;
+                        // case 19: ch3_pwm = 2000; break;
                         default: ch3_pwm = 1000; break;
                     }
                     hal.rcout->write(ch_num, ch3_pwm);                                 
@@ -255,21 +267,21 @@ void SRV_Channel::output_ch(void)
                         case 2:  ch3_pwm = 1150; break;
                         case 3:  ch3_pwm = 1200; break;
                         case 4:  ch3_pwm = 1250; break;
-                        case 5:  ch3_pwm = 1300; break;
-                        case 6:  ch3_pwm = 1350; break;
-                        case 7:  ch3_pwm = 1400; break;
-                        case 8:  ch3_pwm = 1450; break;
-                        case 9:  ch3_pwm = 1500; break;
-                        case 10: ch3_pwm = 1550; break;
-                        case 11: ch3_pwm = 1600; break;
-                        case 12: ch3_pwm = 1650; break;
-                        case 13: ch3_pwm = 1700; break;
-                        case 14: ch3_pwm = 1750; break;
-                        case 15: ch3_pwm = 1800; break;
-                        case 16: ch3_pwm = 1850; break;
-                        case 17: ch3_pwm = 1900; break;
-                        case 18: ch3_pwm = 1950; break;
-                        case 19: ch3_pwm = 2000; break;
+                        // case 5:  ch3_pwm = 1300; break;
+                        // case 6:  ch3_pwm = 1350; break;
+                        // case 7:  ch3_pwm = 1400; break;
+                        // case 8:  ch3_pwm = 1450; break;
+                        // case 9:  ch3_pwm = 1500; break;
+                        // case 10: ch3_pwm = 1550; break;
+                        // case 11: ch3_pwm = 1600; break;
+                        // case 12: ch3_pwm = 1650; break;
+                        // case 13: ch3_pwm = 1700; break;
+                        // case 14: ch3_pwm = 1750; break;
+                        // case 15: ch3_pwm = 1800; break;
+                        // case 16: ch3_pwm = 1850; break;
+                        // case 17: ch3_pwm = 1900; break;
+                        // case 18: ch3_pwm = 1950; break;
+                        // case 19: ch3_pwm = 2000; break;
                         default: ch3_pwm = 1000; break;
                     }
                     hal.rcout->write(ch_num, ch3_pwm);                              
