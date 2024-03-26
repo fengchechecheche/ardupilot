@@ -170,7 +170,6 @@ void SRV_Channel::output_ch(void)
             {
                 hal.rcout->write(ch_num, output_pwm);
             }
-            // hal.scheduler->delay(10);
         }
         else
         {
@@ -244,8 +243,7 @@ void SRV_Channel::output_ch(void)
             else
             {
                 hal.rcout->write(ch_num, output_pwm);
-            }
-            // hal.scheduler->delay(10);            
+            }      
         }      
     }
 }
