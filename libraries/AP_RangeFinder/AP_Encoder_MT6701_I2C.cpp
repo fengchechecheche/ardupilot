@@ -119,17 +119,17 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     {
         angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
 
-        if ((break_angle_MT6701_flag == true) && (relative_gear_rev != 0))
-        {
-            gear_travel_angle += angle_MT6701_error;
-        }
-        else
-        {
-            gear_travel_angle = 0;
-        }
-
         if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
+            if ((break_angle_MT6701_flag == true) && (abs(relative_gear_rev - 0) > 0.0))
+            {
+                gear_travel_angle += angle_MT6701_error;
+            }
+            else
+            {
+                gear_travel_angle = 0;
+            }
+
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
             new_relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
@@ -172,6 +172,15 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
          * */
         if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
+            if ((break_angle_MT6701_flag == true) && (abs(relative_gear_rev - 0) > 0.0))
+            {
+                gear_travel_angle += angle_MT6701_error;
+            }
+            else
+            {
+                gear_travel_angle = 0;
+            }
+
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
             new_relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
