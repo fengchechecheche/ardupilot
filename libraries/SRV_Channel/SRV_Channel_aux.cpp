@@ -29,7 +29,7 @@
 #pragma GCC diagnostic ignored "-Wtype-limits"
 #endif
 
-extern const AP_HAL::HAL& hal;
+extern const AP_HAL::HAL &hal;
 
 #define MOTOR_STOP_VALUE 1000
 #define SERVO_BRAKE_VALUE 1850
@@ -43,8 +43,8 @@ extern const AP_HAL::HAL& hal;
 static uint16_t ch3_pwm = 1100;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
-static bool Motor = true;    // true:电机正在运行，false:电机停止运行
-static bool Servo = false;   // true:舵机正在刹车，false:舵机停止刹车
+static bool Motor = true;  // true:电机正在运行，false:电机停止运行
+static bool Servo = false; // true:舵机正在刹车，false:舵机停止刹车
 static bool old_Glide_Mode_Flag = false;
 static uint8_t Switch_Num = 0;
 float target_angle_MT6701 = 100;
@@ -60,29 +60,38 @@ void SRV_Channel::output_ch(void)
     int8_t passthrough_from = -1;
 
     // take care of special function cases
-    switch(function.get())
+    switch (function.get())
     {
-    case k_manual:              // manual
+    case k_manual: // manual
         passthrough_from = ch_num;
         break;
     case k_rcin1 ... k_rcin16: // rc pass-thru
         passthrough_from = int8_t((int16_t)function - k_rcin1);
         break;
     }
-    if (passthrough_from != -1) {
+    if (passthrough_from != -1)
+    {
         // we are doing passthrough from input to output for this channel
         RC_Channel *c = rc().channel(passthrough_from);
-        if (c) {
-            if (SRV_Channels::passthrough_disabled()) {
+        if (c)
+        {
+            if (SRV_Channels::passthrough_disabled())
+            {
                 output_pwm = c->get_radio_trim();
-            } else {
+            }
+            else
+            {
                 const int16_t radio_in = c->get_radio_in();
-                if (!ign_small_rcin_changes) {
+                if (!ign_small_rcin_changes)
+                {
                     output_pwm = radio_in;
                     previous_radio_in = radio_in;
-                } else {
+                }
+                else
+                {
                     // check if rc input value has changed by more than the deadzone
-                    if (abs(radio_in - previous_radio_in) > c->get_dead_zone()) {
+                    if (abs(radio_in - previous_radio_in) > c->get_dead_zone())
+                    {
                         output_pwm = radio_in;
                         ign_small_rcin_changes = false;
                     }
@@ -91,18 +100,35 @@ void SRV_Channel::output_ch(void)
         }
     }
 #endif // HAL_BUILD_AP_PERIPH
-    
-    if (!(SRV_Channels::disabled_mask & (1U<<ch_num))) 
-    {        
-        if(Glide_Mode_Flag == true)
+
+    if (!(SRV_Channels::disabled_mask & (1U << ch_num)))
+    {
+        if (Glide_Mode_Flag == true)
         {
-            if(old_Glide_Mode_Flag == false)
+            // 尝试通过 ch3_pwm 的值、测量到的齿轮转速、之前存储的齿轮转过的角度对等待延时时间和减速延时时间进行修正。
+            // 先用1100到1400的 ch3_pwm 值进行测试，更高的值可以先暂时不用测。
+            // breaking_angle 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需角度
+            // 不同转速下的 breaking_angle 值应该是不同的
+            // break_delay_time_ms 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需时间
+            // 不同转速下的 break_delay_time_ms 值应该是不同的
+            if (abs(avg_relative_gear_rev - 2) < 0.5)
+            {
+                breaking_angle = 53.11;
+                break_delay_time_ms = 150;
+            }
+            else if (abs(avg_relative_gear_rev - 5) < 0.5)
+            {
+                breaking_angle = 149.04;
+                break_delay_time_ms = 150;
+            }
+
+            if (old_Glide_Mode_Flag == false)
             {
                 old_Glide_Mode_Flag = true;
                 break_angle_MT6701_flag = true;
                 gear_travel_angle_flag = true;
                 Switch_Num++;
-                if(Switch_Num == 5)
+                if (Switch_Num == 5)
                 {
                     Switch_Num = 1;
                 }
@@ -117,7 +143,7 @@ void SRV_Channel::output_ch(void)
              * if(电机通道){}
              * else if(舵机通道){}
              * else{其他通道}
-             * 
+             *
              * 错误写法【1】
              * if(舵机通道){}
              * if(电机通道){}
@@ -132,37 +158,36 @@ void SRV_Channel::output_ch(void)
              * 对于错误写法【2】，当电机通道执行output_ch()时，会进入if(电机通道)语句
              * 但同时也会进入else{其他通道}语句，此时电机通道就不再受持续控制
              * */
-            if(ch_num == 0) // 制动舵机
+            if (ch_num == 0) // 制动舵机
             {
-                if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
+                // 驱动舵机臂刹车
+                if ((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
-                    // breaking_angle 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需角度
-                    // 不同转速下的 breaking_angle 值应该是不同的
-                    // break_delay_time_ms 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需时间
-                    // 不同转速下的 break_delay_time_ms 值应该是不同的
-                    if(abs(avg_relative_gear_rev - 2) < 0.5)
-                    {
-                        breaking_angle = 54.08;
-                        break_delay_time_ms = 152;
-                    }
-                    else if(abs(avg_relative_gear_rev - 5)< 0.5)
-                    {
-                        breaking_angle = 147.10;
-                        break_delay_time_ms = 152;
-                    }
-
-                    // 尝试通过 ch3_pwm 的值、测量到的齿轮转速、之前存储的齿轮转过的角度对等待延时时间和减速延时时间进行修正。
-                    // 先用1100到1400的 ch3_pwm 值进行测试，更高的值可以先暂时不用测。
+                    hal.scheduler->delay(total_delay_time_ms);
+                    Servo = SERVO_BRAKE;
+                    // angle_MT6701 = angle_MT6701 + 1;
+                    // hal.scheduler->delay(10);
+                    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
+                    // hal.scheduler->delay(10);
+                    // ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
+                    hal.rcout->write(ch_num, SERVO_BRAKE_VALUE);
+                }
+            }
+            else if (ch_num == 2) // 驱动电机
+            {
+                // 电机停转
+                if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
+                {
                     // 情况一
-                    if((target_angle_MT6701 - break_angle_MT6701) >= 0)
+                    if ((target_angle_MT6701 - break_angle_MT6701) >= 0)
                     {
                         // 情况二
                         // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
                         // 说明需要让齿轮保持当前速度并等待一定时间
-                        if((target_angle_MT6701 - (break_angle_MT6701 + breaking_angle)) > 0)
+                        if ((target_angle_MT6701 - (break_angle_MT6701 + breaking_angle)) > 0)
                         {
                             mag_angle_delay_time_ms = (int16_t)((target_angle_MT6701 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev);
-                        }  
+                        }
                         // 情况三
                         // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
                         // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
@@ -170,7 +195,6 @@ void SRV_Channel::output_ch(void)
                         {
                             mag_angle_delay_time_ms = (int16_t)((target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle)) / 360 / avg_relative_gear_rev;
                         }
-                        total_delay_time_ms = break_delay_time_ms + mag_angle_delay_time_ms;
                     }
                     // 情况四
                     else
@@ -178,10 +202,10 @@ void SRV_Channel::output_ch(void)
                         // 情况五
                         // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
                         // 说明需要让齿轮保持当前速度并等待一定时间
-                        if((360 - break_angle_MT6701 + target_angle_MT6701 - breaking_angle) > 0)
+                        if ((360 - break_angle_MT6701 + target_angle_MT6701 - breaking_angle) > 0)
                         {
                             mag_angle_delay_time_ms = (int16_t)(target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
-                        }  
+                        }
                         // 情况六
                         // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
                         // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
@@ -189,31 +213,18 @@ void SRV_Channel::output_ch(void)
                         {
                             mag_angle_delay_time_ms = (int16_t)(target_angle_MT6701 + 720 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
                         }
-                        total_delay_time_ms = break_delay_time_ms + mag_angle_delay_time_ms;
                     }
-                    // hal.scheduler->delay(total_delay_time_ms);
-                    Servo = SERVO_BRAKE;
-                    // angle_MT6701 = angle_MT6701 + 1;
-                    // hal.scheduler->delay(10);
-                    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
-                    // hal.scheduler->delay(10);
-                    // ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
-                    hal.rcout->write(ch_num, SERVO_BRAKE_VALUE);                                      
-                }                
-            }
-            else if(ch_num == 2) // 驱动电机
-            {
-                if((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
-                {
+                    hal.scheduler->delay(mag_angle_delay_time_ms);
+
                     Motor = MOTOR_STOP;
                     // angle_MT6701 = angle_MT6701 + 1;
                     // hal.scheduler->delay(10);
                     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
                     // hal.scheduler->delay(10);
-                    hal.rcout->write(ch_num, MOTOR_STOP_VALUE);                                   
-                }                
-            }            
-            else    // 其他PWM通道
+                    hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
+                }
+            }
+            else // 其他PWM通道
             {
                 hal.rcout->write(ch_num, output_pwm);
             }
@@ -221,77 +232,97 @@ void SRV_Channel::output_ch(void)
         else
         {
             old_Glide_Mode_Flag = Glide_Mode_Flag;
-            if(ch_num == 0) // 制动舵机
+            if (ch_num == 0) // 制动舵机
             {
-                if((Motor == MOTOR_STOP) && (Servo == SERVO_BRAKE))
+                if ((Motor == MOTOR_STOP) && (Servo == SERVO_BRAKE))
                 {
                     Servo = SERVO_RELEASE;
-                    hal.rcout->write(ch_num, SERVO_RELEASE_VALUE);                                    
-                }                
+                    hal.rcout->write(ch_num, SERVO_RELEASE_VALUE);
+                }
             }
-            else if(ch_num == 2) // 驱动电机
+            else if (ch_num == 2) // 驱动电机
             {
-                if((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
+                if ((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
                     Motor = MOTOR_RUN;
-                    switch(Switch_Num)
+                    switch (Switch_Num)
                     {
-                        case 1:  ch3_pwm = 1100; break;
-                        case 2:  ch3_pwm = 1150; break;
-                        case 3:  ch3_pwm = 1200; break;
-                        case 4:  ch3_pwm = 1250; break;
-                        // case 5:  ch3_pwm = 1300; break;
-                        // case 6:  ch3_pwm = 1350; break;
-                        // case 7:  ch3_pwm = 1400; break;
-                        // case 8:  ch3_pwm = 1450; break;
-                        // case 9:  ch3_pwm = 1500; break;
-                        // case 10: ch3_pwm = 1550; break;
-                        // case 11: ch3_pwm = 1600; break;
-                        // case 12: ch3_pwm = 1650; break;
-                        // case 13: ch3_pwm = 1700; break;
-                        // case 14: ch3_pwm = 1750; break;
-                        // case 15: ch3_pwm = 1800; break;
-                        // case 16: ch3_pwm = 1850; break;
-                        // case 17: ch3_pwm = 1900; break;
-                        // case 18: ch3_pwm = 1950; break;
-                        // case 19: ch3_pwm = 2000; break;
-                        default: ch3_pwm = 1000; break;
+                    case 1:
+                        ch3_pwm = 1100;
+                        break;
+                    case 2:
+                        ch3_pwm = 1150;
+                        break;
+                    case 3:
+                        ch3_pwm = 1200;
+                        break;
+                    case 4:
+                        ch3_pwm = 1250;
+                        break;
+                    // case 5:  ch3_pwm = 1300; break;
+                    // case 6:  ch3_pwm = 1350; break;
+                    // case 7:  ch3_pwm = 1400; break;
+                    // case 8:  ch3_pwm = 1450; break;
+                    // case 9:  ch3_pwm = 1500; break;
+                    // case 10: ch3_pwm = 1550; break;
+                    // case 11: ch3_pwm = 1600; break;
+                    // case 12: ch3_pwm = 1650; break;
+                    // case 13: ch3_pwm = 1700; break;
+                    // case 14: ch3_pwm = 1750; break;
+                    // case 15: ch3_pwm = 1800; break;
+                    // case 16: ch3_pwm = 1850; break;
+                    // case 17: ch3_pwm = 1900; break;
+                    // case 18: ch3_pwm = 1950; break;
+                    // case 19: ch3_pwm = 2000; break;
+                    default:
+                        ch3_pwm = 1000;
+                        break;
                     }
-                    hal.rcout->write(ch_num, ch3_pwm);                                 
+                    hal.rcout->write(ch_num, ch3_pwm);
                 }
-                else if((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
+                else if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {
-                    switch(Switch_Num)
+                    switch (Switch_Num)
                     {
-                        case 1:  ch3_pwm = 1100; break;
-                        case 2:  ch3_pwm = 1150; break;
-                        case 3:  ch3_pwm = 1200; break;
-                        case 4:  ch3_pwm = 1250; break;
-                        // case 5:  ch3_pwm = 1300; break;
-                        // case 6:  ch3_pwm = 1350; break;
-                        // case 7:  ch3_pwm = 1400; break;
-                        // case 8:  ch3_pwm = 1450; break;
-                        // case 9:  ch3_pwm = 1500; break;
-                        // case 10: ch3_pwm = 1550; break;
-                        // case 11: ch3_pwm = 1600; break;
-                        // case 12: ch3_pwm = 1650; break;
-                        // case 13: ch3_pwm = 1700; break;
-                        // case 14: ch3_pwm = 1750; break;
-                        // case 15: ch3_pwm = 1800; break;
-                        // case 16: ch3_pwm = 1850; break;
-                        // case 17: ch3_pwm = 1900; break;
-                        // case 18: ch3_pwm = 1950; break;
-                        // case 19: ch3_pwm = 2000; break;
-                        default: ch3_pwm = 1000; break;
+                    case 1:
+                        ch3_pwm = 1100;
+                        break;
+                    case 2:
+                        ch3_pwm = 1150;
+                        break;
+                    case 3:
+                        ch3_pwm = 1200;
+                        break;
+                    case 4:
+                        ch3_pwm = 1250;
+                        break;
+                    // case 5:  ch3_pwm = 1300; break;
+                    // case 6:  ch3_pwm = 1350; break;
+                    // case 7:  ch3_pwm = 1400; break;
+                    // case 8:  ch3_pwm = 1450; break;
+                    // case 9:  ch3_pwm = 1500; break;
+                    // case 10: ch3_pwm = 1550; break;
+                    // case 11: ch3_pwm = 1600; break;
+                    // case 12: ch3_pwm = 1650; break;
+                    // case 13: ch3_pwm = 1700; break;
+                    // case 14: ch3_pwm = 1750; break;
+                    // case 15: ch3_pwm = 1800; break;
+                    // case 16: ch3_pwm = 1850; break;
+                    // case 17: ch3_pwm = 1900; break;
+                    // case 18: ch3_pwm = 1950; break;
+                    // case 19: ch3_pwm = 2000; break;
+                    default:
+                        ch3_pwm = 1000;
+                        break;
                     }
-                    hal.rcout->write(ch_num, ch3_pwm);                              
+                    hal.rcout->write(ch_num, ch3_pwm);
                 }
-            }            
+            }
             else
             {
                 hal.rcout->write(ch_num, output_pwm);
-            }      
-        }      
+            }
+        }
     }
 }
 
@@ -300,7 +331,8 @@ void SRV_Channel::output_ch(void)
  */
 void SRV_Channels::output_ch_all(void)
 {
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         channels[i].output_ch();
     }
 }
@@ -310,7 +342,8 @@ void SRV_Channels::output_ch_all(void)
 */
 SRV_Channel::Aux_servo_function_t SRV_Channels::channel_function(uint8_t channel)
 {
-    if (channel < NUM_SERVO_CHANNELS) {
+    if (channel < NUM_SERVO_CHANNELS)
+    {
         return channels[channel].function;
     }
     return SRV_Channel::k_none;
@@ -321,10 +354,12 @@ SRV_Channel::Aux_servo_function_t SRV_Channels::channel_function(uint8_t channel
 */
 void SRV_Channel::aux_servo_function_setup(void)
 {
-    if (type_setup) {
+    if (type_setup)
+    {
         return;
     }
-    switch (function.get()) {
+    switch (function.get())
+    {
     case k_flap:
     case k_flap_auto:
     case k_egg_drop:
@@ -394,24 +429,28 @@ void SRV_Channel::aux_servo_function_setup(void)
 /// setup the output range types of all functions
 void SRV_Channels::update_aux_servo_function(void)
 {
-    if (!channels) {
+    if (!channels)
+    {
         return;
     }
     function_mask.clearall();
 
-    for (uint16_t i = 0; i < SRV_Channel::k_nr_aux_servo_functions; i++) {
+    for (uint16_t i = 0; i < SRV_Channel::k_nr_aux_servo_functions; i++)
+    {
         functions[i].channel_mask = 0;
     }
 
     // set auxiliary ranges
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
-        if (!channels[i].valid_function()) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (!channels[i].valid_function())
+        {
             continue;
         }
         const uint16_t function = channels[i].function.get();
         channels[i].aux_servo_function_setup();
         function_mask.set(function);
-        functions[function].channel_mask |= 1U<<i;
+        functions[function].channel_mask |= 1U << i;
     }
     initialised = true;
 }
@@ -427,24 +466,33 @@ void SRV_Channels::enable_aux_servos()
     // enable all channels that are set to a valid function. This
     // includes k_none servos, which allows those to get their initial
     // trim value on startup
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
         // see if it is a valid function
-        if (c.valid_function() && !(disabled_mask & (1U<<c.ch_num))) {
+        if (c.valid_function() && !(disabled_mask & (1U << c.ch_num)))
+        {
             hal.rcout->enable_ch(c.ch_num);
-        } else {
+        }
+        else
+        {
             hal.rcout->disable_ch(c.ch_num);
         }
 
         // output some servo functions before we fiddle with the
         // parameter values:
-        if (c.function == SRV_Channel::k_min) {
+        if (c.function == SRV_Channel::k_min)
+        {
             c.set_output_pwm(c.servo_min);
             c.output_ch();
-        } else if (c.function == SRV_Channel::k_trim) {
+        }
+        else if (c.function == SRV_Channel::k_trim)
+        {
             c.set_output_pwm(c.servo_trim);
             c.output_ch();
-        } else if (c.function == SRV_Channel::k_max) {
+        }
+        else if (c.function == SRV_Channel::k_max)
+        {
             c.set_output_pwm(c.servo_max);
             c.output_ch();
         }
@@ -468,39 +516,47 @@ void SRV_Channels::enable_aux_servos()
     set TRIM to either 1000 or 1500 depending on whether the channel
     is reversible
 */
-void SRV_Channels::set_digital_outputs(uint16_t dig_mask, uint16_t rev_mask) {
+void SRV_Channels::set_digital_outputs(uint16_t dig_mask, uint16_t rev_mask)
+{
     digital_mask |= dig_mask;
     reversible_mask |= rev_mask;
 
     // add in NeoPixel and ProfiLED functions to digital array to determine anything else
     // that should be disabled
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
-        switch (c.function.get()) {
-            case SRV_Channel::k_LED_neopixel1:
-            case SRV_Channel::k_LED_neopixel2:
-            case SRV_Channel::k_LED_neopixel3:
-            case SRV_Channel::k_LED_neopixel4:
-            case SRV_Channel::k_ProfiLED_1:
-            case SRV_Channel::k_ProfiLED_2:
-            case SRV_Channel::k_ProfiLED_3:
-            case SRV_Channel::k_ProfiLED_Clock:
-                dig_mask |= 1U<<c.ch_num;
-                break;
-            default:
-                break;
+        switch (c.function.get())
+        {
+        case SRV_Channel::k_LED_neopixel1:
+        case SRV_Channel::k_LED_neopixel2:
+        case SRV_Channel::k_LED_neopixel3:
+        case SRV_Channel::k_LED_neopixel4:
+        case SRV_Channel::k_ProfiLED_1:
+        case SRV_Channel::k_ProfiLED_2:
+        case SRV_Channel::k_ProfiLED_3:
+        case SRV_Channel::k_ProfiLED_Clock:
+            dig_mask |= 1U << c.ch_num;
+            break;
+        default:
+            break;
         }
     }
     disabled_mask = hal.rcout->get_disabled_channels(dig_mask);
 
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
-        if (digital_mask & (1U<<i)) {
+        if (digital_mask & (1U << i))
+        {
             c.servo_min.set(1000);
             c.servo_max.set(2000);
-            if (reversible_mask & (1U<<i)) {
+            if (reversible_mask & (1U << i))
+            {
                 c.servo_trim.set(1500);
-            } else {
+            }
+            else
+            {
                 c.servo_trim.set(1000);
             }
         }
@@ -510,8 +566,10 @@ void SRV_Channels::set_digital_outputs(uint16_t dig_mask, uint16_t rev_mask) {
 /// enable output channels using a channel mask
 void SRV_Channels::enable_by_mask(uint16_t mask)
 {
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
-        if (mask & (1U<<i)) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (mask & (1U << i))
+        {
             hal.rcout->enable_ch(i);
         }
     }
@@ -522,11 +580,14 @@ void SRV_Channels::enable_by_mask(uint16_t mask)
  */
 void SRV_Channels::set_output_pwm(SRV_Channel::Aux_servo_function_t function, uint16_t value)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return;
     }
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             channels[i].set_output_pwm(value);
             channels[i].output_ch();
         }
@@ -538,23 +599,28 @@ void SRV_Channels::set_output_pwm(SRV_Channel::Aux_servo_function_t function, ui
   trim the output assuming a 1500 center on the given value
   reverses pwm output based on channel reversed property
  */
-void
-SRV_Channels::set_output_pwm_trimmed(SRV_Channel::Aux_servo_function_t function, int16_t value)
+void SRV_Channels::set_output_pwm_trimmed(SRV_Channel::Aux_servo_function_t function, int16_t value)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return;
     }
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             int16_t value2;
-            if (channels[i].get_reversed()) {
+            if (channels[i].get_reversed())
+            {
                 value2 = 1500 - value + channels[i].get_trim();
-            } else {
+            }
+            else
+            {
                 value2 = value - 1500 + channels[i].get_trim();
             }
-            channels[i].set_output_pwm(constrain_int16(value2,channels[i].get_output_min(),channels[i].get_output_max()));
+            channels[i].set_output_pwm(constrain_int16(value2, channels[i].get_output_min(), channels[i].get_output_max()));
             channels[i].output_ch();
-          }
+        }
     }
 }
 
@@ -562,14 +628,16 @@ SRV_Channels::set_output_pwm_trimmed(SRV_Channel::Aux_servo_function_t function,
   set and save the trim value to current output for all channels matching
   the given function type
  */
-void
-SRV_Channels::set_trim_to_servo_out_for(SRV_Channel::Aux_servo_function_t function)
+void SRV_Channels::set_trim_to_servo_out_for(SRV_Channel::Aux_servo_function_t function)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return;
     }
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             channels[i].servo_trim.set_and_save_ifchanged(channels[i].get_output_pwm());
         }
     }
@@ -578,20 +646,24 @@ SRV_Channels::set_trim_to_servo_out_for(SRV_Channel::Aux_servo_function_t functi
 /*
   copy radio_in to radio_out for a given function
  */
-void
-SRV_Channels::copy_radio_in_out(SRV_Channel::Aux_servo_function_t function, bool do_input_output)
+void SRV_Channels::copy_radio_in_out(SRV_Channel::Aux_servo_function_t function, bool do_input_output)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return;
     }
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             RC_Channel *c = rc().channel(channels[i].ch_num);
-            if (c == nullptr) {
+            if (c == nullptr)
+            {
                 continue;
             }
             channels[i].set_output_pwm(c->get_radio_in());
-            if (do_input_output) {
+            if (do_input_output)
+            {
                 channels[i].output_ch();
             }
         }
@@ -601,34 +673,37 @@ SRV_Channels::copy_radio_in_out(SRV_Channel::Aux_servo_function_t function, bool
 /*
   copy radio_in to radio_out for a channel mask
  */
-void
-SRV_Channels::copy_radio_in_out_mask(uint16_t mask)
+void SRV_Channels::copy_radio_in_out_mask(uint16_t mask)
 {
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
-        if ((1U<<i) & mask) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if ((1U << i) & mask)
+        {
             RC_Channel *c = rc().channel(channels[i].ch_num);
-            if (c == nullptr) {
+            if (c == nullptr)
+            {
                 continue;
             }
             channels[i].set_output_pwm(c->get_radio_in());
         }
     }
-
 }
 
 /*
   setup failsafe value for an auxiliary function type to a Limit
  */
-void
-SRV_Channels::set_failsafe_pwm(SRV_Channel::Aux_servo_function_t function, uint16_t pwm)
+void SRV_Channels::set_failsafe_pwm(SRV_Channel::Aux_servo_function_t function, uint16_t pwm)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return;
     }
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         const SRV_Channel &c = channels[i];
-        if (c.function == function) {
-            hal.rcout->set_failsafe_pwm(1U<<c.ch_num, pwm);
+        if (c.function == function)
+        {
+            hal.rcout->set_failsafe_pwm(1U << c.ch_num, pwm);
         }
     }
 }
@@ -636,17 +711,19 @@ SRV_Channels::set_failsafe_pwm(SRV_Channel::Aux_servo_function_t function, uint1
 /*
   setup failsafe value for an auxiliary function type to a Limit
  */
-void
-SRV_Channels::set_failsafe_limit(SRV_Channel::Aux_servo_function_t function, SRV_Channel::Limit limit)
+void SRV_Channels::set_failsafe_limit(SRV_Channel::Aux_servo_function_t function, SRV_Channel::Limit limit)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return;
     }
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         const SRV_Channel &c = channels[i];
-        if (c.function == function) {
+        if (c.function == function)
+        {
             uint16_t pwm = c.get_limit_pwm(limit);
-            hal.rcout->set_failsafe_pwm(1U<<c.ch_num, pwm);
+            hal.rcout->set_failsafe_pwm(1U << c.ch_num, pwm);
         }
     }
 }
@@ -654,20 +731,24 @@ SRV_Channels::set_failsafe_limit(SRV_Channel::Aux_servo_function_t function, SRV
 /*
   set radio output value for an auxiliary function type to a Limit
  */
-void
-SRV_Channels::set_output_limit(SRV_Channel::Aux_servo_function_t function, SRV_Channel::Limit limit)
+void SRV_Channels::set_output_limit(SRV_Channel::Aux_servo_function_t function, SRV_Channel::Limit limit)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return;
     }
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
-        if (c.function == function) {
+        if (c.function == function)
+        {
             uint16_t pwm = c.get_limit_pwm(limit);
             c.set_output_pwm(pwm);
-            if (c.function == SRV_Channel::k_manual) {
+            if (c.function == SRV_Channel::k_manual)
+            {
                 RC_Channel *cin = rc().channel(c.ch_num);
-                if (cin != nullptr) {
+                if (cin != nullptr)
+                {
                     // in order for output_ch() to work for k_manual we
                     // also have to override radio_in
                     cin->set_radio_in(pwm);
@@ -680,10 +761,10 @@ SRV_Channels::set_output_limit(SRV_Channel::Aux_servo_function_t function, SRV_C
 /*
   return true if a particular function is assigned to at least one RC channel
  */
-bool
-SRV_Channels::function_assigned(SRV_Channel::Aux_servo_function_t function)
+bool SRV_Channels::function_assigned(SRV_Channel::Aux_servo_function_t function)
 {
-    if (!initialised) {
+    if (!initialised)
+    {
         update_aux_servo_function();
     }
     return function_mask.get(uint16_t(function));
@@ -693,22 +774,25 @@ SRV_Channels::function_assigned(SRV_Channel::Aux_servo_function_t function)
   set servo_out and angle_min/max, then calc_pwm and output a
   value. This is used to move a AP_Mount servo
  */
-void
-SRV_Channels::move_servo(SRV_Channel::Aux_servo_function_t function,
-                         int16_t value, int16_t angle_min, int16_t angle_max)
+void SRV_Channels::move_servo(SRV_Channel::Aux_servo_function_t function,
+                              int16_t value, int16_t angle_min, int16_t angle_max)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return;
     }
-    if (angle_max <= angle_min) {
+    if (angle_max <= angle_min)
+    {
         return;
     }
     float v = float(value - angle_min) / float(angle_max - angle_min);
     v = constrain_float(v, 0.0f, 1.0f);
-    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
-        if (c.function == function) {
-            float v2 = c.get_reversed()? (1-v) : v;
+        if (c.function == function)
+        {
+            float v2 = c.get_reversed() ? (1 - v) : v;
             uint16_t pwm = c.servo_min + v2 * (c.servo_max - c.servo_min);
             c.set_output_pwm(pwm);
         }
@@ -720,12 +804,15 @@ SRV_Channels::move_servo(SRV_Channel::Aux_servo_function_t function,
  */
 bool SRV_Channels::set_aux_channel_default(SRV_Channel::Aux_servo_function_t function, uint8_t channel)
 {
-    if (function_assigned(function)) {
+    if (function_assigned(function))
+    {
         // already assigned
         return true;
     }
-    if (channels[channel].function != SRV_Channel::k_none) {
-        if (channels[channel].function == function) {
+    if (channels[channel].function != SRV_Channel::k_none)
+    {
+        if (channels[channel].function == function)
+        {
             return true;
         }
         hal.console->printf("Channel %u already assigned function %u\n",
@@ -737,8 +824,9 @@ bool SRV_Channels::set_aux_channel_default(SRV_Channel::Aux_servo_function_t fun
     channels[channel].function.set(function);
     channels[channel].aux_servo_function_setup();
     function_mask.set((uint16_t)function);
-    if (SRV_Channel::valid_function(function)) {
-        functions[function].channel_mask |= 1U<<channel;
+    if (SRV_Channel::valid_function(function))
+    {
+        functions[function].channel_mask |= 1U << channel;
     }
     return true;
 }
@@ -746,11 +834,14 @@ bool SRV_Channels::set_aux_channel_default(SRV_Channel::Aux_servo_function_t fun
 // find first channel that a function is assigned to
 bool SRV_Channels::find_channel(SRV_Channel::Aux_servo_function_t function, uint8_t &chan)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return false;
     }
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             chan = channels[i].ch_num;
             return true;
         }
@@ -764,10 +855,12 @@ bool SRV_Channels::find_channel(SRV_Channel::Aux_servo_function_t function, uint
 SRV_Channel *SRV_Channels::get_channel_for(SRV_Channel::Aux_servo_function_t function, int8_t default_chan)
 {
     uint8_t chan;
-    if (default_chan >= 0) {
+    if (default_chan >= 0)
+    {
         set_aux_channel_default(function, default_chan);
     }
-    if (!find_channel(function, chan)) {
+    if (!find_channel(function, chan))
+    {
         return nullptr;
     }
     return &channels[chan];
@@ -775,7 +868,8 @@ SRV_Channel *SRV_Channels::get_channel_for(SRV_Channel::Aux_servo_function_t fun
 
 void SRV_Channels::set_output_scaled(SRV_Channel::Aux_servo_function_t function, float value)
 {
-    if (SRV_Channel::valid_function(function)) {
+    if (SRV_Channel::valid_function(function))
+    {
         functions[function].output_scaled = value;
         SRV_Channel::have_pwm_mask &= ~functions[function].channel_mask;
     }
@@ -783,7 +877,8 @@ void SRV_Channels::set_output_scaled(SRV_Channel::Aux_servo_function_t function,
 
 float SRV_Channels::get_output_scaled(SRV_Channel::Aux_servo_function_t function)
 {
-    if (SRV_Channel::valid_function(function)) {
+    if (SRV_Channel::valid_function(function))
+    {
         return functions[function].output_scaled;
     }
     return 0;
@@ -792,12 +887,16 @@ float SRV_Channels::get_output_scaled(SRV_Channel::Aux_servo_function_t function
 // get slew limited scaled output for the given function type
 float SRV_Channels::get_slew_limited_output_scaled(SRV_Channel::Aux_servo_function_t function)
 {
-    if (!SRV_Channel::valid_function(function)) {
+    if (!SRV_Channel::valid_function(function))
+    {
         return 0.0;
     }
-    for (slew_list *slew = _slew; slew; slew = slew->next) {
-        if (slew->func == function) {
-            if (!is_positive(slew->max_change)) {
+    for (slew_list *slew = _slew; slew; slew = slew->next)
+    {
+        if (slew->func == function)
+        {
+            if (!is_positive(slew->max_change))
+            {
                 // treat negative or zero slew rate as disabled
                 break;
             }
@@ -813,21 +912,24 @@ float SRV_Channels::get_slew_limited_output_scaled(SRV_Channel::Aux_servo_functi
  */
 uint16_t SRV_Channels::get_output_channel_mask(SRV_Channel::Aux_servo_function_t function)
 {
-    if (!initialised) {
+    if (!initialised)
+    {
         update_aux_servo_function();
     }
-    if (SRV_Channel::valid_function(function)) {
+    if (SRV_Channel::valid_function(function))
+    {
         return functions[function].channel_mask;
     }
     return 0;
 }
 
-
 // set the trim for a function channel to given pwm
 void SRV_Channels::set_trim_to_pwm_for(SRV_Channel::Aux_servo_function_t function, int16_t pwm)
 {
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             channels[i].servo_trim.set(pwm);
         }
     }
@@ -836,9 +938,11 @@ void SRV_Channels::set_trim_to_pwm_for(SRV_Channel::Aux_servo_function_t functio
 // set the trim for a function channel to min output of the channel honnoring reverse unless ignore_reversed is true
 void SRV_Channels::set_trim_to_min_for(SRV_Channel::Aux_servo_function_t function, bool ignore_reversed)
 {
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
-            channels[i].servo_trim.set((channels[i].get_reversed() && !ignore_reversed)?channels[i].servo_max:channels[i].servo_min);
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
+            channels[i].servo_trim.set((channels[i].get_reversed() && !ignore_reversed) ? channels[i].servo_max : channels[i].servo_min);
         }
     }
 }
@@ -848,10 +952,12 @@ void SRV_Channels::set_trim_to_min_for(SRV_Channel::Aux_servo_function_t functio
 */
 void SRV_Channels::set_default_function(uint8_t chan, SRV_Channel::Aux_servo_function_t function)
 {
-    if (chan < NUM_SERVO_CHANNELS) {
+    if (chan < NUM_SERVO_CHANNELS)
+    {
         const SRV_Channel::Aux_servo_function_t old = channels[chan].function;
         channels[chan].function.set_default(function);
-        if (old != channels[chan].function && channels[chan].function == function) {
+        if (old != channels[chan].function && channels[chan].function == function)
+        {
             function_mask.set((uint16_t)function);
         }
     }
@@ -860,7 +966,8 @@ void SRV_Channels::set_default_function(uint8_t chan, SRV_Channel::Aux_servo_fun
 void SRV_Channels::set_esc_scaling_for(SRV_Channel::Aux_servo_function_t function)
 {
     uint8_t chan;
-    if (find_channel(function, chan)) {
+    if (find_channel(function, chan))
+    {
         hal.rcout->set_esc_scaling(channels[chan].get_output_min(), channels[chan].get_output_max());
     }
 }
@@ -871,30 +978,39 @@ void SRV_Channels::set_esc_scaling_for(SRV_Channel::Aux_servo_function_t functio
  */
 void SRV_Channels::adjust_trim(SRV_Channel::Aux_servo_function_t function, float v)
 {
-    if (is_zero(v)) {
+    if (is_zero(v))
+    {
         return;
     }
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
-        if (function != c.function) {
+        if (function != c.function)
+        {
             continue;
         }
-        float change = c.reversed?-v:v;
+        float change = c.reversed ? -v : v;
         uint16_t new_trim = c.servo_trim;
-        if (c.servo_max <= c.servo_min) {
+        if (c.servo_max <= c.servo_min)
+        {
             continue;
         }
         float trim_scaled = float(c.servo_trim - c.servo_min) / (c.servo_max - c.servo_min);
-        if (change > 0 && trim_scaled < 0.6f) {
+        if (change > 0 && trim_scaled < 0.6f)
+        {
             new_trim++;
-        } else if (change < 0 && trim_scaled > 0.4f) {
+        }
+        else if (change < 0 && trim_scaled > 0.4f)
+        {
             new_trim--;
-        } else {
+        }
+        else
+        {
             return;
         }
         c.servo_trim.set(new_trim);
 
-        trimmed_mask |= 1U<<i;
+        trimmed_mask |= 1U << i;
     }
 }
 
@@ -902,10 +1018,12 @@ void SRV_Channels::adjust_trim(SRV_Channel::Aux_servo_function_t function, float
 bool SRV_Channels::get_output_pwm(SRV_Channel::Aux_servo_function_t function, uint16_t &value)
 {
     uint8_t chan;
-    if (!find_channel(function, chan)) {
+    if (!find_channel(function, chan))
+    {
         return false;
     }
-    if (!SRV_Channel::valid_function(function)) {
+    if (!SRV_Channel::valid_function(function))
+    {
         return false;
     }
     channels[chan].calc_pwm(functions[function].output_scaled);
@@ -916,8 +1034,10 @@ bool SRV_Channels::get_output_pwm(SRV_Channel::Aux_servo_function_t function, ui
 // set output pwm to trim for the given function
 void SRV_Channels::set_output_to_trim(SRV_Channel::Aux_servo_function_t function)
 {
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             channels[i].set_output_pwm(channels[i].servo_trim);
         }
     }
@@ -930,10 +1050,12 @@ void SRV_Channels::set_output_to_trim(SRV_Channel::Aux_servo_function_t function
 float SRV_Channels::get_output_norm(SRV_Channel::Aux_servo_function_t function)
 {
     uint8_t chan;
-    if (!find_channel(function, chan)) {
+    if (!find_channel(function, chan))
+    {
         return 0;
     }
-    if (SRV_Channel::valid_function(function)) {
+    if (SRV_Channel::valid_function(function))
+    {
         channels[chan].calc_pwm(functions[function].output_scaled);
     }
     return channels[chan].get_output_norm();
@@ -942,12 +1064,15 @@ float SRV_Channels::get_output_norm(SRV_Channel::Aux_servo_function_t function)
 // set normalised output (-1 to 1 with 0 at mid point of servo_min/servo_max) for the given function
 void SRV_Channels::set_output_norm(SRV_Channel::Aux_servo_function_t function, float value)
 {
-    if (!function_assigned(function)) {
+    if (!function_assigned(function))
+    {
         return;
     }
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
-        if (c.function == function) {
+        if (c.function == function)
+        {
             c.set_output_norm(value);
         }
     }
@@ -959,27 +1084,32 @@ void SRV_Channels::set_output_norm(SRV_Channel::Aux_servo_function_t function, f
  */
 void SRV_Channels::set_slew_rate(SRV_Channel::Aux_servo_function_t function, float slew_rate, uint16_t range, float dt)
 {
-    if (!SRV_Channel::valid_function(function)) {
+    if (!SRV_Channel::valid_function(function))
+    {
         return;
     }
     const float max_change = range * slew_rate * 0.01 * dt;
 
-    for (slew_list *slew = _slew; slew; slew = slew->next) {
-        if (slew->func == function) {
+    for (slew_list *slew = _slew; slew; slew = slew->next)
+    {
+        if (slew->func == function)
+        {
             // found existing item, update max change
             slew->max_change = max_change;
             return;
         }
     }
 
-    if (!is_positive(max_change)) {
+    if (!is_positive(max_change))
+    {
         // no point in adding a disabled slew limit
         return;
     }
 
     // add new item
     slew_list *new_slew = new slew_list(function);
-    if (new_slew == nullptr) {
+    if (new_slew == nullptr)
+    {
         return;
     }
     new_slew->last_scaled_output = functions[function].output_scaled;
@@ -991,18 +1121,22 @@ void SRV_Channels::set_slew_rate(SRV_Channel::Aux_servo_function_t function, flo
 // call set_angle() on matching channels
 void SRV_Channels::set_angle(SRV_Channel::Aux_servo_function_t function, uint16_t angle)
 {
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             channels[i].set_angle(angle);
         }
-    }    
+    }
 }
 
 // call set_range() on matching channels
 void SRV_Channels::set_range(SRV_Channel::Aux_servo_function_t function, uint16_t range)
 {
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             channels[i].set_range(range);
         }
     }
@@ -1011,8 +1145,10 @@ void SRV_Channels::set_range(SRV_Channel::Aux_servo_function_t function, uint16_
 // set MIN parameter for a function
 void SRV_Channels::set_output_min_max(SRV_Channel::Aux_servo_function_t function, uint16_t min_pwm, uint16_t max_pwm)
 {
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
-        if (channels[i].function == function) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
+        if (channels[i].function == function)
+        {
             channels[i].set_output_min(min_pwm);
             channels[i].set_output_max(max_pwm);
         }
@@ -1022,9 +1158,11 @@ void SRV_Channels::set_output_min_max(SRV_Channel::Aux_servo_function_t function
 // constrain to output min/max for function
 void SRV_Channels::constrain_pwm(SRV_Channel::Aux_servo_function_t function)
 {
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
-        if (c.function == function) {
+        if (c.function == function)
+        {
             c.set_output_pwm(constrain_int16(c.output_pwm, c.servo_min, c.servo_max));
         }
     }
@@ -1037,7 +1175,8 @@ void SRV_Channels::constrain_pwm(SRV_Channel::Aux_servo_function_t function)
 */
 void SRV_Channels::upgrade_parameters(void)
 {
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
         // convert from AP_Int8 to AP_Int16
         c.function.convert_parameter_width(AP_PARAM_INT8);
@@ -1048,13 +1187,16 @@ void SRV_Channels::upgrade_parameters(void)
 void SRV_Channels::set_rc_frequency(SRV_Channel::Aux_servo_function_t function, uint16_t frequency_hz)
 {
     uint16_t mask = 0;
-    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
+    for (uint8_t i = 0; i < NUM_SERVO_CHANNELS; i++)
+    {
         SRV_Channel &c = channels[i];
-        if (c.function == function) {
-            mask |= (1U<<c.ch_num);
+        if (c.function == function)
+        {
+            mask |= (1U << c.ch_num);
         }
     }
-    if (mask != 0) {
+    if (mask != 0)
+    {
         hal.rcout->set_freq(mask, frequency_hz);
     }
 }
