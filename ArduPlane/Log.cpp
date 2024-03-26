@@ -69,8 +69,6 @@ struct PACKED log_Encoder
     float mag_angle_degree;
     float mag_angle_error_degree;
     float gear_rev_rps;
-    float new_gear_rev_rps;
-    float old_gear_rev_rps;
     bool flap_or_glide;
     float break_angle_degree;
     float travel_angle_degree;
@@ -84,8 +82,6 @@ void Plane::Log_Write_Encoder()
         mag_angle_degree        : angle_MT6701,
         mag_angle_error_degree  : angle_MT6701_error,
         gear_rev_rps            : relative_gear_rev,
-        new_gear_rev_rps        : new_relative_gear_rev,
-        old_gear_rev_rps        : old_relative_gear_rev,
         flap_or_glide           : Glide_Mode_Flag,
         break_angle_degree      : break_angle_MT6701,
         travel_angle_degree     : gear_travel_angle,
@@ -499,8 +495,9 @@ const struct LogStructure Plane::log_structure[] = {
 // @LoggerMessage: Encoder
 // @Description: 
 // @Field: TimeUS: Time since system startup
+// 注：这里的字符长度最长只能是64个
     { LOG_ENCODER_MSG, sizeof(log_Encoder),     
-      "ENCO", "Qfffffbff",    "TimeUS,MagAngle,MagAngleErr,GearRev,NewGearRev,OldGearRev,FlyModee,BreakAngle,TravelAngle", "shhhhQ-hh", "F--------" },
+      "ENCO", "Qfffbff",    "TimeUS,MagAngle,MagAngleErr,GearRev,FlyModee,BreakAngle,TravelAngle", "shhQ-hh", "F------" },
 };
 
 
