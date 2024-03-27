@@ -233,9 +233,11 @@ void SRV_Channel::output_ch(void)
                     }
                     else
                     {
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "current time: %d, target time: %d.", AP_HAL::micros64(), (current_break_time + mag_angle_delay_time_ms * 1000));
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "current time: %lld, target time: %lld.", AP_HAL::micros64(), (current_break_time + mag_angle_delay_time_ms * 1000));
                         hal.rcout->write(ch_num, ch3_pwm);
-                    }                    
+                    }   
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "current break time flag: %d, current break time: %lld.", current_break_time_flag, current_break_time);
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "really current time: %lld.", AP_HAL::micros64());
                 }
             }
             else // 其他PWM通道
