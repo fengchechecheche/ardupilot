@@ -51,7 +51,8 @@ float target_angle_MT6701 = 100;
 float breaking_angle = 0.0;
 uint16_t break_delay_time_ms = 0;
 uint16_t mag_angle_delay_time_ms = 0;
-uint16_t total_delay_time_ms = 0;
+uint64_t current_break_time = 0;
+static bool current_break_time_flag = false;
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
@@ -127,6 +128,7 @@ void SRV_Channel::output_ch(void)
                 old_Glide_Mode_Flag = true;
                 break_angle_MT6701_flag = true;
                 gear_travel_angle_flag = true;
+                current_break_time_flag = true;
                 Switch_Num++;
                 if (Switch_Num == 5)
                 {
@@ -163,7 +165,6 @@ void SRV_Channel::output_ch(void)
                 // 驱动舵机臂刹车
                 if ((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
-                    hal.scheduler->delay(total_delay_time_ms);
                     Servo = SERVO_BRAKE;
                     // angle_MT6701 = angle_MT6701 + 1;
                     // hal.scheduler->delay(10);
@@ -216,12 +217,25 @@ void SRV_Channel::output_ch(void)
                     }
                     hal.scheduler->delay(mag_angle_delay_time_ms);
 
-                    Motor = MOTOR_STOP;
-                    // angle_MT6701 = angle_MT6701 + 1;
-                    // hal.scheduler->delay(10);
-                    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
-                    // hal.scheduler->delay(10);
-                    hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
+                    if(current_break_time_flag == true)
+                    {
+                        current_break_time_flag = false;
+                        current_break_time = AP_HAL::micros64();                        
+                    }
+                    if(AP_HAL::micros64() >= (current_break_time + mag_angle_delay_time_ms * 1000))
+                    {
+                        Motor = MOTOR_STOP;
+                        // angle_MT6701 = angle_MT6701 + 1;
+                        // hal.scheduler->delay(10);
+                        // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
+                        // hal.scheduler->delay(10);
+                        hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
+                    }
+                    else
+                    {
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "current time: %d, target time: %d.", AP_HAL::micros64(), (current_break_time + mag_angle_delay_time_ms * 1000));
+                        hal.rcout->write(ch_num, ch3_pwm);
+                    }                    
                 }
             }
             else // 其他PWM通道
