@@ -122,15 +122,15 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
         if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
-            if ((gear_travel_angle_flag == true) && (relative_gear_rev - 0 > 0.0))
-            {
-                gear_travel_angle += angle_MT6701_error;
-            }
-            else
-            {
-                gear_travel_angle_flag = false;
-                gear_travel_angle = 0;
-            }
+            // if ((gear_travel_angle_flag == true) && (relative_gear_rev - 0 > 0.0))
+            // {
+            //     gear_travel_angle += angle_MT6701_error;
+            // }
+            // else
+            // {
+            //     gear_travel_angle_flag = false;
+            //     gear_travel_angle = 0;
+            // }
 
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
@@ -174,15 +174,15 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
          * */
         if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
-            if ((gear_travel_angle_flag == true) && (relative_gear_rev - 0 > 0.0))
-            {
-                gear_travel_angle += angle_MT6701_error;
-            }
-            else
-            {
-                gear_travel_angle_flag = false;
-                gear_travel_angle = 0;
-            }
+            // if ((gear_travel_angle_flag == true) && (relative_gear_rev - 0 > 0.0))
+            // {
+            //     gear_travel_angle += angle_MT6701_error;
+            // }
+            // else
+            // {
+            //     gear_travel_angle_flag = false;
+            //     gear_travel_angle = 0;
+            // }
 
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
