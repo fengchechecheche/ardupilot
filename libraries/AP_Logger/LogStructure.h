@@ -67,6 +67,7 @@ const struct UnitStructure log_Units[] = {
     { 'S', "satellites" },    // number of satellites
     { 's', "s" },             // seconds
     { 'q', "rpm" },           // rounds per minute. Not SI, but sometimes more intuitive than Hertz
+    { 'Q', "rps" },           // rounds per second. Not SI, but sometimes more intuitive than Hertz
     { 'r', "rad" },           // radians
     { 'U', "deglongitude" },  // degrees of longitude
     { 'u', "ppm" },           // pulses per minute

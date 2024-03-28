@@ -919,6 +919,7 @@ private:
     void Log_Write_Vehicle_Startup_Messages();
     void Log_Write_AETR();
     void Log_Write_MavCmdI(const mavlink_command_int_t &packet);
+    void Log_Write_Encoder(void);
     void log_init();
 
     // Parameters.cpp

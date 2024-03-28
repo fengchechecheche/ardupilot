@@ -1,4 +1,5 @@
 #include "Plane.h"
+#include "../libraries/AP_RangeFinder/AP_Encoder_MT6701_I2C.h"
 
 #if LOGGING_ENABLED == ENABLED
 
@@ -58,6 +59,26 @@ void Plane::Log_Write_Fast(void)
     if (should_log(MASK_LOG_ATTITUDE_FAST | MASK_LOG_ATTITUDE_FULLRATE)) {
         Log_Write_Attitude();
     }
+}
+
+
+struct PACKED log_Encoder
+{
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    float mag_angle_degree;
+    float gear_rev_rps;
+};
+
+void Plane::Log_Write_Encoder()
+{
+    struct log_Encoder pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_ENCODER_MSG),
+        time_us     : AP_HAL::micros64(),
+        mag_angle_degree   : angle_MT6701,
+        gear_rev_rps       : relative_gear_rev
+    };
+    logger.WriteCriticalBlock(&pkt, sizeof(pkt));
 }
 
 
@@ -462,7 +483,11 @@ const struct LogStructure Plane::log_structure[] = {
       "CMDA", "QHBBBBffffiifB",    "TimeUS,CId,TSys,TCmp,cur,cont,Prm1,Prm2,Prm3,Prm4,Lat,Lng,Alt,F", "s---------DUm-", "F---------GGB-" }, 
     { LOG_CMDH_MSG, sizeof(log_CMDI),     
       "CMDH", "QHBBBBffffiifB",    "TimeUS,CId,TSys,TCmp,cur,cont,Prm1,Prm2,Prm3,Prm4,Lat,Lng,Alt,F", "s---------DUm-", "F---------GGB-" }, 
-
+    // @LoggerMessage: Encoder
+    // @Description: 
+    // @Field: TimeUS: Time since system startup
+    { LOG_ENCODER_MSG, sizeof(log_Encoder),     
+      "ENCO", "Qff",    "TimeUS,MagAngle,GearRev", "shQ", "F--" },
 };
 
 
