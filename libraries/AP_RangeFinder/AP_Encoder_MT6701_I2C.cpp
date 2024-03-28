@@ -5,7 +5,7 @@
 #include "AP_Encoder_MT6701_I2C.h"
 
 float angle_MT6701 = 0.0;
-static float old_angle_MT6701;
+float old_angle_MT6701 = 0.0;
 float relative_gear_rev = 0.0;
 #define SEND_TEST_MESSAGE false
 
@@ -69,6 +69,7 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-2] timeout.bytes[1]: %d.\n", timeout.bytes[1]);
     hal.scheduler->delay(10);
 
+    // call timer() at 100Hz.       10,000 us = 0.01 s 
     // call timer() at 20Hz.        50,000 us = 0.05 s 
     // call timer() at 2Hz.         500,000 us = 0.5 s 
     // call timer() at 2s.          2,000,000 us = 2 s 
