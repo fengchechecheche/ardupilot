@@ -334,7 +334,7 @@ void Plane::read_glide_switch()
             if(AP_HAL::micros64() - stored_time1_us > 5000000)
             {
                 stored_time1_us = AP_HAL::micros64();
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop glide ++++++++++");
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop  glide ++++++++++");
             }
             Glide_Mode_Flag = false;
         }

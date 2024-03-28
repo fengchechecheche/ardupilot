@@ -231,7 +231,10 @@ void SRV_Channel::output_ch(void)
                     }
                     if(AP_HAL::micros64() >= (current_break_time + mag_angle_delay_time_ms * 1000))
                     {
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]current time: %lld, target time: %lld.", AP_HAL::micros64(), (current_break_time + mag_angle_delay_time_ms * 1000));
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]current time: %lld.", AP_HAL::micros64());
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]delay   time: %lld.", mag_angle_delay_time_ms);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]target  time: %lld.", current_break_time + mag_angle_delay_time_ms * 1000);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]delta   time: %lld.", (current_break_time + mag_angle_delay_time_ms * 1000) - AP_HAL::micros64());
                         Motor = MOTOR_STOP;
                         // angle_MT6701 = angle_MT6701 + 1;
                         // hal.scheduler->delay(10);
@@ -241,12 +244,12 @@ void SRV_Channel::output_ch(void)
                     }
                     else
                     {
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]current time: %lld, target time: %lld.", AP_HAL::micros64(), (current_break_time + mag_angle_delay_time_ms * 1000));
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]current time: %lld.", AP_HAL::micros64());
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]delay   time: %lld.", mag_angle_delay_time_ms);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]target  time: %lld.", (current_break_time + mag_angle_delay_time_ms * 1000));
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]delta   time: %lld.", (current_break_time + mag_angle_delay_time_ms * 1000) - AP_HAL::micros64());
                         hal.rcout->write(ch_num, ch3_pwm);
                     }   
-                    gcs().send_text(MAV_SEVERITY_CRITICAL, "current break time flag: %d", current_break_time_flag);
-                    gcs().send_text(MAV_SEVERITY_CRITICAL, "current break time: %lld.", current_break_time);
-                    gcs().send_text(MAV_SEVERITY_CRITICAL, "really current time: %lld.", AP_HAL::micros64());
                 }
             }
             else // 其他PWM通道
