@@ -6,6 +6,7 @@
 
 float angle_MT6701 = 0.0;
 float old_angle_MT6701 = 0.0;
+float angle_MT6701_error = 0.0;
 float relative_gear_rev = 0.0;
 #define SEND_TEST_MESSAGE false
 #define SAMPLE_FREQUENCY 0.01
@@ -94,12 +95,14 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
     if(angle_MT6701 - old_angle_MT6701 > 0.0)
     {
-        relative_gear_rev = (angle_MT6701 - old_angle_MT6701) / 360.0 / SAMPLE_FREQUENCY ;
+        angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
+        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ;
         old_angle_MT6701 = angle_MT6701;
     }
     else if(angle_MT6701 - old_angle_MT6701 < 0.0)
     {
-        relative_gear_rev = (360 - old_angle_MT6701 + angle_MT6701) / 360.0 / SAMPLE_FREQUENCY ;
+        angle_MT6701_error = 360 - old_angle_MT6701 + angle_MT6701;
+        relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY ;
         old_angle_MT6701 = angle_MT6701;
     }
     else
