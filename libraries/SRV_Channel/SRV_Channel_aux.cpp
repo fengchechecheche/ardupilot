@@ -215,6 +215,13 @@ void SRV_Channel::output_ch(void)
                             mag_angle_delay_time_ms = (int16_t)(target_angle_MT6701 + 720 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
                         }
                     }
+                    /*
+                     * 特别注意：控制电机输出的任务中不能使用延时函数！！！
+                     * 因为控制电机输出的任务执行频率较高，如果在其中调用了延时函数，
+                     * 程序会认为该任务卡死了，就会重启飞控程序，
+                     * 导致飞控板与MP之间的连接中断，飞控程序不能正常运行。
+                     * 这里的延时要采用其他的延时逻辑。
+                     * */
                     // hal.scheduler->delay(mag_angle_delay_time_ms);
 
                     if(current_break_time_flag == true)
