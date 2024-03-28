@@ -50,7 +50,7 @@ static uint8_t Switch_Num = 0;
 float target_angle_MT6701 = 100;
 float breaking_angle = 0.0;
 uint16_t break_delay_time_ms = 0;
-float mag_angle_delay_time_ms = 0;
+float mag_angle_delay_time_ms = 1000;
 uint64_t current_break_time = 0;
 static bool current_break_time_flag = false;
 
@@ -181,76 +181,76 @@ void SRV_Channel::output_ch(void)
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {
-                    // 情况一
-                    if ((target_angle_MT6701 - break_angle_MT6701) >= 0)
-                    {
-                        hal.scheduler->delay(10);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 1.");
-                        hal.scheduler->delay(10);
-                        // 情况二
-                        // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
-                        // 说明需要让齿轮保持当前速度并等待一定时间
-                        if ((target_angle_MT6701 - (break_angle_MT6701 + breaking_angle)) > 0)
-                        {                            
-                            mag_angle_delay_time_ms = (target_angle_MT6701 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
-                            hal.scheduler->delay(10);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 2.");
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)target_angle_MT6701: %f.", target_angle_MT6701);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)break_angle_MT6701: %f.", break_angle_MT6701);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)breaking_angle: %f.", breaking_angle);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
-                            hal.scheduler->delay(10);
-                        }
-                        // 情况三
-                        // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
-                        // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
-                        else
-                        {                            
-                            mag_angle_delay_time_ms = (target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
-                            hal.scheduler->delay(10);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 3.");
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)target_angle_MT6701: %f.", target_angle_MT6701);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)break_angle_MT6701: %f.", break_angle_MT6701);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)breaking_angle: %f.", breaking_angle);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
-                            hal.scheduler->delay(10);
-                        }
-                    }
-                    // 情况四
-                    else
-                    {
-                        hal.scheduler->delay(10);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 4.");
-                        hal.scheduler->delay(10);
-                        // 情况五
-                        // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
-                        // 说明需要让齿轮保持当前速度并等待一定时间
-                        if ((360 - break_angle_MT6701 + target_angle_MT6701 - breaking_angle) > 0)
-                        {                            
-                            mag_angle_delay_time_ms = (target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
-                            hal.scheduler->delay(10);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 5.");
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)target_angle_MT6701: %f.", target_angle_MT6701);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)break_angle_MT6701: %f.", break_angle_MT6701);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)breaking_angle: %f.", breaking_angle);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
-                            hal.scheduler->delay(10);
-                        }
-                        // 情况六
-                        // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
-                        // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
-                        else
-                        {                            
-                            mag_angle_delay_time_ms = (target_angle_MT6701 + 720 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
-                            hal.scheduler->delay(10);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 6.");
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)target_angle_MT6701: %f.", target_angle_MT6701);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)break_angle_MT6701: %f.", break_angle_MT6701);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)breaking_angle: %f.", breaking_angle);
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
-                            hal.scheduler->delay(10);
-                        }
-                    }
+                    // // 情况一
+                    // if ((target_angle_MT6701 - break_angle_MT6701) >= 0)
+                    // {
+                    //     hal.scheduler->delay(10);
+                    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 1.");
+                    //     hal.scheduler->delay(10);
+                    //     // 情况二
+                    //     // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
+                    //     // 说明需要让齿轮保持当前速度并等待一定时间
+                    //     if ((target_angle_MT6701 - (break_angle_MT6701 + breaking_angle)) > 0)
+                    //     {                            
+                    //         mag_angle_delay_time_ms = (target_angle_MT6701 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
+                    //         hal.scheduler->delay(10);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 2.");
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)target_angle_MT6701: %f.", target_angle_MT6701);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)break_angle_MT6701: %f.", break_angle_MT6701);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)breaking_angle: %f.", breaking_angle);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
+                    //         hal.scheduler->delay(10);
+                    //     }
+                    //     // 情况三
+                    //     // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
+                    //     // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
+                    //     else
+                    //     {                            
+                    //         mag_angle_delay_time_ms = (target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
+                    //         hal.scheduler->delay(10);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 3.");
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)target_angle_MT6701: %f.", target_angle_MT6701);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)break_angle_MT6701: %f.", break_angle_MT6701);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)breaking_angle: %f.", breaking_angle);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
+                    //         hal.scheduler->delay(10);
+                    //     }
+                    // }
+                    // // 情况四
+                    // else
+                    // {
+                    //     hal.scheduler->delay(10);
+                    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 4.");
+                    //     hal.scheduler->delay(10);
+                    //     // 情况五
+                    //     // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
+                    //     // 说明需要让齿轮保持当前速度并等待一定时间
+                    //     if ((360 - break_angle_MT6701 + target_angle_MT6701 - breaking_angle) > 0)
+                    //     {                            
+                    //         mag_angle_delay_time_ms = (target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
+                    //         hal.scheduler->delay(10);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 5.");
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)target_angle_MT6701: %f.", target_angle_MT6701);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)break_angle_MT6701: %f.", break_angle_MT6701);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)breaking_angle: %f.", breaking_angle);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
+                    //         hal.scheduler->delay(10);
+                    //     }
+                    //     // 情况六
+                    //     // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
+                    //     // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
+                    //     else
+                    //     {                            
+                    //         mag_angle_delay_time_ms = (target_angle_MT6701 + 720 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
+                    //         hal.scheduler->delay(10);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 6.");
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)target_angle_MT6701: %f.", target_angle_MT6701);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)break_angle_MT6701: %f.", break_angle_MT6701);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)breaking_angle: %f.", breaking_angle);
+                    //         gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
+                    //         hal.scheduler->delay(10);
+                    //     }
+                    // }
                     /*
                      * 特别注意：控制电机输出的任务中不能使用延时函数！！！
                      * 因为控制电机输出的任务执行频率较高，如果在其中调用了延时函数，
