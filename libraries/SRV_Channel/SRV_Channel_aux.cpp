@@ -190,6 +190,10 @@ void SRV_Channel::output_ch(void)
                         {
                             gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 2.");
                             mag_angle_delay_time_ms = (int16_t)((target_angle_MT6701 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)target_angle_MT6701: %f.", target_angle_MT6701);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)break_angle_MT6701: %f.", break_angle_MT6701);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)breaking_angle: %f.", breaking_angle);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(2)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
                         }
                         // 情况三
                         // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
@@ -198,6 +202,10 @@ void SRV_Channel::output_ch(void)
                         {
                             gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 3.");
                             mag_angle_delay_time_ms = (int16_t)((target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle)) / 360 / avg_relative_gear_rev;
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)target_angle_MT6701: %f.", target_angle_MT6701);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)break_angle_MT6701: %f.", break_angle_MT6701);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)breaking_angle: %f.", breaking_angle);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(3)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
                         }
                     }
                     // 情况四
@@ -211,6 +219,10 @@ void SRV_Channel::output_ch(void)
                         {
                             gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 5.");
                             mag_angle_delay_time_ms = (int16_t)(target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)target_angle_MT6701: %f.", target_angle_MT6701);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)break_angle_MT6701: %f.", break_angle_MT6701);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)breaking_angle: %f.", breaking_angle);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(5)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
                         }
                         // 情况六
                         // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
@@ -219,6 +231,10 @@ void SRV_Channel::output_ch(void)
                         {
                             gcs().send_text(MAV_SEVERITY_CRITICAL, "--->enter case 6.");
                             mag_angle_delay_time_ms = (int16_t)(target_angle_MT6701 + 720 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev;
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)target_angle_MT6701: %f.", target_angle_MT6701);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)break_angle_MT6701: %f.", break_angle_MT6701);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)breaking_angle: %f.", breaking_angle);
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "--->(6)avg_relative_gear_rev: %f.", avg_relative_gear_rev);
                         }
                     }
                     /*
@@ -238,7 +254,7 @@ void SRV_Channel::output_ch(void)
                     if(AP_HAL::micros64() >= (current_break_time + mag_angle_delay_time_ms * 1000))
                     {
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]break   time: %lld.", current_break_time);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]delay   time: %d.", mag_angle_delay_time_ms);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]delay   time: %d.", mag_angle_delay_time_ms * 1000);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]target  time: %lld.", current_break_time + mag_angle_delay_time_ms * 1000);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]current time: %lld.", AP_HAL::micros64());
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]delta   time: %lld.", AP_HAL::micros64() - current_break_time);
@@ -252,7 +268,7 @@ void SRV_Channel::output_ch(void)
                     else
                     {
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]break   time: %lld.", current_break_time);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]delay   time: %d.", mag_angle_delay_time_ms);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]delay   time: %d.", mag_angle_delay_time_ms * 1000);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]target  time: %lld.", (current_break_time + mag_angle_delay_time_ms * 1000));
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]current time: %lld.", AP_HAL::micros64());
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[fals]delta   time: %lld.", AP_HAL::micros64() - current_break_time);
