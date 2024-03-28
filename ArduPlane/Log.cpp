@@ -489,7 +489,7 @@ const struct LogStructure Plane::log_structure[] = {
     // @Description: 
     // @Field: TimeUS: Time since system startup
     { LOG_ENCODER_MSG, sizeof(log_Encoder),     
-      "ENCO", "Qff",    "TimeUS,MagAngle,GearRev", "shQ", "F--" },
+      "ENCO", "Qfff",    "TimeUS,MagAngle,OldMagAngle,GearRev", "shhQ", "F---" },
 };
 
 
