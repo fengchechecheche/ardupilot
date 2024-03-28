@@ -272,6 +272,7 @@ void SRV_Channel::output_ch(void)
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]target  time: %lld.", current_break_time + (uint64_t)(mag_angle_delay_time_ms * 1000));
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]current time: %lld.", AP_HAL::micros64());
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "[true]delta   time: %lld.", AP_HAL::micros64() - current_break_time);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "----------------------------------------");
                         Motor = MOTOR_STOP;
                         // angle_MT6701 = angle_MT6701 + 1;
                         // hal.scheduler->delay(10);
