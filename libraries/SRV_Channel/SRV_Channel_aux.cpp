@@ -50,7 +50,7 @@ static uint8_t Switch_Num = 0;
 float target_angle_MT6701 = 100;
 float breaking_angle = 0.0;
 uint16_t break_delay_time_ms = 0;
-float mag_angle_delay_time_ms = 1000;
+float mag_angle_delay_time_ms = 200;
 uint64_t current_break_time = 0;
 static bool current_break_time_flag = false;
 
