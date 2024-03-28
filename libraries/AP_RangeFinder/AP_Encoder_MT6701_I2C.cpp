@@ -8,7 +8,7 @@
 #define SAMPLE_FREQUENCY 0.01
 #define MAX_LIMIT_factor 80
 #define LPF_factor 200
-#define Buff_Num 20
+#define Buff_Num 10
 
 float angle_MT6701 = 0.0;
 float break_angle_MT6701 = 0.0;
@@ -122,16 +122,6 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
         if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
-            if ((gear_travel_angle_flag == true) && (relative_gear_rev - 0 > 0.0))
-            {
-                gear_travel_angle += angle_MT6701_error;
-            }
-            else
-            {
-                gear_travel_angle_flag = false;
-                gear_travel_angle = 0;
-            }
-
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
             new_relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
@@ -174,16 +164,6 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
          * */
         if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
-            if ((gear_travel_angle_flag == true) && (relative_gear_rev - 0 > 0.0))
-            {
-                gear_travel_angle += angle_MT6701_error;
-            }
-            else
-            {
-                gear_travel_angle_flag = false;
-                gear_travel_angle = 0;
-            }
-
             old_angle_MT6701 = angle_MT6701;
             // 对末端齿轮转速进行一阶低通滤波
             new_relative_gear_rev = angle_MT6701_error / 360.0 / SAMPLE_FREQUENCY;
