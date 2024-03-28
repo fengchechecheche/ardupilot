@@ -141,11 +141,11 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
             // 存储齿轮转速平均值的变量 avg_relative_gear_rev 只有在齿轮转动的时候才会更新
             // 当限幅滤波不通过或齿轮停转转动时，变量 avg_relative_gear_rev 的值不会被更新。
             sum_relative_gear_rev = 0.0;
-            for (uint8_t i = 0; i < Buff_Num - 1; i++)
-            {
-                relative_gear_rev_buff[i] = relative_gear_rev_buff[i + 1];
-                sum_relative_gear_rev += relative_gear_rev_buff[i];
-            }
+            // for (uint8_t i = 0; i < Buff_Num - 1; i++)
+            // {
+            //     relative_gear_rev_buff[i] = relative_gear_rev_buff[i + 1];
+            //     sum_relative_gear_rev += relative_gear_rev_buff[i];
+            // }
             relative_gear_rev_buff[Buff_Num - 1] = relative_gear_rev;
             sum_relative_gear_rev += relative_gear_rev_buff[Buff_Num - 1];
             avg_relative_gear_rev = sum_relative_gear_rev / Buff_Num;
@@ -191,11 +191,11 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
             old_relative_gear_rev = relative_gear_rev;
 
             sum_relative_gear_rev = 0.0;
-            for (uint8_t j = 0; j < Buff_Num - 1; j++)
-            {
-                relative_gear_rev_buff[j] = relative_gear_rev_buff[j + 1];
-                sum_relative_gear_rev += relative_gear_rev_buff[j];
-            }
+            // for (uint8_t j = 0; j < Buff_Num - 1; j++)
+            // {
+            //     relative_gear_rev_buff[j] = relative_gear_rev_buff[j + 1];
+            //     sum_relative_gear_rev += relative_gear_rev_buff[j];
+            // }
             relative_gear_rev_buff[Buff_Num - 1] = relative_gear_rev;
             sum_relative_gear_rev += relative_gear_rev_buff[Buff_Num - 1];
             avg_relative_gear_rev = sum_relative_gear_rev / Buff_Num;
