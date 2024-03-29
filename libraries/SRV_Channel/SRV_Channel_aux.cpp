@@ -46,7 +46,7 @@ static uint16_t ch3_pwm = 1100;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
 static bool Servo = false; // true:舵机正在刹车，false:舵机停止刹车
 static bool old_Glide_Mode_Flag = false;
-static uint8_t Switch_Num = 0;
+static uint8_t Switch_Num = 5;
 float target_angle_MT6701 = 100;
 float breaking_angle = 0.0;
 uint16_t break_delay_time_ms = 0;
@@ -138,9 +138,9 @@ void SRV_Channel::output_ch(void)
                 gear_travel_angle_flag = true;
                 current_break_time_flag = true;
                 Switch_Num++;
-                if (Switch_Num == 5)
+                if (Switch_Num == 6)
                 {
-                    Switch_Num = 1;
+                    Switch_Num = 4;
                 }
                 hal.scheduler->delay(10);
                 gcs().send_text(MAV_SEVERITY_CRITICAL, ">>>>Switch_Num: %d.", Switch_Num);
@@ -306,15 +306,9 @@ void SRV_Channel::output_ch(void)
                     Motor = MOTOR_RUN;
                     switch (Switch_Num)
                     {
-                    case 1:
-                        ch3_pwm = 1100;
-                        break;
-                    case 2:
-                        ch3_pwm = 1150;
-                        break;
-                    case 3:
-                        ch3_pwm = 1200;
-                        break;
+                    // case 1: ch3_pwm = 1100; break;
+                    // case 2: ch3_pwm = 1150; break;
+                    // case 3: ch3_pwm = 1200; break;
                     case 4:
                         ch3_pwm = 1250;
                         break;
@@ -343,15 +337,9 @@ void SRV_Channel::output_ch(void)
                 {
                     switch (Switch_Num)
                     {
-                    case 1:
-                        ch3_pwm = 1100;
-                        break;
-                    case 2:
-                        ch3_pwm = 1150;
-                        break;
-                    case 3:
-                        ch3_pwm = 1200;
-                        break;
+                    // case 1: ch3_pwm = 1100; break;
+                    // case 2: ch3_pwm = 1150; break;
+                    // case 3: ch3_pwm = 1200; break;
                     case 4:
                         ch3_pwm = 1250;
                         break;
