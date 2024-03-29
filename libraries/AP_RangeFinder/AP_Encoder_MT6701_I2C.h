@@ -13,8 +13,6 @@ extern float relative_gear_rev;
 extern float new_relative_gear_rev;
 extern float old_relative_gear_rev;
 extern float avg_relative_gear_rev;
-extern float gear_travel_angle;
-extern bool  gear_travel_angle_flag;
 #define SlaveAddress 0X06 //MT6701 地址
 #define ReadAddress1 0X03 // 数据高位寄存器地址
 #define ReadAddress2 0X04 // 数据低位寄存器地址

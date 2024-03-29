@@ -40,16 +40,14 @@ extern const AP_HAL::HAL &hal;
 #define SERVO_RELEASE false
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
-static uint16_t ch3_pwm = 1100;
+static uint16_t ch3_pwm = 1250;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
 static bool Servo = false; // true:舵机正在刹车，false:舵机停止刹车
 static bool old_Glide_Mode_Flag = false;
-static uint8_t Switch_Num = 5;
 float target_angle_MT6701 = 100;
 float breaking_angle = 0.0;
-uint16_t break_delay_time_ms = 0;
 float mag_angle_delay_time_ms = 200;
 uint64_t current_break_time = 0;
 static bool current_break_time_flag = false;
@@ -118,33 +116,20 @@ void SRV_Channel::output_ch(void)
             // 先用1100到1400的 ch3_pwm 值进行测试，更高的值可以先暂时不用测。
             // breaking_angle 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需角度
             // 不同转速下的 breaking_angle 值应该是不同的
-            // break_delay_time_ms 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需时间
-            // 不同转速下的 break_delay_time_ms 值应该是不同的
             if (abs(avg_relative_gear_rev - 2) < 0.5)
             {
                 breaking_angle = 53.11;
-                break_delay_time_ms = 150;
             }
             else if (abs(avg_relative_gear_rev - 5) < 0.5)
             {
                 breaking_angle = 149.04;
-                break_delay_time_ms = 150;
             }
 
             if (old_Glide_Mode_Flag == false)
             {
                 old_Glide_Mode_Flag = true;
                 break_angle_MT6701_flag = true;
-                gear_travel_angle_flag = true;
                 current_break_time_flag = true;
-                Switch_Num++;
-                if (Switch_Num == 6)
-                {
-                    Switch_Num = 4;
-                }
-                hal.scheduler->delay(10);
-                gcs().send_text(MAV_SEVERITY_CRITICAL, ">>>>Switch_Num: %d.", Switch_Num);
-                hal.scheduler->delay(10);
 
                 // 测试结果正常
                 // 情况一
@@ -228,11 +213,6 @@ void SRV_Channel::output_ch(void)
                 if ((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
                     Servo = SERVO_BRAKE;
-                    // angle_MT6701 = angle_MT6701 + 1;
-                    // hal.scheduler->delay(10);
-                    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
-                    // hal.scheduler->delay(10);
-                    // ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
                     hal.rcout->write(ch_num, SERVO_BRAKE_VALUE);
                 }
             }
@@ -258,10 +238,6 @@ void SRV_Channel::output_ch(void)
                             break_delta_time = AP_HAL::micros64() - current_break_time;
 
                             Motor = MOTOR_STOP;
-                            // angle_MT6701 = angle_MT6701 + 1;
-                            // hal.scheduler->delay(10);
-                            // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
-                            // hal.scheduler->delay(10);
                             hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
                         }
                         else
@@ -305,65 +281,11 @@ void SRV_Channel::output_ch(void)
                 if ((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
                     Motor = MOTOR_RUN;
-                    switch (Switch_Num)
-                    {
-                    // case 1: ch3_pwm = 1100; break;
-                    // case 2: ch3_pwm = 1150; break;
-                    // case 3: ch3_pwm = 1200; break;
-                    case 4:
-                        ch3_pwm = 1250;
-                        break;
-                    // case 5:  ch3_pwm = 1300; break;
-                    // case 6:  ch3_pwm = 1350; break;
-                    // case 7:  ch3_pwm = 1400; break;
-                    // case 8:  ch3_pwm = 1450; break;
-                    // case 9:  ch3_pwm = 1500; break;
-                    // case 10: ch3_pwm = 1550; break;
-                    // case 11: ch3_pwm = 1600; break;
-                    // case 12: ch3_pwm = 1650; break;
-                    // case 13: ch3_pwm = 1700; break;
-                    // case 14: ch3_pwm = 1750; break;
-                    // case 15: ch3_pwm = 1800; break;
-                    // case 16: ch3_pwm = 1850; break;
-                    // case 17: ch3_pwm = 1900; break;
-                    // case 18: ch3_pwm = 1950; break;
-                    // case 19: ch3_pwm = 2000; break;
-                    default:
-                        ch3_pwm = 1000;
-                        break;
-                    }
-                    hal.rcout->write(ch_num, ch3_pwm);
+                    hal.rcout->write(ch_num, output_pwm);
                 }
                 else if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
-                {
-                    switch (Switch_Num)
-                    {
-                    // case 1: ch3_pwm = 1100; break;
-                    // case 2: ch3_pwm = 1150; break;
-                    // case 3: ch3_pwm = 1200; break;
-                    case 4:
-                        ch3_pwm = 1250;
-                        break;
-                    // case 5:  ch3_pwm = 1300; break;
-                    // case 6:  ch3_pwm = 1350; break;
-                    // case 7:  ch3_pwm = 1400; break;
-                    // case 8:  ch3_pwm = 1450; break;
-                    // case 9:  ch3_pwm = 1500; break;
-                    // case 10: ch3_pwm = 1550; break;
-                    // case 11: ch3_pwm = 1600; break;
-                    // case 12: ch3_pwm = 1650; break;
-                    // case 13: ch3_pwm = 1700; break;
-                    // case 14: ch3_pwm = 1750; break;
-                    // case 15: ch3_pwm = 1800; break;
-                    // case 16: ch3_pwm = 1850; break;
-                    // case 17: ch3_pwm = 1900; break;
-                    // case 18: ch3_pwm = 1950; break;
-                    // case 19: ch3_pwm = 2000; break;
-                    default:
-                        ch3_pwm = 1000;
-                        break;
-                    }
-                    hal.rcout->write(ch_num, ch3_pwm);
+                {                    
+                    hal.rcout->write(ch_num, output_pwm);
                 }
             }
             else

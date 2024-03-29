@@ -72,7 +72,6 @@ struct PACKED log_Encoder
     float gear_rev_rps;
     bool flap_or_glide;
     float break_angle_degree;
-    float travel_angle_degree;
 };
 
 void Plane::Log_Write_Encoder()
@@ -85,7 +84,6 @@ void Plane::Log_Write_Encoder()
         gear_rev_rps            : relative_gear_rev,
         flap_or_glide           : Glide_Mode_Flag,
         break_angle_degree      : break_angle_MT6701,
-        travel_angle_degree     : gear_travel_angle,
     };
     logger.WriteCriticalBlock(&pkt, sizeof(pkt));
 }
