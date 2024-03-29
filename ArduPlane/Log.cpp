@@ -528,10 +528,9 @@ const struct LogStructure Plane::log_structure[] = {
 // @Field: GR: GearRev，末端齿轮转速
 // @Field: FM:  FlyMode，记录当前飞行方式是扑翼还是滑翔
 // @Field: BAg: BreakAngle，记录刹车开始时末端齿轮的角度
-// @Field: TAg: TravelAngle，记录刹车过程中，末端齿轮经过的角度
 // 注：这里的字符长度最长只能是64个
     { LOG_ENCODER_MSG, sizeof(log_Encoder),     
-      "ENCO", "Qfffbff",    "TimeUS,MAg,MAgE,GR,FM,BAg,TAg", "shhQ-hh", "F------" },
+      "ENCO", "Qfffbf",    "TimeUS,MAg,MAgE,GR,FM,BAg", "shhQ-h", "F-----" },
 
 // @LoggerMessage: Encoder2
 // @Description: 记录编码器测量的相关数据
