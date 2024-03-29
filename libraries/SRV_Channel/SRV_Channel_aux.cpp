@@ -49,7 +49,6 @@ static bool old_Glide_Mode_Flag = false;
 static uint8_t Switch_Num = 5;
 float target_angle_MT6701 = 100;
 float breaking_angle = 0.0;
-uint16_t break_delay_time_ms = 0;
 float mag_angle_delay_time_ms = 200;
 uint64_t current_break_time = 0;
 static bool current_break_time_flag = false;
@@ -118,24 +117,19 @@ void SRV_Channel::output_ch(void)
             // 先用1100到1400的 ch3_pwm 值进行测试，更高的值可以先暂时不用测。
             // breaking_angle 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需角度
             // 不同转速下的 breaking_angle 值应该是不同的
-            // break_delay_time_ms 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需时间
-            // 不同转速下的 break_delay_time_ms 值应该是不同的
             if (abs(avg_relative_gear_rev - 2) < 0.5)
             {
                 breaking_angle = 53.11;
-                break_delay_time_ms = 150;
             }
             else if (abs(avg_relative_gear_rev - 5) < 0.5)
             {
                 breaking_angle = 149.04;
-                break_delay_time_ms = 150;
             }
 
             if (old_Glide_Mode_Flag == false)
             {
                 old_Glide_Mode_Flag = true;
                 break_angle_MT6701_flag = true;
-                gear_travel_angle_flag = true;
                 current_break_time_flag = true;
                 Switch_Num++;
                 if (Switch_Num == 6)

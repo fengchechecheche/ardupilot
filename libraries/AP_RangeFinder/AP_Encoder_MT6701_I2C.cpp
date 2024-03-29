@@ -21,8 +21,6 @@ float old_relative_gear_rev = 0.0;
 float avg_relative_gear_rev = 0.0;
 float sum_relative_gear_rev = 0.0;
 float relative_gear_rev_buff[Buff_Num] = {};
-float gear_travel_angle = 0.0;
-bool  gear_travel_angle_flag = false;
 
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
     : AP_Encoder_Backend(encoder), _dev(std::move(dev)) {}
