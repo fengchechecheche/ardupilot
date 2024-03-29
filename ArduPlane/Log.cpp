@@ -1,5 +1,6 @@
 #include "Plane.h"
 #include "../libraries/AP_RangeFinder/AP_Encoder_MT6701_I2C.h"
+#include "../libraries/SRV_Channel/SRV_Channel.h"
 
 #if LOGGING_ENABLED == ENABLED
 
@@ -85,6 +86,35 @@ void Plane::Log_Write_Encoder()
         flap_or_glide           : Glide_Mode_Flag,
         break_angle_degree      : break_angle_MT6701,
         travel_angle_degree     : gear_travel_angle,
+    };
+    logger.WriteCriticalBlock(&pkt, sizeof(pkt));
+}
+
+
+struct PACKED log_Encoder2
+{
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    bool log_delay_time_flag;
+    uint64_t log_break_time;
+    uint64_t log_delay_time;
+    uint64_t log_target_time;
+    uint64_t log_current_time;
+    uint64_t log_delta_time;
+};
+
+
+void Plane::Log_Write_Encoder2()
+{
+    struct log_Encoder2 pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_ENCODER2_MSG),
+        time_us                 : AP_HAL::micros64(),
+        log_delay_time_flag     : delay_time_flag,
+        log_break_time          : break_time,
+        log_delay_time          : delay_time,
+        log_target_time         : target_time,
+        log_current_time        : current_time,
+        log_delta_time          : break_delta_time,
     };
     logger.WriteCriticalBlock(&pkt, sizeof(pkt));
 }
@@ -504,6 +534,19 @@ const struct LogStructure Plane::log_structure[] = {
 // 注：这里的字符长度最长只能是64个
     { LOG_ENCODER_MSG, sizeof(log_Encoder),     
       "ENCO", "Qfffbff",    "TimeUS,MAg,MAgE,GR,FM,BAg,TAg", "shhQ-hh", "F------" },
+
+// @LoggerMessage: Encoder2
+// @Description: 记录编码器测量的相关数据
+// @Field: TimeUS: Time since system startup
+// @Field: dtFlag:  delay_time_flag，记录当前时间是否已经达到需要等待的时间，true表示已经达到
+// @Field: BrkTi: break_time，记录刹车命令下达时的系统时间
+// @Field: DlyTi: delay_time，记录需要等待多长时间
+// @Field: TarTi: target_time，记录等待的目标时间
+// @Field: CurTi:  current_time，记录系统的当前时间
+// @Field: DltTi: delta_time，记录从刹车命令下达到当前已经经过的时间
+// 注：这里的字符长度最长只能是64个
+    { LOG_ENCODER2_MSG, sizeof(log_Encoder2),     
+      "ENC2", "QbQQQQQ",    "TimeUS,dtFlag,BrkTi,DlyTi,TarTi,CurTi,DltTi", "s-YYYYY", "F-FFFFF" },
 };
 
 

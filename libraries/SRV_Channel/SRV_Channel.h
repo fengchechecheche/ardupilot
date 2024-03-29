@@ -33,6 +33,13 @@
 #endif
 #endif
 
+extern uint64_t break_time;
+extern uint64_t delay_time;
+extern uint64_t target_time;
+extern uint64_t current_time;
+extern uint64_t break_delta_time;
+extern bool delay_time_flag;
+
 class SRV_Channels;
 
 /*

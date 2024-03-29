@@ -102,6 +102,7 @@ enum log_messages {
     LOG_CMDS_MSG,
     LOG_CMDH_MSG,
     LOG_ENCODER_MSG,
+    LOG_ENCODER2_MSG,
 };
 
 #define MASK_LOG_ATTITUDE_FAST          (1<<0)

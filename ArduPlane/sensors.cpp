@@ -39,4 +39,5 @@ void Plane::read_recoder(void)
     encoder.update();
 
     Log_Write_Encoder();
+    Log_Write_Encoder2();
 }
