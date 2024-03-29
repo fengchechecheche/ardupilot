@@ -146,6 +146,7 @@ void SRV_Channel::output_ch(void)
                 gcs().send_text(MAV_SEVERITY_CRITICAL, ">>>>Switch_Num: %d.", Switch_Num);
                 hal.scheduler->delay(10);
 
+                // 测试结果正常
                 // 情况一
                 if ((target_angle_MT6701 - break_angle_MT6701) >= 0)
                 {
