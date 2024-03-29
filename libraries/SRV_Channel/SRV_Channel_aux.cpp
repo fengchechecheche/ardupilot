@@ -41,14 +41,14 @@ extern const AP_HAL::HAL &hal;
 #define SERVO_RELEASE false
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
-// static uint16_t ch3_pwm = 1250;
+static uint16_t ch3_pwm = 1250;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
 static bool Servo = false; // true:舵机正在刹车，false:舵机停止刹车
 static bool old_Glide_Mode_Flag = false;
 float target_angle_MT6701 = 100;
-float breaking_angle = 0.0;
+float breaking_angle = 149.04;
 float mag_angle_delay_time_ms = 200;
 uint64_t current_break_time = 0;
 static bool current_break_time_flag = false;
@@ -59,7 +59,8 @@ uint64_t target_time = 0;
 uint64_t current_time = 0;
 uint64_t break_delta_time = 0;
 bool delay_time_flag = false;
-
+bool gear_rev_ready_flag = false;
+bool mag_angle_delay_flag = false;
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
@@ -117,60 +118,12 @@ void SRV_Channel::output_ch(void)
             // 先用1100到1400的 ch3_pwm 值进行测试，更高的值可以先暂时不用测。
             // breaking_angle 需要通过实验测得（可以通过日志检验），表示不同齿轮转速下的刹车所需角度
             // 不同转速下的 breaking_angle 值应该是不同的
-            if (abs(avg_relative_gear_rev - 2) < 0.5)
-            {
-                breaking_angle = 53.11;
-            }
-            else if (abs(avg_relative_gear_rev - 5) < 0.5)
-            {
-                breaking_angle = 149.04;
-            }
-
+            
             if (old_Glide_Mode_Flag == false)
             {
                 old_Glide_Mode_Flag = true;
                 break_angle_MT6701_flag = true;
-                current_break_time_flag = true;
-
-                // 测试结果正常
-                // 情况一
-                // if ((target_angle_MT6701 - break_angle_MT6701) >= 0)
-                // {
-                //     // 情况二
-                //     // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
-                //     // 说明需要让齿轮保持当前速度并等待一定时间
-                //     if ((target_angle_MT6701 - (break_angle_MT6701 + breaking_angle)) > 0)
-                //     {                  
-                //         // 注意，这里计算出来的单位是秒，乘以1000后得到的数字单位才是毫秒。          
-                //         mag_angle_delay_time_ms = (target_angle_MT6701 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev * 1000;
-                //     }
-                //     // 情况三
-                //     // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
-                //     // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
-                //     else
-                //     {                            
-                //         mag_angle_delay_time_ms = (target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev * 1000;
-                //     }
-                // }
-                // // 情况四
-                // else
-                // {
-                //     // 情况五
-                //     // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
-                //     // 说明需要让齿轮保持当前速度并等待一定时间
-                //     if ((360 - break_angle_MT6701 + target_angle_MT6701 - breaking_angle) > 0)
-                //     {                            
-                //         mag_angle_delay_time_ms = (target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev * 1000;
-                //     }
-                //     // 情况六
-                //     // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
-                //     // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
-                //     else
-                //     {                            
-                //         mag_angle_delay_time_ms = (target_angle_MT6701 + 720 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev * 1000;
-                //     }
-                // }
-                
+                                               
                 /*
                  * 特别注意：控制电机输出的任务中不能使用延时函数！！！
                  * 因为控制电机输出的任务执行频率较高，如果在其中调用了延时函数，
@@ -215,49 +168,103 @@ void SRV_Channel::output_ch(void)
             }
             else if (ch_num == 2) // 驱动电机
             {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 0.");
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {                    
+                    if ((abs(avg_relative_gear_rev - 5.0) < 0.5) && (mag_angle_delay_flag == false))
+                    {
+                        gear_rev_ready_flag = true;
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 1.");
+                    }
+                    else
+                    {
+                        hal.rcout->write(ch_num, ch3_pwm);
+                    }
+
+                    if(gear_rev_ready_flag == true)
+                    {
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 2.");
+
+                        gear_rev_ready_flag = false;
+                        current_break_time_flag = true;
+                        mag_angle_delay_flag = true;
+
+                        // 情况一
+                        if ((target_angle_MT6701 - break_angle_MT6701) >= 0)
+                        {
+                            // 情况二
+                            // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
+                            // 说明需要让齿轮保持当前速度并等待一定时间
+                            if ((target_angle_MT6701 - (break_angle_MT6701 + breaking_angle)) > 0)
+                            {                  
+                                // 注意，这里计算出来的单位是秒，乘以1000后得到的数字单位才是毫秒。          
+                                mag_angle_delay_time_ms = (target_angle_MT6701 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev * 1000;
+                            }
+                            // 情况三
+                            // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
+                            // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
+                            else
+                            {                            
+                                mag_angle_delay_time_ms = (target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev * 1000;
+                            }
+                        }
+                        // 情况四
+                        else
+                        {
+                            // 情况五
+                            // 目标角度减去当前齿轮角度，再减去刹车所需预留角度都还要大于0
+                            // 说明需要让齿轮保持当前速度并等待一定时间
+                            if ((360 - break_angle_MT6701 + target_angle_MT6701 - breaking_angle) > 0)
+                            {                            
+                                mag_angle_delay_time_ms = (target_angle_MT6701 + 360 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev * 1000;
+                            }
+                            // 情况六
+                            // 目标角度减去当前齿轮角度，再减去刹车所需预留角度小于0时
+                            // 说明需要让齿轮多转一圈，才能预留出足够的刹车所需角度
+                            else
+                            {                            
+                                mag_angle_delay_time_ms = (target_angle_MT6701 + 720 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev * 1000;
+                            }
+                        }
+                    }
+
                     if(current_break_time_flag == true)
                     {
                         current_break_time_flag = false;
                         current_break_time = AP_HAL::micros64();                        
                     }
-                    if(mag_angle_delay_time_ms - 1000 < 0.0)
+                    if((mag_angle_delay_time_ms - 1000 < 0.0) && (mag_angle_delay_flag == true))
                     {
-                        Motor = MOTOR_STOP;
-                        hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 3.");
 
-                        // if(AP_HAL::micros64() >= (current_break_time + (uint64_t)(mag_angle_delay_time_ms * 1000)))
-                        // {
-                        //     delay_time_flag = true;
-                        //     break_time = current_break_time;
-                        //     delay_time = (uint64_t)(mag_angle_delay_time_ms * 1000);
-                        //     target_time = current_break_time + (uint64_t)(mag_angle_delay_time_ms * 1000);
-                        //     current_time = AP_HAL::micros64();
-                        //     break_delta_time = AP_HAL::micros64() - current_break_time;
+                        if(AP_HAL::micros64() >= (current_break_time + (uint64_t)(mag_angle_delay_time_ms * 1000)))
+                        {
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 4.");
 
-                        //     Motor = MOTOR_STOP;
-                        //     hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
-                        // }
-                        // else
-                        // {
-                        //     delay_time_flag = false;
-                        //     break_time = current_break_time;
-                        //     delay_time = (uint64_t)(mag_angle_delay_time_ms * 1000);
-                        //     target_time = current_break_time + (uint64_t)(mag_angle_delay_time_ms * 1000);
-                        //     current_time = AP_HAL::micros64();
-                        //     break_delta_time = AP_HAL::micros64() - current_break_time;
+                            delay_time_flag = true;
+                            mag_angle_delay_flag = false;
+                            break_time = current_break_time;
+                            delay_time = (uint64_t)(mag_angle_delay_time_ms * 1000);
+                            target_time = current_break_time + (uint64_t)(mag_angle_delay_time_ms * 1000);
+                            current_time = AP_HAL::micros64();
+                            break_delta_time = AP_HAL::micros64() - current_break_time;
 
-                        //     hal.rcout->write(ch_num, MOTOR_STOP_DELAY_VALUE);
-                        // }   
+                            Motor = MOTOR_STOP;
+                            hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
+                        }
+                        else
+                        {
+                            delay_time_flag = false;
+                            break_time = current_break_time;
+                            delay_time = (uint64_t)(mag_angle_delay_time_ms * 1000);
+                            target_time = current_break_time + (uint64_t)(mag_angle_delay_time_ms * 1000);
+                            current_time = AP_HAL::micros64();
+                            break_delta_time = AP_HAL::micros64() - current_break_time;
+
+                            hal.rcout->write(ch_num, ch3_pwm);
+                        }   
                     }
-                    else
-                    {
-                        Motor = MOTOR_STOP;
-                        hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
-                    }
-                    
                 }
             }
             else // 其他PWM通道
@@ -284,7 +291,7 @@ void SRV_Channel::output_ch(void)
                     hal.rcout->write(ch_num, output_pwm);
                 }
                 else if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
-                {                    
+                {                 
                     hal.rcout->write(ch_num, output_pwm);
                 }
             }

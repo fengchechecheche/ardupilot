@@ -8,7 +8,7 @@
 #define SAMPLE_FREQUENCY 0.01
 #define MAX_LIMIT_factor 80
 #define LPF_factor 200
-#define Buff_Num 10
+#define Buff_Num 20
 
 float angle_MT6701 = 0.0;
 float break_angle_MT6701 = 0.0;
