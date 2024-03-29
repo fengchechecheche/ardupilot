@@ -228,11 +228,6 @@ void SRV_Channel::output_ch(void)
                 if ((Motor == MOTOR_STOP) && (Servo == SERVO_RELEASE))
                 {
                     Servo = SERVO_BRAKE;
-                    // angle_MT6701 = angle_MT6701 + 1;
-                    // hal.scheduler->delay(10);
-                    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
-                    // hal.scheduler->delay(10);
-                    // ch4_pwm = (u_int16_t)(1300 + 400.0 / 360 * angle_MT6701);
                     hal.rcout->write(ch_num, SERVO_BRAKE_VALUE);
                 }
             }
@@ -258,10 +253,6 @@ void SRV_Channel::output_ch(void)
                             break_delta_time = AP_HAL::micros64() - current_break_time;
 
                             Motor = MOTOR_STOP;
-                            // angle_MT6701 = angle_MT6701 + 1;
-                            // hal.scheduler->delay(10);
-                            // gcs().send_text(MAV_SEVERITY_CRITICAL, "[PWM Channel] angle_MT6701: %.4f.\n", angle_MT6701);
-                            // hal.scheduler->delay(10);
                             hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
                         }
                         else
