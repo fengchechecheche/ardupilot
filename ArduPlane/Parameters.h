@@ -574,6 +574,9 @@ public:
     AP_Int8         man_expo_rudder;
 
     AP_Int32        oneshot_mask;
+
+    // AP_Int16 ch3_pwm_in_gcs;
+    // AP_Float target_angle_MT6701_in_gcs;
 };
 
 extern const AP_Param::Info var_info[];

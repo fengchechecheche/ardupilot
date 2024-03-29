@@ -1259,6 +1259,9 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Path: ../libraries/AP_Follow/AP_Follow.cpp
     AP_SUBGROUPINFO(follow, "FOLL", 33, ParametersG2, AP_Follow),
 #endif
+
+    // AP_GROUPINFO("CH3_PWM", 33, ParametersG2, ch3_pwm_in_gcs, 1250),
+    // AP_GROUPINFO("TARGET_ANGLE_MT6701", 34, ParametersG2, target_angle_MT6701_in_gcs, 100),
     
     AP_GROUPEND
 };
