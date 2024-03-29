@@ -122,8 +122,7 @@ void SRV_Channel::output_ch(void)
             if (old_Glide_Mode_Flag == false)
             {
                 old_Glide_Mode_Flag = true;
-                break_angle_MT6701_flag = true;
-                                               
+                                                               
                 /*
                  * 特别注意：控制电机输出的任务中不能使用延时函数！！！
                  * 因为控制电机输出的任务执行频率较高，如果在其中调用了延时函数，
@@ -168,14 +167,13 @@ void SRV_Channel::output_ch(void)
             }
             else if (ch_num == 2) // 驱动电机
             {
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 0.");
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {                    
-                    if ((abs(avg_relative_gear_rev - 5.0) < 0.5) && (mag_angle_delay_flag == false))
+                    if ((abs(avg_relative_gear_rev - 5.0) < 0.35) && (mag_angle_delay_flag == false))
                     {
                         gear_rev_ready_flag = true;
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 1.");
+                        break_angle_MT6701 = angle_MT6701;
                     }
                     else
                     {
@@ -184,8 +182,6 @@ void SRV_Channel::output_ch(void)
 
                     if(gear_rev_ready_flag == true)
                     {
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 2.");
-
                         gear_rev_ready_flag = false;
                         current_break_time_flag = true;
                         mag_angle_delay_flag = true;
@@ -236,12 +232,8 @@ void SRV_Channel::output_ch(void)
                     }
                     if((mag_angle_delay_time_ms - 1000 < 0.0) && (mag_angle_delay_flag == true))
                     {
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 3.");
-
                         if(AP_HAL::micros64() >= (current_break_time + (uint64_t)(mag_angle_delay_time_ms * 1000)))
                         {
-                            gcs().send_text(MAV_SEVERITY_CRITICAL, "---->enter state 4.");
-
                             delay_time_flag = true;
                             mag_angle_delay_flag = false;
                             break_time = current_break_time;

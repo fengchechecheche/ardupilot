@@ -7,6 +7,7 @@
 extern const AP_HAL::HAL &hal;
 extern float angle_MT6701;
 extern float break_angle_MT6701;
+// 下面这个变量没有作用了，考虑删除
 extern bool  break_angle_MT6701_flag;
 extern float angle_MT6701_error;
 extern float relative_gear_rev;
