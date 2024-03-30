@@ -141,7 +141,6 @@ void SRV_Channel::output_ch(void)
             if(break_success_flag == 2)
             {                
                 break_success_flag = 3;
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "break_success_flag = 3");
                 if(break_success_angle - target_angle_MT6701 > 5)
                 {
                     if(break_delay_time_offset_counter < 10)
@@ -218,7 +217,6 @@ void SRV_Channel::output_ch(void)
                     hal.rcout->write(ch_num, SERVO_BRAKE_VALUE);
 
                     break_success_flag = 1;
-                    gcs().send_text(MAV_SEVERITY_CRITICAL, "break_success_flag = 1");
                 }
             }
             else if (ch_num == 2) // 驱动电机
