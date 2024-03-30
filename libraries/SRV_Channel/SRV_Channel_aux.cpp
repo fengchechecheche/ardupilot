@@ -64,6 +64,7 @@ bool mag_angle_delay_flag = false;
 bool break_success_flag = false;
 float break_success_angle = 0.0;
 float break_delay_time_offset = 0.0;
+uint16_t break_delay_time_offset_counter = 0;
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
@@ -142,14 +143,46 @@ void SRV_Channel::output_ch(void)
                 break_success_angle_flag = false;
                 if(break_success_angle - target_angle_MT6701 > 5)
                 {
-                    break_delay_time_offset = break_delay_time_offset + 5;
+                    if(break_delay_time_offset_counter < 10)
+                    {
+                        break_delay_time_offset_counter++;
+                        break_delay_time_offset = break_delay_time_offset + 5;
+                        if(break_delay_time_offset - 30 > 0)
+                        {
+                            break_delay_time_offset = 30;
+                        }
+                    }
+                    else
+                    {
+                        break_delay_time_offset_counter++;
+                        break_delay_time_offset = break_delay_time_offset + 1;
+                        if(break_delay_time_offset - 30 > 0)
+                        {
+                            break_delay_time_offset = 30;
+                        }
+                    }
                 }
                 else if(break_success_angle - target_angle_MT6701 < -5)
                 {
-                    break_delay_time_offset = break_delay_time_offset - 5;
+                    if(break_delay_time_offset_counter < 10)
+                    {
+                        break_delay_time_offset_counter++;
+                        break_delay_time_offset = break_delay_time_offset - 5;
+                        if(break_delay_time_offset + 30 < 0)
+                        {
+                            break_delay_time_offset = -30;
+                        }
+                    }
+                    else
+                    {
+                        break_delay_time_offset_counter++;
+                        break_delay_time_offset = break_delay_time_offset - 1;
+                        if(break_delay_time_offset + 30 < 0)
+                        {
+                            break_delay_time_offset = -30;
+                        }
+                    }
                 }
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "delay time offset: %.2f.", break_delay_time_offset);
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "break_success_angle: %.2f", break_success_angle);
             }
 
             /*
