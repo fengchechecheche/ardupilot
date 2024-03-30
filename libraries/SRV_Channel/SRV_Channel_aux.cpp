@@ -41,7 +41,7 @@ extern const AP_HAL::HAL &hal;
 #define SERVO_RELEASE false
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
-uint16_t ch3_pwm = 1250;
+uint16_t ch3_pwm = 1270;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
@@ -147,18 +147,18 @@ void SRV_Channel::output_ch(void)
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset + 5;
-                        if(break_delay_time_offset - 30 > 0)
+                        if(break_delay_time_offset - 50 > 0)
                         {
-                            break_delay_time_offset = 30;
+                            break_delay_time_offset = 50;
                         }
                     }
                     else
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset + 1;
-                        if(break_delay_time_offset - 30 > 0)
+                        if(break_delay_time_offset - 50 > 0)
                         {
-                            break_delay_time_offset = 30;
+                            break_delay_time_offset = 50;
                         }
                     }
                 }
@@ -168,18 +168,18 @@ void SRV_Channel::output_ch(void)
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset - 5;
-                        if(break_delay_time_offset + 30 < 0)
+                        if(break_delay_time_offset + 50 < 0)
                         {
-                            break_delay_time_offset = -30;
+                            break_delay_time_offset = -50;
                         }
                     }
                     else
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset - 1;
-                        if(break_delay_time_offset + 30 < 0)
+                        if(break_delay_time_offset + 50 < 0)
                         {
-                            break_delay_time_offset = -30;
+                            break_delay_time_offset = -50;
                         }
                     }
                 }
