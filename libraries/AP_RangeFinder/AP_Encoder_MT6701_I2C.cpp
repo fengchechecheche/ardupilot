@@ -93,6 +93,14 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
         break_angle_MT6701 = angle_MT6701;
     }
 
+    if(break_success_flag == true)
+    {
+        if(abs(avg_relative_gear_rev - 0) < 0.1)
+        {
+            break_success_angle = angle_MT6701;
+        }
+    }
+
     // 磁场角度没有从360度跨到0度的情况
     if (angle_MT6701 - old_angle_MT6701 > 0.0)
     {

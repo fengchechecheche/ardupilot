@@ -17,6 +17,10 @@ extern float avg_relative_gear_rev;
 #define SlaveAddress 0X06 //MT6701 地址
 #define ReadAddress1 0X03 // 数据高位寄存器地址
 #define ReadAddress2 0X04 // 数据低位寄存器地址
+// 自动调节刹车等待时间的相关变量
+extern bool break_success_flag;
+extern float break_success_angle;
+extern float break_delay_time_offset;
 
 class AP_Encoder_MT6701_I2C : public AP_Encoder_Backend{
 public:
