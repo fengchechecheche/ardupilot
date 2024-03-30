@@ -181,6 +181,8 @@ void SRV_Channel::output_ch(void)
                 {
                     Servo = SERVO_BRAKE;
                     hal.rcout->write(ch_num, SERVO_BRAKE_VALUE);
+
+                    break_success_flag = true;
                 }
             }
             else if (ch_num == 2) // 驱动电机
@@ -280,11 +282,6 @@ void SRV_Channel::output_ch(void)
             else // 其他PWM通道
             {
                 hal.rcout->write(ch_num, output_pwm);
-            }
-
-            if(Motor == MOTOR_STOP && Servo == SERVO_BRAKE)
-            {
-                break_success_flag = true;
             }
         }
         else
