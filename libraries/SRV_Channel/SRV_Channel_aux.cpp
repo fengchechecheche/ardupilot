@@ -42,6 +42,8 @@ extern const AP_HAL::HAL &hal;
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
 uint16_t ch3_pwm = 1270;
+uint8_t ch3_pwm_add_counter = 0;
+uint8_t ch3_pwm_min_counter = 0;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
@@ -223,8 +225,9 @@ void SRV_Channel::output_ch(void)
             {
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
-                {                    
-                    if ((abs(avg_relative_gear_rev - 5.0) < 0.4) && (mag_angle_delay_flag == false))
+                {            
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "avg_relative_gear_rev: %.2f.", avg_relative_gear_rev);        
+                    if ((abs(avg_relative_gear_rev - 5.0) < 0.3) && (mag_angle_delay_flag == false))
                     {
                         gear_rev_ready_flag = true;
                         break_angle_MT6701 = angle_MT6701;
