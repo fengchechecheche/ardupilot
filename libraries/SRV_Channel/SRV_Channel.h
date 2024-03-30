@@ -42,6 +42,7 @@ extern bool delay_time_flag;
 
 extern uint16_t ch3_pwm;
 extern float target_angle_MT6701;
+extern float break_delay_time_offset;
 
 class SRV_Channels;
 
