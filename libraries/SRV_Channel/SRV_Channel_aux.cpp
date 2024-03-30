@@ -147,6 +147,7 @@ void SRV_Channel::output_ch(void)
                 {
                     break_delay_time_offset = break_delay_time_offset + 5;
                 }
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "delay time offset: %.2f.", break_delay_time_offset);
             }
 
             /*
