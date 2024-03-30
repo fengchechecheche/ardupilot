@@ -40,6 +40,9 @@ extern uint64_t current_time;
 extern uint64_t break_delta_time;
 extern bool delay_time_flag;
 
+extern uint16_t ch3_pwm;
+extern float target_angle_MT6701;
+
 class SRV_Channels;
 
 /*

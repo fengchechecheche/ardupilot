@@ -1260,6 +1260,12 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     AP_SUBGROUPINFO(follow, "FOLL", 33, ParametersG2, AP_Follow),
 #endif
     
+    AP_GROUPINFO("CH3_PWM", 33, ParametersG2, ch3_pwm_in_gcs, 1250),
+    /*
+     * 注意：参数名不能过长。APM规定参数名的总长不能超过16个字符，否则就会导致飞控无法启动。
+     * */
+    AP_GROUPINFO("TARGET_ANGLE", 34, ParametersG2, target_angle_MT6701_in_gcs, 100),
+
     AP_GROUPEND
 };
 
