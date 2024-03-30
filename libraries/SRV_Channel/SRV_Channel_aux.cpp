@@ -41,7 +41,7 @@ extern const AP_HAL::HAL &hal;
 #define SERVO_RELEASE false
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
-static uint16_t ch3_pwm = 1250;
+uint16_t ch3_pwm = 1250;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
