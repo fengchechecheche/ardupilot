@@ -72,6 +72,7 @@ struct PACKED log_Encoder
     float gear_rev_rps;
     bool flap_or_glide;
     float break_angle_degree;
+    float break_suc_angle_degree;
 };
 
 void Plane::Log_Write_Encoder()
@@ -84,6 +85,7 @@ void Plane::Log_Write_Encoder()
         gear_rev_rps            : relative_gear_rev,
         flap_or_glide           : Glide_Mode_Flag,
         break_angle_degree      : break_angle_MT6701,
+        break_suc_angle_degree  : break_success_angle,
     };
     logger.WriteCriticalBlock(&pkt, sizeof(pkt));
 }
@@ -99,6 +101,7 @@ struct PACKED log_Encoder2
     uint64_t log_target_time;
     uint64_t log_current_time;
     uint64_t log_delta_time;
+    float log_break_delay_time_offset;
 };
 
 
@@ -113,6 +116,7 @@ void Plane::Log_Write_Encoder2()
         log_target_time         : target_time,
         log_current_time        : current_time,
         log_delta_time          : break_delta_time,
+        log_break_delay_time_offset     : break_delay_time_offset,
     };
     logger.WriteCriticalBlock(&pkt, sizeof(pkt));
 }
@@ -528,9 +532,10 @@ const struct LogStructure Plane::log_structure[] = {
 // @Field: GR: GearRev，末端齿轮转速
 // @Field: FM:  FlyMode，记录当前飞行方式是扑翼还是滑翔
 // @Field: BAg: BreakAngle，记录刹车开始时末端齿轮的角度
+// @Field: BsAg: break_success_angle，记录刹车成功后末端齿轮的角度
 // 注：这里的字符长度最长只能是64个
     { LOG_ENCODER_MSG, sizeof(log_Encoder),     
-      "ENCO", "Qfffbf",    "TimeUS,MAg,MAgE,GR,FM,BAg", "shhQ-h", "F-----" },
+      "ENCO", "Qfffbff",    "TimeUS,MAg,MAgE,GR,FM,BAg,BsAg", "shhQ-hh", "F------"  },
 
 // @LoggerMessage: Encoder2
 // @Description: 记录编码器测量的相关数据
@@ -541,9 +546,10 @@ const struct LogStructure Plane::log_structure[] = {
 // @Field: TarTi: target_time，记录等待的目标时间
 // @Field: CurTi:  current_time，记录系统的当前时间
 // @Field: DltTi: delta_time，记录从刹车命令下达到当前已经经过的时间
+// @Field: OstTi: break_delay_time_offset，记录刹车等待时间的调节变量的值
 // 注：这里的字符长度最长只能是64个
     { LOG_ENCODER2_MSG, sizeof(log_Encoder2),     
-      "ENC2", "QbQQQQQ",    "TimeUS,dtFlag,BrkTi,DlyTi,TarTi,CurTi,DltTi", "s-YYYYY", "F-FFFFF" },
+      "ENC2", "QbQQQQQf",    "TimeUS,dtFlag,BrkTi,DlyTi,TarTi,CurTi,DltTi,OstTi", "s-YYYYYh", "F-FFFFF-" },
 };
 
 
