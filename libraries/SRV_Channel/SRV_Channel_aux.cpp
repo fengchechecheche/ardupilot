@@ -141,11 +141,11 @@ void SRV_Channel::output_ch(void)
                 break_success_flag = false;
                 if(break_success_angle - target_angle_MT6701 > 5)
                 {
-                    break_delay_time_offset = break_delay_time_offset - 5;
+                    break_delay_time_offset = break_delay_time_offset + 5;
                 }
                 else if(break_success_angle - target_angle_MT6701 < -5)
                 {
-                    break_delay_time_offset = break_delay_time_offset + 5;
+                    break_delay_time_offset = break_delay_time_offset - 5;
                 }
                 gcs().send_text(MAV_SEVERITY_CRITICAL, "delay time offset: %.2f.", break_delay_time_offset);
             }
@@ -190,7 +190,7 @@ void SRV_Channel::output_ch(void)
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {                    
-                    if ((abs(avg_relative_gear_rev - 5.0) < 0.35) && (mag_angle_delay_flag == false))
+                    if ((abs(avg_relative_gear_rev - 5.0) < 0.4) && (mag_angle_delay_flag == false))
                     {
                         gear_rev_ready_flag = true;
                         break_angle_MT6701 = angle_MT6701;
