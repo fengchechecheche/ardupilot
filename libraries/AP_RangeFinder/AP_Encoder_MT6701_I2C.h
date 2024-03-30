@@ -21,6 +21,7 @@ extern float avg_relative_gear_rev;
 extern bool break_success_flag;
 extern float break_success_angle;
 extern float break_delay_time_offset;
+extern bool break_success_angle_flag;
 
 class AP_Encoder_MT6701_I2C : public AP_Encoder_Backend{
 public:

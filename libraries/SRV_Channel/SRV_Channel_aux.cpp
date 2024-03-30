@@ -136,9 +136,10 @@ void SRV_Channel::output_ch(void)
                 // hal.scheduler->delay(mag_angle_delay_time_ms);
             }
 
-            if(break_success_flag == true)
+            if(break_success_angle_flag == true)
             {
                 break_success_flag = false;
+                break_success_angle_flag = false;
                 if(break_success_angle - target_angle_MT6701 > 5)
                 {
                     break_delay_time_offset = break_delay_time_offset + 5;
@@ -148,6 +149,7 @@ void SRV_Channel::output_ch(void)
                     break_delay_time_offset = break_delay_time_offset - 5;
                 }
                 gcs().send_text(MAV_SEVERITY_CRITICAL, "delay time offset: %.2f.", break_delay_time_offset);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "break_success_angle: %.2f", break_success_angle);
             }
 
             /*
