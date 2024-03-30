@@ -233,6 +233,7 @@ void SRV_Channel::output_ch(void)
                     else
                     {
                         hal.rcout->write(ch_num, ch3_pwm);
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "avg_relative_gear_rev: %.2f.", avg_relative_gear_rev);
                     }
 
                     if(gear_rev_ready_flag == true)
