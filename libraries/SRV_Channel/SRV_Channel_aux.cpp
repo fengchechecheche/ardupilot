@@ -189,12 +189,14 @@ void SRV_Channel::output_ch(void)
             }
             else if (ch_num == 2) // 驱动电机
             {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-0] enter 3 channel.");
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {                    
                     if ((abs(avg_relative_gear_rev - 5.0) < 0.4) && (mag_angle_delay_flag == false))
                     {
                         gear_rev_ready_flag = true;
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-1] gear rev ready.");
                         break_angle_MT6701 = angle_MT6701;
                     }
                     else
@@ -245,6 +247,8 @@ void SRV_Channel::output_ch(void)
                                 mag_angle_delay_time_ms = (target_angle_MT6701 + 720 - break_angle_MT6701 - breaking_angle) / 360 / avg_relative_gear_rev * 1000 + break_delay_time_offset;
                             }
                         }
+
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-2] delay time calculate finish.");
                     }
 
                     if(current_break_time_flag == true)
@@ -254,6 +258,7 @@ void SRV_Channel::output_ch(void)
                     }
                     if((mag_angle_delay_time_ms - 1000 < 0.0) && (mag_angle_delay_flag == true))
                     {
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-3] start delay.");
                         if(AP_HAL::micros64() >= (current_break_time + (uint64_t)(mag_angle_delay_time_ms * 1000)))
                         {
                             delay_time_flag = true;
@@ -266,6 +271,8 @@ void SRV_Channel::output_ch(void)
 
                             Motor = MOTOR_STOP;
                             hal.rcout->write(ch_num, MOTOR_STOP_VALUE);
+
+                            gcs().send_text(MAV_SEVERITY_CRITICAL, "[1-4] motor stopped.");
                         }
                         else
                         {
