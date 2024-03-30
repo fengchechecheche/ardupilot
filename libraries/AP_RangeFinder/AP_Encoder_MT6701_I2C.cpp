@@ -95,7 +95,7 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
 
     if(break_success_flag == 1)
     {
-        if(abs(avg_relative_gear_rev - 0) < 0.1)
+        if(abs(relative_gear_rev - 0) < 0.1)
         {
             break_success_angle = angle_MT6701;
             break_success_flag = 2;
