@@ -99,6 +99,7 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
         if(abs(avg_relative_gear_rev - 0) < 0.1)
         {
             break_success_angle = angle_MT6701;
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "break_success_angle: %.2f", break_success_angle);
             break_success_angle_flag = true;
         }
     }

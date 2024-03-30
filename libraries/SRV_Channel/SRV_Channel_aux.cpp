@@ -185,6 +185,8 @@ void SRV_Channel::output_ch(void)
                 }
             }
 
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "break_delay_time_offset: %.2f", break_delay_time_offset);
+
             /*
              * 注意：此处必须是以下的判断形式
              * if(舵机通道){}
