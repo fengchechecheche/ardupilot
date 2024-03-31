@@ -366,7 +366,6 @@ void Plane::one_second_loop()
         landing.alt_offset = 0;
     }
 
-    ch3_pwm = g2.ch3_pwm_in_gcs;
     target_angle_MT6701 = g2.target_angle_MT6701_in_gcs;
 }
 

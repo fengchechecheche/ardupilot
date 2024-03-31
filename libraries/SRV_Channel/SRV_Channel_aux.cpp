@@ -39,9 +39,10 @@ extern const AP_HAL::HAL &hal;
 #define MOTOR_RUN true
 #define SERVO_BRAKE true
 #define SERVO_RELEASE false
+#define BREAK_DELAY_TIME_OFFSET_THRESHOLD 30
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
-uint16_t ch3_pwm = 1270;
+uint16_t ch3_pwm = 1250;
 uint8_t ch3_pwm_add_counter = 0;
 uint8_t ch3_pwm_min_counter = 0;
 // static uint16_t ch4_pwm = 1300;
@@ -149,18 +150,18 @@ void SRV_Channel::output_ch(void)
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset + 5;
-                        if(break_delay_time_offset - 50 > 0)
+                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
-                            break_delay_time_offset = 50;
+                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
                     }
                     else
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset + 1;
-                        if(break_delay_time_offset - 50 > 0)
+                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
-                            break_delay_time_offset = 50;
+                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
                     }
                 }
@@ -170,18 +171,18 @@ void SRV_Channel::output_ch(void)
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset - 5;
-                        if(break_delay_time_offset + 50 < 0)
+                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
                         {
-                            break_delay_time_offset = -50;
+                            break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
                     }
                     else
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset - 1;
-                        if(break_delay_time_offset + 50 < 0)
+                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
                         {
-                            break_delay_time_offset = -50;
+                            break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
                     }
                 }
