@@ -240,6 +240,7 @@ void SRV_Channel::output_ch(void)
                             ch3_pwm_min_counter = 0;
                             ch3_pwm--;
                         }
+                        hal.rcout->write(ch_num, ch3_pwm);
                     }
                     else if(((avg_relative_gear_rev - 4.7) < 0) && (mag_angle_delay_flag == false))
                     {
@@ -249,6 +250,7 @@ void SRV_Channel::output_ch(void)
                             ch3_pwm_add_counter = 0;
                             ch3_pwm++;
                         }
+                        hal.rcout->write(ch_num, ch3_pwm);
                     }
                     else
                     {
