@@ -236,20 +236,28 @@ void SRV_Channel::output_ch(void)
                     else if(((avg_relative_gear_rev - 5.3) > 0) && (mag_angle_delay_flag == false))
                     {
                         ch3_pwm_min_counter++;
-                        if(ch3_pwm_min_counter >= 5)
+                        if(ch3_pwm_min_counter >= 50)
                         {
                             ch3_pwm_min_counter = 0;
                             ch3_pwm--;
+                            if(ch3_pwm < 1200)
+                            {
+                                ch3_pwm = 1200;
+                            }
                         }
                         hal.rcout->write(ch_num, ch3_pwm);
                     }
                     else if(((avg_relative_gear_rev - 4.7) < 0) && (mag_angle_delay_flag == false))
                     {
                         ch3_pwm_add_counter++;
-                        if(ch3_pwm_add_counter >= 5)
+                        if(ch3_pwm_add_counter >= 50)
                         {
                             ch3_pwm_add_counter = 0;
                             ch3_pwm++;
+                            if(ch3_pwm > 1300)
+                            {
+                                ch3_pwm = 1300;
+                            }
                         }
                         hal.rcout->write(ch_num, ch3_pwm);
                     }
