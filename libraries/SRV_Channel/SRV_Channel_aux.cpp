@@ -158,7 +158,7 @@ void SRV_Channel::output_ch(void)
                     else
                     {
                         break_delay_time_offset_counter++;
-                        break_delay_time_offset = break_delay_time_offset - 1;
+                        break_delay_time_offset = break_delay_time_offset - 3;
                         if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
                         {
                             break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
@@ -179,7 +179,7 @@ void SRV_Channel::output_ch(void)
                     else
                     {
                         break_delay_time_offset_counter++;
-                        break_delay_time_offset = break_delay_time_offset + 1;
+                        break_delay_time_offset = break_delay_time_offset + 3;
                         if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
                             break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
