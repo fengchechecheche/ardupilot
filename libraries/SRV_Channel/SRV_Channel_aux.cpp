@@ -149,29 +149,8 @@ void SRV_Channel::output_ch(void)
                     if(break_delay_time_offset_counter < 10)
                     {
                         break_delay_time_offset_counter++;
-                        break_delay_time_offset = break_delay_time_offset + 5;
-                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
-                        {
-                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
-                        }
-                    }
-                    else
-                    {
-                        break_delay_time_offset_counter++;
-                        break_delay_time_offset = break_delay_time_offset + 1;
-                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
-                        {
-                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
-                        }
-                    }
-                }
-                else if(break_success_angle - target_angle_MT6701 < -5)
-                {
-                    if(break_delay_time_offset_counter < 10)
-                    {
-                        break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset - 5;
-                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
                             break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
@@ -180,9 +159,30 @@ void SRV_Channel::output_ch(void)
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset - 1;
-                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
                             break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                        }
+                    }
+                }
+                else if(break_success_angle - target_angle_MT6701 < -5)
+                {
+                    if(break_delay_time_offset_counter < 10)
+                    {
+                        break_delay_time_offset_counter++;
+                        break_delay_time_offset = break_delay_time_offset + 5;
+                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                        {
+                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                        }
+                    }
+                    else
+                    {
+                        break_delay_time_offset_counter++;
+                        break_delay_time_offset = break_delay_time_offset + 1;
+                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                        {
+                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
                     }
                 }
