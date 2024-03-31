@@ -39,7 +39,7 @@ extern const AP_HAL::HAL &hal;
 #define MOTOR_RUN true
 #define SERVO_BRAKE true
 #define SERVO_RELEASE false
-#define BREAK_DELAY_TIME_OFFSET_THRESHOLD 30
+#define BREAK_DELAY_TIME_OFFSET_THRESHOLD 60
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
 uint16_t ch3_pwm = 1250;
