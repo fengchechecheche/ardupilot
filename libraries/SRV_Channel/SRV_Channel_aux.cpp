@@ -150,7 +150,7 @@ void SRV_Channel::output_ch(void)
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset - 5;
-                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
+                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
                         {
                             break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
@@ -159,7 +159,7 @@ void SRV_Channel::output_ch(void)
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset - 1;
-                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
+                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
                         {
                             break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
@@ -171,7 +171,7 @@ void SRV_Channel::output_ch(void)
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset + 5;
-                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
                             break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
@@ -180,7 +180,7 @@ void SRV_Channel::output_ch(void)
                     {
                         break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset + 1;
-                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
                             break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
