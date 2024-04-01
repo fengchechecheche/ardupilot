@@ -45,6 +45,8 @@ extern const AP_HAL::HAL &hal;
 uint16_t ch3_pwm = 1250;
 uint8_t ch3_pwm_add_counter = 0;
 uint8_t ch3_pwm_min_counter = 0;
+uint16_t ch3_pwm_pid = 1250;
+uint16_t delta_ch3_pwm = 0;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
@@ -69,6 +71,11 @@ uint8_t break_success_flag = 0;
 float break_success_angle = 0.0;
 float break_delay_time_offset = 0.0;
 uint16_t break_delay_time_offset_counter = 0;
+// 增量式PID控制器相关变量
+float error_buff[3] = {0, 0, 0};
+float K_p = 0.544491;
+float K_i = 4.315097;
+float K_d = 0.007933;
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
@@ -235,7 +242,16 @@ void SRV_Channel::output_ch(void)
                     }
                     else if(((avg_relative_gear_rev - 5.3) > 0) && (mag_angle_delay_flag == false))
                     {
-                        // 考虑对这里的转速控制采用PID控制器
+                        // 对这里的转速控制采用PID控制器
+                        for(uint8_t i = 0; i < 2; i++)
+                        {
+                            error_buff[i] = error_buff[i+1];
+                        }
+                        error_buff[2] = avg_relative_gear_rev - 5.0;
+                        delta_ch3_pwm = (uint16_t)((K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2  *error_buff[1] + error_buff[0])) * 10);
+                        ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "ch3_pwm with pid: %d.", ch3_pwm_pid);
+
                         ch3_pwm_min_counter++;
                         if(ch3_pwm_min_counter >= 50)
                         {
@@ -246,10 +262,22 @@ void SRV_Channel::output_ch(void)
                                 ch3_pwm = 1200;
                             }
                         }
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "origin ch3_pwm: %d.", ch3_pwm);
+
                         hal.rcout->write(ch_num, ch3_pwm);
                     }
                     else if(((avg_relative_gear_rev - 4.7) < 0) && (mag_angle_delay_flag == false))
                     {
+                        // 对这里的转速控制采用PID控制器
+                        for(uint8_t i = 0; i < 2; i++)
+                        {
+                            error_buff[i] = error_buff[i+1];
+                        }
+                        error_buff[2] = avg_relative_gear_rev - 5.0;
+                        delta_ch3_pwm = (uint16_t)((K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2  *error_buff[1] + error_buff[0])) * 10);
+                        ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "ch3_pwm with pid: %d.", ch3_pwm_pid);
+
                         ch3_pwm_add_counter++;
                         if(ch3_pwm_add_counter >= 50)
                         {
@@ -260,6 +288,8 @@ void SRV_Channel::output_ch(void)
                                 ch3_pwm = 1300;
                             }
                         }
+                        gcs().send_text(MAV_SEVERITY_CRITICAL, "origin ch3_pwm: %d.", ch3_pwm);
+
                         hal.rcout->write(ch_num, ch3_pwm);
                     }
                     else
