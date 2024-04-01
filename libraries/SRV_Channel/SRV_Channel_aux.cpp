@@ -234,8 +234,7 @@ void SRV_Channel::output_ch(void)
             {
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
-                {            
-                    gcs().send_text(MAV_SEVERITY_CRITICAL, "avg_relative_gear_rev: %.2f.", avg_relative_gear_rev);        
+                {  
                     if ((abs(avg_relative_gear_rev - 5.0) < 0.2) && (mag_angle_delay_flag == false))
                     {
                         gear_rev_ready_flag = true;
@@ -372,7 +371,7 @@ void SRV_Channel::output_ch(void)
                             current_time = AP_HAL::micros64();
                             break_delta_time = AP_HAL::micros64() - current_break_time;
 
-                            hal.rcout->write(ch_num, ch3_pwm);
+                            hal.rcout->write(ch_num, MOTOR_STOP_DELAY_VALUE);
                         }   
                     }
                 }
