@@ -248,7 +248,8 @@ void SRV_Channel::output_ch(void)
                             error_buff[i] = error_buff[i+1];
                         }
                         error_buff[2] = avg_relative_gear_rev - 5.0;
-                        delta_ch3_pwm = (int16_t)((K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2  *error_buff[1] + error_buff[0])) * 10);
+                        delta_ch3_pwm = (uint16_t)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
+                        delta_ch3_pwm = 65535 - delta_ch3_pwm;
                         ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K]: %f.", error_buff[2]);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-1]: %f.", error_buff[1]);
@@ -260,7 +261,7 @@ void SRV_Channel::output_ch(void)
                         if(ch3_pwm_min_counter >= 50)
                         {
                             ch3_pwm_min_counter = 0;
-                            ch3_pwm--;
+                            ch3_pwm = ch3_pwm - 2;
                             if(ch3_pwm < 1200)
                             {
                                 ch3_pwm = 1200;
@@ -278,7 +279,8 @@ void SRV_Channel::output_ch(void)
                             error_buff[i] = error_buff[i+1];
                         }
                         error_buff[2] = avg_relative_gear_rev - 5.0;
-                        delta_ch3_pwm = (int16_t)((K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2  *error_buff[1] + error_buff[0])) * 10);
+                        delta_ch3_pwm = (uint16_t)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
+                        delta_ch3_pwm = 65535 - delta_ch3_pwm;
                         ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K]: %f.", error_buff[2]);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-1]: %f.", error_buff[1]);
@@ -290,7 +292,7 @@ void SRV_Channel::output_ch(void)
                         if(ch3_pwm_add_counter >= 50)
                         {
                             ch3_pwm_add_counter = 0;
-                            ch3_pwm++;
+                            ch3_pwm = ch3_pwm + 2;
                             if(ch3_pwm > 1300)
                             {
                                 ch3_pwm = 1300;
