@@ -47,6 +47,10 @@ uint8_t ch3_pwm_add_counter = 0;
 uint8_t ch3_pwm_min_counter = 0;
 uint16_t ch3_pwm_pid = 1250;
 signed delta_ch3_pwm = 0;
+// 编码器读取磁场角度的频率是 50Hz
+// 控制油门输出的任务的执行频率是 400 Hz
+// 因此采用一个计数变量使他们的频率能够对应上
+uint8_t ch3_pwm_pid_counter = 0;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
@@ -137,7 +141,7 @@ void SRV_Channel::output_ch(void)
             if (old_Glide_Mode_Flag == false)
             {
                 old_Glide_Mode_Flag = true;
-                                                               
+                ch3_pwm_pid = 1250;                                       
                 /*
                  * 特别注意：控制电机输出的任务中不能使用延时函数！！！
                  * 因为控制电机输出的任务执行频率较高，如果在其中调用了延时函数，
@@ -249,7 +253,20 @@ void SRV_Channel::output_ch(void)
                         }
                         error_buff[2] = 5.0 - avg_relative_gear_rev;
                         delta_ch3_pwm = (signed)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
-                        ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
+                        ch3_pwm_pid_counter++;
+                        if(ch3_pwm_pid_counter >= 8)
+                        {
+                            ch3_pwm_pid_counter = 0;
+                            ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
+                            if(ch3_pwm_pid > 1350)
+                            {
+                                ch3_pwm_pid = 1350;
+                            }
+                            else if(ch3_pwm_pid < 1200)
+                            {
+                                ch3_pwm_pid = 1200;
+                            }
+                        }
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K]: %f.", error_buff[2]);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-1]: %f.", error_buff[1]);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-2]: %f.", error_buff[0]);
@@ -268,7 +285,7 @@ void SRV_Channel::output_ch(void)
                         }
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "origin ch3_pwm: %d.", ch3_pwm);
 
-                        hal.rcout->write(ch_num, ch3_pwm);
+                        hal.rcout->write(ch_num, ch3_pwm_pid);
                     }
                     else if(((avg_relative_gear_rev - 4.7) < 0) && (mag_angle_delay_flag == false))
                     {
@@ -279,7 +296,20 @@ void SRV_Channel::output_ch(void)
                         }
                         error_buff[2] = 5.0 - avg_relative_gear_rev;
                         delta_ch3_pwm = (signed)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
-                        ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
+                        ch3_pwm_pid_counter++;
+                        if(ch3_pwm_pid_counter >= 8)
+                        {
+                            ch3_pwm_pid_counter = 0;
+                            ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
+                            if(ch3_pwm_pid > 1350)
+                            {
+                                ch3_pwm_pid = 1350;
+                            }
+                            else if(ch3_pwm_pid < 1200)
+                            {
+                                ch3_pwm_pid = 1200;
+                            }
+                        }
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K]: %f.", error_buff[2]);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-1]: %f.", error_buff[1]);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-2]: %f.", error_buff[0]);
@@ -298,11 +328,11 @@ void SRV_Channel::output_ch(void)
                         }
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "origin ch3_pwm: %d.", ch3_pwm);
 
-                        hal.rcout->write(ch_num, ch3_pwm);
+                        hal.rcout->write(ch_num, ch3_pwm_pid);
                     }
                     else
                     {
-                        hal.rcout->write(ch_num, ch3_pwm);
+                        hal.rcout->write(ch_num, MOTOR_STOP_DELAY_VALUE);
                     }
 
                     if(gear_rev_ready_flag == true)
