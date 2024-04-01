@@ -46,7 +46,7 @@ uint16_t ch3_pwm = 1250;
 uint8_t ch3_pwm_add_counter = 0;
 uint8_t ch3_pwm_min_counter = 0;
 uint16_t ch3_pwm_pid = 1250;
-uint16_t delta_ch3_pwm = 0;
+signed delta_ch3_pwm = 0;
 // static uint16_t ch4_pwm = 1300;
 // static uint16_t ch8_pwm = 1000;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
@@ -247,9 +247,8 @@ void SRV_Channel::output_ch(void)
                         {
                             error_buff[i] = error_buff[i+1];
                         }
-                        error_buff[2] = avg_relative_gear_rev - 5.0;
-                        delta_ch3_pwm = (uint16_t)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
-                        delta_ch3_pwm = 65535 - delta_ch3_pwm;
+                        error_buff[2] = 5.0 - avg_relative_gear_rev;
+                        delta_ch3_pwm = (signed)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
                         ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K]: %f.", error_buff[2]);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-1]: %f.", error_buff[1]);
@@ -278,9 +277,8 @@ void SRV_Channel::output_ch(void)
                         {
                             error_buff[i] = error_buff[i+1];
                         }
-                        error_buff[2] = avg_relative_gear_rev - 5.0;
-                        delta_ch3_pwm = (uint16_t)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
-                        delta_ch3_pwm = 65535 - delta_ch3_pwm;
+                        error_buff[2] = 5.0 - avg_relative_gear_rev;
+                        delta_ch3_pwm = (signed)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
                         ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K]: %f.", error_buff[2]);
                         gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-1]: %f.", error_buff[1]);

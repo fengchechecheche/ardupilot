@@ -124,6 +124,27 @@ void Plane::Log_Write_Encoder2()
 }
 
 
+struct PACKED log_pid
+{
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    signed log_delta_ch3_pwm;
+    uint16_t log_ch3_pwm_pid;
+};
+
+
+void Plane::Log_Write_PID()
+{
+    struct log_pid pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_PID_MSG),
+        time_us                 : AP_HAL::micros64(),
+        log_delta_ch3_pwm       : delta_ch3_pwm,
+        log_ch3_pwm_pid         : ch3_pwm_pid,
+    };
+    logger.WriteCriticalBlock(&pkt, sizeof(pkt));
+}
+
+
 struct PACKED log_Control_Tuning {
     LOG_PACKET_HEADER;
     uint64_t time_us;
@@ -552,6 +573,14 @@ const struct LogStructure Plane::log_structure[] = {
 // 注：这里的字符长度最长只能是64个
     { LOG_ENCODER2_MSG, sizeof(log_Encoder2),     
       "ENC2", "QbQQQQQf",    "TimeUS,dtFlag,BrkTi,DlyTi,TarTi,CurTi,DltTi,OstTi", "s-YYYYYh", "F-FFFFF-" },
+
+// @LoggerMessage: PID
+// @Description: 记录PID控制器的相关数据
+// @Field: TimeUS: Time since system startup
+// @Field: Delta_Duty:  记录增量式PID控制器输出的增量值
+// @Field: Duty: 记录输出到油门控制通道的占空比的值
+    { LOG_PID_MSG, sizeof(log_pid),     
+      "PID", "Qhh",    "TimeUS,Delta_Duty,Duty", "s%%", "F--" },  
 };
 
 
