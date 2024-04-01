@@ -42,9 +42,6 @@ extern const AP_HAL::HAL &hal;
 #define BREAK_DELAY_TIME_OFFSET_THRESHOLD 60
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
-uint16_t ch3_pwm = 1250;
-uint8_t ch3_pwm_add_counter = 0;
-uint8_t ch3_pwm_min_counter = 0;
 uint16_t ch3_pwm_pid = 1250;
 signed delta_ch3_pwm = 0;
 // 编码器读取磁场角度的频率是 50Hz
@@ -239,12 +236,12 @@ void SRV_Channel::output_ch(void)
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {            
                     gcs().send_text(MAV_SEVERITY_CRITICAL, "avg_relative_gear_rev: %.2f.", avg_relative_gear_rev);        
-                    if ((abs(avg_relative_gear_rev - 5.0) < 0.3) && (mag_angle_delay_flag == false))
+                    if ((abs(avg_relative_gear_rev - 5.0) < 0.2) && (mag_angle_delay_flag == false))
                     {
                         gear_rev_ready_flag = true;
                         break_angle_MT6701 = angle_MT6701;
                     }
-                    else if(((avg_relative_gear_rev - 5.3) > 0) && (mag_angle_delay_flag == false))
+                    else if(((avg_relative_gear_rev - 5.2) > 0) && (mag_angle_delay_flag == false))
                     {
                         // 对这里的转速控制采用PID控制器
                         for(uint8_t i = 0; i < 2; i++)
@@ -267,27 +264,10 @@ void SRV_Channel::output_ch(void)
                                 ch3_pwm_pid = 1200;
                             }
                         }
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K]: %f.", error_buff[2]);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-1]: %f.", error_buff[1]);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-2]: %f.", error_buff[0]);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "delta_ch3_pwm with pid: %d.", delta_ch3_pwm);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "ch3_pwm with pid: %d.", ch3_pwm_pid);
-
-                        ch3_pwm_min_counter++;
-                        if(ch3_pwm_min_counter >= 50)
-                        {
-                            ch3_pwm_min_counter = 0;
-                            ch3_pwm = ch3_pwm - 2;
-                            if(ch3_pwm < 1200)
-                            {
-                                ch3_pwm = 1200;
-                            }
-                        }
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "origin ch3_pwm: %d.", ch3_pwm);
 
                         hal.rcout->write(ch_num, ch3_pwm_pid);
                     }
-                    else if(((avg_relative_gear_rev - 4.7) < 0) && (mag_angle_delay_flag == false))
+                    else if(((avg_relative_gear_rev - 4.8) < 0) && (mag_angle_delay_flag == false))
                     {
                         // 对这里的转速控制采用PID控制器
                         for(uint8_t i = 0; i < 2; i++)
@@ -310,23 +290,6 @@ void SRV_Channel::output_ch(void)
                                 ch3_pwm_pid = 1200;
                             }
                         }
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K]: %f.", error_buff[2]);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-1]: %f.", error_buff[1]);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "error_buff[K-2]: %f.", error_buff[0]);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "delta_ch3_pwm with pid: %d.", delta_ch3_pwm);
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "ch3_pwm with pid: %d.", ch3_pwm_pid);
-
-                        ch3_pwm_add_counter++;
-                        if(ch3_pwm_add_counter >= 50)
-                        {
-                            ch3_pwm_add_counter = 0;
-                            ch3_pwm = ch3_pwm + 2;
-                            if(ch3_pwm > 1300)
-                            {
-                                ch3_pwm = 1300;
-                            }
-                        }
-                        gcs().send_text(MAV_SEVERITY_CRITICAL, "origin ch3_pwm: %d.", ch3_pwm);
 
                         hal.rcout->write(ch_num, ch3_pwm_pid);
                     }

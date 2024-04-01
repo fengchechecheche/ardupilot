@@ -580,7 +580,7 @@ const struct LogStructure Plane::log_structure[] = {
 // @Field: Delta_Duty:  记录增量式PID控制器输出的增量值
 // @Field: Duty: 记录输出到油门控制通道的占空比的值
     { LOG_PID_MSG, sizeof(log_pid),     
-      "PID", "Qhh",    "TimeUS,Delta_Duty,Duty", "s%%", "F--" },  
+      "PID", "Qhh",    "TimeUS,Delta_Duty,Duty", "s%-", "F--" },  
 };
 
 
