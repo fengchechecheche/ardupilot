@@ -74,9 +74,9 @@ float break_delay_time_offset = 0.0;
 uint16_t break_delay_time_offset_counter = 0;
 // 增量式PID控制器相关变量
 float error_buff[3] = {0, 0, 0};
-float K_p = 0.4554;
-float K_i = 0.0863;
-float K_d = 0.3950;
+float K_p = 0.544491;
+float K_i = 4.315097;
+float K_d = 0.007933;
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
