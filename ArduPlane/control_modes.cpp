@@ -8,8 +8,9 @@
 // variable define
 ////////////////////////////////////////////////////////////////////////////////
 bool Glide_Mode_Flag = false;
-static uint64_t stored_time1_us = 0;
-static uint64_t stored_time2_us = 0;
+bool Old_Glide_Mode_Flag_To_GCS = false;
+// static uint64_t stored_time1_us = 0;
+// static uint64_t stored_time2_us = 0;
 
 Mode *Plane::mode_from_mode_num(const enum Mode::Number num)
 {
@@ -322,21 +323,31 @@ void Plane::read_glide_switch()
         // 如果 switch_debouncer 为 true，则根据开关位置 switchPosition 设置飞行器的飞行方式
         if(switchPosition == 2)
         {
-            if(AP_HAL::micros64() - stored_time2_us > 5000000)
+            // if(AP_HAL::micros64() - stored_time2_us > 5000000)
+            // {
+            //     stored_time2_us = AP_HAL::micros64();
+            //     gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ start glide ++++++++++");
+            // }            
+            Glide_Mode_Flag  = true;  
+            if(Old_Glide_Mode_Flag_To_GCS != Glide_Mode_Flag)
             {
-                stored_time2_us = AP_HAL::micros64();
                 gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ start glide ++++++++++");
-            }            
-            Glide_Mode_Flag  =true;  
+                Old_Glide_Mode_Flag_To_GCS = Glide_Mode_Flag;
+            }
         }
         else
         {
-            if(AP_HAL::micros64() - stored_time1_us > 5000000)
-            {
-                stored_time1_us = AP_HAL::micros64();
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop  glide ++++++++++");
-            }
+            // if(AP_HAL::micros64() - stored_time1_us > 5000000)
+            // {
+            //     stored_time1_us = AP_HAL::micros64();
+            //     gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop  glide ++++++++++");
+            // }
             Glide_Mode_Flag = false;
+            if(Old_Glide_Mode_Flag_To_GCS != Glide_Mode_Flag)
+            {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop  glide ++++++++++");
+                Old_Glide_Mode_Flag_To_GCS = Glide_Mode_Flag;
+            }
         }
 
         // 8.更新旧的开关位置
