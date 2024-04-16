@@ -34,7 +34,7 @@ extern const AP_HAL::HAL &hal;
 #define MOTOR_STOP_VALUE 1000
 #define MOTOR_STOP_DELAY_VALUE 1250
 #define SERVO_BRAKE_VALUE 1850
-#define SERVO_RELEASE_VALUE 1750
+#define SERVO_RELEASE_VALUE 1720
 #define MOTOR_STOP false
 #define MOTOR_RUN true
 #define SERVO_BRAKE true
@@ -54,7 +54,7 @@ static bool Motor = true;  // true:电机正在运行，false:电机停止运行
 static bool Servo = false; // true:舵机正在刹车，false:舵机停止刹车
 static bool old_Glide_Mode_Flag = false;
 float target_angle_MT6701 = 100;
-float breaking_angle = 149.04;
+float breaking_angle = 53.11;
 float mag_angle_delay_time_ms = 200;
 uint64_t current_break_time = 0;
 static bool current_break_time_flag = false;
@@ -165,7 +165,6 @@ void SRV_Channel::output_ch(void)
                     }
                     else
                     {
-                        break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset - 3;
                         if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
                         {
@@ -186,7 +185,6 @@ void SRV_Channel::output_ch(void)
                     }
                     else
                     {
-                        break_delay_time_offset_counter++;
                         break_delay_time_offset = break_delay_time_offset + 3;
                         if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
@@ -235,22 +233,22 @@ void SRV_Channel::output_ch(void)
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {  
-                    if ((abs(avg_relative_gear_rev - 5.0) < 0.2) && (mag_angle_delay_flag == false))
+                    if ((abs(avg_relative_gear_rev - 2.0) < 0.2) && (mag_angle_delay_flag == false))
                     {
                         gear_rev_ready_flag = true;
                         break_angle_MT6701 = angle_MT6701;
                     }
-                    else if(((avg_relative_gear_rev - 5.2) > 0) && (mag_angle_delay_flag == false))
+                    else if(((avg_relative_gear_rev - 2.2) > 0) && (mag_angle_delay_flag == false))
                     {
                         // 对这里的转速控制采用PID控制器
                         for(uint8_t i = 0; i < 2; i++)
                         {
                             error_buff[i] = error_buff[i+1];
                         }
-                        error_buff[2] = 5.0 - avg_relative_gear_rev;
+                        error_buff[2] = 2.0 - avg_relative_gear_rev;
                         delta_ch3_pwm = (signed)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
                         ch3_pwm_pid_counter++;
-                        if(ch3_pwm_pid_counter >= 8)
+                        if(ch3_pwm_pid_counter >= 4)
                         {
                             ch3_pwm_pid_counter = 0;
                             ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
@@ -258,25 +256,25 @@ void SRV_Channel::output_ch(void)
                             {
                                 ch3_pwm_pid = 1350;
                             }
-                            else if(ch3_pwm_pid < 1200)
+                            else if(ch3_pwm_pid < 1150)
                             {
-                                ch3_pwm_pid = 1200;
+                                ch3_pwm_pid = 1150;
                             }
                         }
 
                         hal.rcout->write(ch_num, ch3_pwm_pid);
                     }
-                    else if(((avg_relative_gear_rev - 4.8) < 0) && (mag_angle_delay_flag == false))
+                    else if(((avg_relative_gear_rev - 1.8) < 0) && (mag_angle_delay_flag == false))
                     {
                         // 对这里的转速控制采用PID控制器
                         for(uint8_t i = 0; i < 2; i++)
                         {
                             error_buff[i] = error_buff[i+1];
                         }
-                        error_buff[2] = 5.0 - avg_relative_gear_rev;
+                        error_buff[2] = 2.0 - avg_relative_gear_rev;
                         delta_ch3_pwm = (signed)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
                         ch3_pwm_pid_counter++;
-                        if(ch3_pwm_pid_counter >= 8)
+                        if(ch3_pwm_pid_counter >= 4)
                         {
                             ch3_pwm_pid_counter = 0;
                             ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
@@ -284,9 +282,9 @@ void SRV_Channel::output_ch(void)
                             {
                                 ch3_pwm_pid = 1350;
                             }
-                            else if(ch3_pwm_pid < 1200)
+                            else if(ch3_pwm_pid < 1150)
                             {
-                                ch3_pwm_pid = 1200;
+                                ch3_pwm_pid = 1150;
                             }
                         }
 
