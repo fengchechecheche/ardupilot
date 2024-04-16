@@ -34,7 +34,7 @@ extern const AP_HAL::HAL &hal;
 #define MOTOR_STOP_VALUE 1000
 #define MOTOR_STOP_DELAY_VALUE 1250
 #define SERVO_BRAKE_VALUE 1850
-#define SERVO_RELEASE_VALUE 1100
+#define SERVO_RELEASE_VALUE 1750
 #define MOTOR_STOP false
 #define MOTOR_RUN true
 #define SERVO_BRAKE true
