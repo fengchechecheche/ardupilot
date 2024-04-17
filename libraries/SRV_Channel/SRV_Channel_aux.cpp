@@ -77,6 +77,9 @@ float error_buff[3] = {0, 0, 0};
 float K_p = 0.544491;
 float K_i = 4.315097;
 float K_d = 0.007933;
+// 记录齿轮速度保持时间的变量
+uint64_t Gear_Rev_Hold_Time = 0;
+bool Gear_Rev_Hold_Time_Flag = false;
 
 /// map a function to a servo channel and output it
 void SRV_Channel::output_ch(void)
@@ -235,11 +238,21 @@ void SRV_Channel::output_ch(void)
                 {  
                     if ((abs(avg_relative_gear_rev - 2.0) < 0.2) && (mag_angle_delay_flag == false))
                     {
-                        gear_rev_ready_flag = true;
-                        break_angle_MT6701 = angle_MT6701;
+                        if(Gear_Rev_Hold_Time_Flag == false)
+                        {
+                            Gear_Rev_Hold_Time_Flag = true;
+                            Gear_Rev_Hold_Time = AP_HAL::micros64();
+                        }
+                        if((AP_HAL::micros64() - Gear_Rev_Hold_Time) > 1000000)
+                        {
+                            Gear_Rev_Hold_Time_Flag = false;
+                            gear_rev_ready_flag = true;
+                            break_angle_MT6701 = angle_MT6701;
+                        }                        
                     }
                     else if(((avg_relative_gear_rev - 2.2) > 0) && (mag_angle_delay_flag == false))
                     {
+                        Gear_Rev_Hold_Time_Flag = false;
                         // 对这里的转速控制采用PID控制器
                         for(uint8_t i = 0; i < 2; i++)
                         {
@@ -266,6 +279,7 @@ void SRV_Channel::output_ch(void)
                     }
                     else if(((avg_relative_gear_rev - 1.8) < 0) && (mag_angle_delay_flag == false))
                     {
+                        Gear_Rev_Hold_Time_Flag = false;
                         // 对这里的转速控制采用PID控制器
                         for(uint8_t i = 0; i < 2; i++)
                         {
