@@ -102,10 +102,10 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
         }
     }
 
-    // 磁场角度没有从360度跨到0度的情况
-    if (angle_MT6701 - old_angle_MT6701 > 0.0)
+    // 磁场角度没有从0度跨到360度的情况
+    if (angle_MT6701 - old_angle_MT6701 < 0.0)
     {
-        angle_MT6701_error = angle_MT6701 - old_angle_MT6701;
+        angle_MT6701_error = old_angle_MT6701 - angle_MT6701;
 
         if (angle_MT6701_error - MAX_LIMIT_factor < 0.0)
         {
@@ -133,10 +133,10 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
             relative_gear_rev = 0.0;
         }
     }
-    // 磁场角度从360度跨到0度的情况
-    else if (angle_MT6701 - old_angle_MT6701 < 0.0)
+    // 磁场角度从0度跨到360度的情况
+    else if (angle_MT6701 - old_angle_MT6701 > 0.0)
     {
-        angle_MT6701_error = 360 - old_angle_MT6701 + angle_MT6701;
+        angle_MT6701_error = 360 - angle_MT6701 + old_angle_MT6701;
 
         // 如果磁场角度的偏差在20度以内，则更新齿轮转速
         // 否则考虑读取到的是异常数据，直接丢弃掉
