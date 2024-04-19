@@ -55,7 +55,7 @@ uint8_t ch3_pwm_pid_counter = 0;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
 static bool Servo = false; // true:舵机正在刹车，false:舵机停止刹车
 static bool old_Glide_Mode_Flag = false;
-float target_angle_MT6701 = 100;
+float target_angle_MT6701 = 50;
 float breaking_angle = 124.3872;
 float mag_angle_delay_time_ms = 0.0;
 uint64_t current_break_time = 0;
@@ -161,41 +161,47 @@ void SRV_Channel::output_ch(void)
                 break_success_flag = 3;
                 if(break_success_angle - target_angle_MT6701 > BREAK_ANGLE_OFFSET_THRESHOLD)
                 {
-                    if(break_delay_time_offset_counter < 10)
+                    if(break_success_angle - target_angle_MT6701 < 100)
                     {
-                        break_delay_time_offset_counter++;
-                        break_delay_time_offset = break_delay_time_offset - 5;
-                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                        if(break_delay_time_offset_counter < 10)
                         {
-                            break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                            break_delay_time_offset_counter++;
+                            break_delay_time_offset = break_delay_time_offset - 5;
+                            if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                            {
+                                break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                            }
                         }
-                    }
-                    else
-                    {
-                        break_delay_time_offset = break_delay_time_offset - 3;
-                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                        else
                         {
-                            break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                            break_delay_time_offset = break_delay_time_offset - 3;
+                            if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
+                            {
+                                break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                            }
                         }
                     }
                 }
                 else if(break_success_angle - target_angle_MT6701 < -BREAK_ANGLE_OFFSET_THRESHOLD)
                 {
-                    if(break_delay_time_offset_counter < 10)
+                    if(break_success_angle - target_angle_MT6701 > -100)
                     {
-                        break_delay_time_offset_counter++;
-                        break_delay_time_offset = break_delay_time_offset + 5;
-                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
+                        if(break_delay_time_offset_counter < 10)
                         {
-                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                            break_delay_time_offset_counter++;
+                            break_delay_time_offset = break_delay_time_offset + 5;
+                            if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
+                            {
+                                break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                            }
                         }
-                    }
-                    else
-                    {
-                        break_delay_time_offset = break_delay_time_offset + 3;
-                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
+                        else
                         {
-                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                            break_delay_time_offset = break_delay_time_offset + 3;
+                            if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
+                            {
+                                break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
+                            }
                         }
                     }
                 }
@@ -240,6 +246,8 @@ void SRV_Channel::output_ch(void)
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {  
+                    // 这里可以进行优化，avg_relative_gear_rev只要在3.8到4.2的范围内就进行下一阶段
+                    // avg_relative_gear_rev不在3.8到4.2的范围内就采用PID控制器对占空比进行调节
                     if ((abs(avg_relative_gear_rev - AVG_GEAR_VALUE) < 0.2) && (mag_angle_delay_flag == false))
                     {
                         if(Gear_Rev_Hold_Time_Flag == false)
