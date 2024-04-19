@@ -42,7 +42,9 @@ extern const AP_HAL::HAL &hal;
 #define BREAK_DELAY_TIME_OFFSET_THRESHOLD 60
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
-uint16_t ch3_pwm_pid = 1250;
+uint16_t ch3_pwm_pid = 1300;
+#define CH3_PWM_PID_UPPER_THRESHOLD 1450
+#define CH3_PWM_PID_LOWER_THRESHOLD 1150
 signed delta_ch3_pwm = 0;
 // 编码器读取磁场角度的频率是 50Hz
 // 控制油门输出的任务的执行频率是 400 Hz
@@ -54,8 +56,8 @@ static bool Motor = true;  // true:电机正在运行，false:电机停止运行
 static bool Servo = false; // true:舵机正在刹车，false:舵机停止刹车
 static bool old_Glide_Mode_Flag = false;
 float target_angle_MT6701 = 100;
-float breaking_angle = 53.11;
-float mag_angle_delay_time_ms = 200;
+float breaking_angle = 124.3872;
+float mag_angle_delay_time_ms = 0.0;
 uint64_t current_break_time = 0;
 static bool current_break_time_flag = false;
 // 一下变量都记入日志 log_Encoder2 中
@@ -70,6 +72,7 @@ bool mag_angle_delay_flag = false;
 // 自动调节刹车等待时间的相关变量
 uint8_t break_success_flag = 0;
 float break_success_angle = 0.0;
+#define BREAK_ANGLE_OFFSET_THRESHOLD 10
 float break_delay_time_offset = 0.0;
 uint16_t break_delay_time_offset_counter = 0;
 // 增量式PID控制器相关变量
@@ -77,6 +80,7 @@ float error_buff[3] = {0, 0, 0};
 float K_p = 0.544491;
 float K_i = 4.315097;
 float K_d = 0.007933;
+#define AVG_GEAR_VALUE 4.0
 // 记录齿轮速度保持时间的变量
 uint64_t Gear_Rev_Hold_Time = 0;
 bool Gear_Rev_Hold_Time_Flag = false;
@@ -155,7 +159,7 @@ void SRV_Channel::output_ch(void)
             if(break_success_flag == 2)
             {                
                 break_success_flag = 3;
-                if(break_success_angle - target_angle_MT6701 > 5)
+                if(break_success_angle - target_angle_MT6701 > BREAK_ANGLE_OFFSET_THRESHOLD)
                 {
                     if(break_delay_time_offset_counter < 10)
                     {
@@ -175,7 +179,7 @@ void SRV_Channel::output_ch(void)
                         }
                     }
                 }
-                else if(break_success_angle - target_angle_MT6701 < -5)
+                else if(break_success_angle - target_angle_MT6701 < -BREAK_ANGLE_OFFSET_THRESHOLD)
                 {
                     if(break_delay_time_offset_counter < 10)
                     {
@@ -236,21 +240,21 @@ void SRV_Channel::output_ch(void)
                 // 电机停转
                 if ((Motor == MOTOR_RUN) && (Servo == SERVO_RELEASE))
                 {  
-                    if ((abs(avg_relative_gear_rev - 2.0) < 0.2) && (mag_angle_delay_flag == false))
+                    if ((abs(avg_relative_gear_rev - AVG_GEAR_VALUE) < 0.2) && (mag_angle_delay_flag == false))
                     {
                         if(Gear_Rev_Hold_Time_Flag == false)
                         {
                             Gear_Rev_Hold_Time_Flag = true;
                             Gear_Rev_Hold_Time = AP_HAL::micros64();
                         }
-                        if((AP_HAL::micros64() - Gear_Rev_Hold_Time) > 300000)
+                        if((AP_HAL::micros64() - Gear_Rev_Hold_Time) > 200000)
                         {
                             Gear_Rev_Hold_Time_Flag = false;
                             gear_rev_ready_flag = true;
                             break_angle_MT6701 = angle_MT6701;
                         }                        
                     }
-                    else if(((avg_relative_gear_rev - 2.2) > 0) && (mag_angle_delay_flag == false))
+                    else if(((avg_relative_gear_rev - AVG_GEAR_VALUE - 0.2) > 0) && (mag_angle_delay_flag == false))
                     {
                         Gear_Rev_Hold_Time_Flag = false;
                         // 对这里的转速控制采用PID控制器
@@ -258,26 +262,26 @@ void SRV_Channel::output_ch(void)
                         {
                             error_buff[i] = error_buff[i+1];
                         }
-                        error_buff[2] = 2.0 - avg_relative_gear_rev;
+                        error_buff[2] = AVG_GEAR_VALUE - avg_relative_gear_rev;
                         delta_ch3_pwm = (signed)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
                         ch3_pwm_pid_counter++;
                         if(ch3_pwm_pid_counter >= 4)
                         {
                             ch3_pwm_pid_counter = 0;
                             ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
-                            if(ch3_pwm_pid > 1350)
+                            if(ch3_pwm_pid > CH3_PWM_PID_UPPER_THRESHOLD)
                             {
-                                ch3_pwm_pid = 1350;
+                                ch3_pwm_pid = CH3_PWM_PID_UPPER_THRESHOLD;
                             }
-                            else if(ch3_pwm_pid < 1150)
+                            else if(ch3_pwm_pid < CH3_PWM_PID_LOWER_THRESHOLD)
                             {
-                                ch3_pwm_pid = 1150;
+                                ch3_pwm_pid = CH3_PWM_PID_LOWER_THRESHOLD;
                             }
                         }
 
                         hal.rcout->write(ch_num, ch3_pwm_pid);
                     }
-                    else if(((avg_relative_gear_rev - 1.8) < 0) && (mag_angle_delay_flag == false))
+                    else if(((avg_relative_gear_rev - AVG_GEAR_VALUE + 0.2) < 0) && (mag_angle_delay_flag == false))
                     {
                         Gear_Rev_Hold_Time_Flag = false;
                         // 对这里的转速控制采用PID控制器
@@ -285,28 +289,24 @@ void SRV_Channel::output_ch(void)
                         {
                             error_buff[i] = error_buff[i+1];
                         }
-                        error_buff[2] = 2.0 - avg_relative_gear_rev;
+                        error_buff[2] = AVG_GEAR_VALUE - avg_relative_gear_rev;
                         delta_ch3_pwm = (signed)(K_p * (error_buff[2] - error_buff[1]) + K_i * error_buff[2] + K_d * (error_buff[2] - 2 * error_buff[1] + error_buff[0]));
                         ch3_pwm_pid_counter++;
                         if(ch3_pwm_pid_counter >= 4)
                         {
                             ch3_pwm_pid_counter = 0;
                             ch3_pwm_pid = ch3_pwm_pid + delta_ch3_pwm;
-                            if(ch3_pwm_pid > 1350)
+                            if(ch3_pwm_pid > CH3_PWM_PID_UPPER_THRESHOLD)
                             {
-                                ch3_pwm_pid = 1350;
+                                ch3_pwm_pid = CH3_PWM_PID_UPPER_THRESHOLD;
                             }
-                            else if(ch3_pwm_pid < 1150)
+                            else if(ch3_pwm_pid < CH3_PWM_PID_LOWER_THRESHOLD)
                             {
-                                ch3_pwm_pid = 1150;
+                                ch3_pwm_pid = CH3_PWM_PID_LOWER_THRESHOLD;
                             }
                         }
 
                         hal.rcout->write(ch_num, ch3_pwm_pid);
-                    }
-                    else
-                    {
-                        hal.rcout->write(ch_num, MOTOR_STOP_DELAY_VALUE);
                     }
 
                     if(gear_rev_ready_flag == true)
@@ -383,7 +383,7 @@ void SRV_Channel::output_ch(void)
                             current_time = AP_HAL::micros64();
                             break_delta_time = AP_HAL::micros64() - current_break_time;
 
-                            hal.rcout->write(ch_num, MOTOR_STOP_DELAY_VALUE);
+                            hal.rcout->write(ch_num, ch3_pwm_pid);
                         }   
                     }
                 }
