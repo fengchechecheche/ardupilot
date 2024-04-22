@@ -981,7 +981,7 @@ void Plane::exit_mission_callback()
         // set_mode(mode_rtl, ModeReason::MISSION_END);
         // gcs().send_text(MAV_SEVERITY_INFO, "Mission complete, changing mode to RTL");
         set_mode(mode_stabilize, ModeReason::MISSION_END);
-        gcs().send_text(MAV_SEVERITY_INFO, "Mission complete, changing mode to STABILIZE");
+        // gcs().send_text(MAV_SEVERITY_INFO, "Mission complete, changing mode to STABILIZE");
     }
 }
 
