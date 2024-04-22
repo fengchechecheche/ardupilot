@@ -398,10 +398,11 @@ void AP_BattMonitor::read()
             drivers[i]->update_resistance_estimate();
 
 #if HAL_LOGGING_ENABLED
-            if (logger != nullptr && logger->should_log(_log_battery_bit)) {
+            if (logger != nullptr) {
                 const uint64_t time_us = AP_HAL::micros64();
                 drivers[i]->Log_Write_BAT(i, time_us);
                 drivers[i]->Log_Write_BCL(i, time_us);
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "log battery data success.");
             }
 #endif
         }
