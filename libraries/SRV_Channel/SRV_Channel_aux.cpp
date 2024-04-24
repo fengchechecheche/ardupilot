@@ -145,7 +145,7 @@ void SRV_Channel::output_ch(void)
             if (old_Glide_Mode_Flag == false)
             {
                 old_Glide_Mode_Flag = true;
-                ch3_pwm_pid = 1250;                                       
+                ch3_pwm_pid = 1300;                                       
                 /*
                  * 特别注意：控制电机输出的任务中不能使用延时函数！！！
                  * 因为控制电机输出的任务执行频率较高，如果在其中调用了延时函数，

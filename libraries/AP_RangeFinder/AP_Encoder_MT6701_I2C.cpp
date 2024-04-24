@@ -8,7 +8,7 @@
 #define SAMPLE_FREQUENCY 0.0025
 #define MAX_LIMIT_factor 80
 #define LPF_factor 200
-#define Buff_Num 30
+#define Buff_Num 20
 
 float angle_MT6701 = 0.0;
 float break_angle_MT6701 = 0.0;
@@ -84,7 +84,6 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
 
 void AP_Encoder_MT6701_I2C::encoder_timer(void)
 {
-    enter_encoder_CNT++;
     // 为 angle_f 赋初值，避免仿真编译报错
     float angle_f = 0.0;
 
@@ -183,6 +182,8 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
         angle_MT6701_error = 0.0;
         relative_gear_rev = 0.0;
     }
+
+    enter_encoder_CNT++;
 }
 
 void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
