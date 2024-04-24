@@ -5,10 +5,10 @@
 #include "AP_Encoder_MT6701_I2C.h"
 
 #define SEND_TEST_MESSAGE false
-#define SAMPLE_FREQUENCY 0.01
+#define SAMPLE_FREQUENCY 0.0025
 #define MAX_LIMIT_factor 80
 #define LPF_factor 200
-#define Buff_Num 20
+#define Buff_Num 30
 
 float angle_MT6701 = 0.0;
 float break_angle_MT6701 = 0.0;
@@ -68,6 +68,7 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
         return false;
     }
 
+    // call timer() at 400Hz.       10,000 us = 0.0025 s
     // call timer() at 100Hz.       10,000 us = 0.01 s
     // call timer() at 20Hz.        50,000 us = 0.05 s
     // call timer() at 2Hz.         500,000 us = 0.5 s
