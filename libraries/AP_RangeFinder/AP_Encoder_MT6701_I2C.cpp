@@ -22,6 +22,9 @@ float avg_relative_gear_rev = 0.0;
 float sum_relative_gear_rev = 0.0;
 float relative_gear_rev_buff[Buff_Num] = {};
 
+// 记录编码器读取数据次数，与写入日志频率进行对比
+uint64_t enter_encoder_CNT = 0;
+
 AP_Encoder_MT6701_I2C::AP_Encoder_MT6701_I2C(AP_Encoder &encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev)
     : AP_Encoder_Backend(encoder), _dev(std::move(dev)) {}
 
@@ -81,6 +84,7 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
 
 void AP_Encoder_MT6701_I2C::encoder_timer(void)
 {
+    enter_encoder_CNT++;
     // 为 angle_f 赋初值，避免仿真编译报错
     float angle_f = 0.0;
 

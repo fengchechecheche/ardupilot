@@ -74,6 +74,7 @@ struct PACKED log_Encoder
     bool flap_or_glide;
     float break_angle_degree;
     float break_suc_angle_degree;
+    uint64_t enter_encoder_counter;
 };
 
 void Plane::Log_Write_Encoder()
@@ -88,6 +89,7 @@ void Plane::Log_Write_Encoder()
         flap_or_glide           : Glide_Mode_Flag,
         break_angle_degree      : break_angle_MT6701,
         break_suc_angle_degree  : break_success_angle,
+        enter_encoder_counter   : enter_encoder_CNT,
     };
     logger.WriteCriticalBlock(&pkt, sizeof(pkt));
 }
@@ -558,7 +560,7 @@ const struct LogStructure Plane::log_structure[] = {
 // @Field: BsAg: break_success_angle，记录刹车成功后末端齿轮的角度
 // 注：这里的字符长度最长只能是64个
     { LOG_ENCODER_MSG, sizeof(log_Encoder),     
-      "ENCO", "Qffffbff",    "TimeUS,MAg,MAgE,GR,AGR,FM,BAg,BsAg", "shhQQ-hh", "F-------"  },
+      "ENCO", "QffffbffQ",    "TimeUS,MAg,MAgE,GR,AGR,FM,BAg,BsAg,eECT", "shhQQ-hhs", "F--------"  },
 
 // @LoggerMessage: Encoder2
 // @Description: 记录编码器测量的相关数据
