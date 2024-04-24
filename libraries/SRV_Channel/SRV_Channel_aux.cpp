@@ -72,7 +72,7 @@ bool mag_angle_delay_flag = false;
 // 自动调节刹车等待时间的相关变量
 uint8_t break_success_flag = 0;
 float break_success_angle = 0.0;
-#define BREAK_ANGLE_OFFSET_THRESHOLD 10
+#define BREAK_ANGLE_OFFSET_THRESHOLD 35
 float break_delay_time_offset = 0.0;
 uint16_t break_delay_time_offset_counter = 0;
 // 增量式PID控制器相关变量
@@ -161,47 +161,41 @@ void SRV_Channel::output_ch(void)
                 break_success_flag = 3;
                 if(break_success_angle - target_angle_MT6701 > BREAK_ANGLE_OFFSET_THRESHOLD)
                 {
-                    if(break_success_angle - target_angle_MT6701 < 100)
+                    if(break_delay_time_offset_counter < 10)
                     {
-                        if(break_delay_time_offset_counter < 10)
+                        break_delay_time_offset_counter++;
+                        break_delay_time_offset = break_delay_time_offset + 3;
+                        if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
-                            break_delay_time_offset_counter++;
-                            break_delay_time_offset = break_delay_time_offset - 5;
-                            if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
-                            {
-                                break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
-                            }
+                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
-                        else
+                    }
+                    else
+                    {
+                        break_delay_time_offset = break_delay_time_offset + 1;
+                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
-                            break_delay_time_offset = break_delay_time_offset - 3;
-                            if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
-                            {
-                                break_delay_time_offset = -BREAK_DELAY_TIME_OFFSET_THRESHOLD;
-                            }
+                                break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
                     }
                 }
                 else if(break_success_angle - target_angle_MT6701 < -BREAK_ANGLE_OFFSET_THRESHOLD)
                 {
-                    if(break_success_angle - target_angle_MT6701 > -100)
+                    if(break_delay_time_offset_counter < 10)
                     {
-                        if(break_delay_time_offset_counter < 10)
+                        break_delay_time_offset_counter++;
+                        break_delay_time_offset = break_delay_time_offset - 3;
+                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
                         {
-                            break_delay_time_offset_counter++;
-                            break_delay_time_offset = break_delay_time_offset + 5;
-                            if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
-                            {
-                                break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
-                            }
+                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
-                        else
+                    }
+                    else
+                    {
+                        break_delay_time_offset = break_delay_time_offset - 1;
+                        if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
                         {
-                            break_delay_time_offset = break_delay_time_offset + 3;
-                            if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
-                            {
-                                break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
-                            }
+                            break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
                         }
                     }
                 }
@@ -255,7 +249,7 @@ void SRV_Channel::output_ch(void)
                             Gear_Rev_Hold_Time_Flag = true;
                             Gear_Rev_Hold_Time = AP_HAL::micros64();
                         }
-                        if((AP_HAL::micros64() - Gear_Rev_Hold_Time) > 2000)
+                        if((AP_HAL::micros64() - Gear_Rev_Hold_Time) > 10000)
                         {
                             Gear_Rev_Hold_Time_Flag = false;
                             gear_rev_ready_flag = true;
