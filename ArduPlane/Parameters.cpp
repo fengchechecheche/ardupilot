@@ -1263,7 +1263,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     /*
      * 注意：参数名不能过长。APM规定参数名的总长不能超过16个字符，否则就会导致飞控无法启动。
      * */
-    AP_GROUPINFO("TARGET_ANGLE", 33, ParametersG2, target_angle_MT6701_in_gcs, 50),
+    AP_GROUPINFO("TARGET_ANGLE", 33, ParametersG2, target_angle_MT6701_in_gcs, 220),
 
     AP_GROUPEND
 };

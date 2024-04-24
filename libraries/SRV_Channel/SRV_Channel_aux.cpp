@@ -39,7 +39,7 @@ extern const AP_HAL::HAL &hal;
 #define MOTOR_RUN true
 #define SERVO_BRAKE true
 #define SERVO_RELEASE false
-#define BREAK_DELAY_TIME_OFFSET_THRESHOLD 60
+#define BREAK_DELAY_TIME_OFFSET_THRESHOLD 50
 // static uint64_t current_time_4_us;
 // static uint64_t stored_time_4_us;
 uint16_t ch3_pwm_pid = 1300;
@@ -55,7 +55,7 @@ uint8_t ch3_pwm_pid_counter = 0;
 static bool Motor = true;  // true:电机正在运行，false:电机停止运行
 static bool Servo = false; // true:舵机正在刹车，false:舵机停止刹车
 static bool old_Glide_Mode_Flag = false;
-float target_angle_MT6701 = 50;
+float target_angle_MT6701 = 25;
 float breaking_angle = 124.3872;
 float mag_angle_delay_time_ms = 0.0;
 uint64_t current_break_time = 0;
@@ -72,7 +72,7 @@ bool mag_angle_delay_flag = false;
 // 自动调节刹车等待时间的相关变量
 uint8_t break_success_flag = 0;
 float break_success_angle = 0.0;
-#define BREAK_ANGLE_OFFSET_THRESHOLD 35
+#define BREAK_ANGLE_OFFSET_THRESHOLD 15
 float break_delay_time_offset = 0.0;
 uint16_t break_delay_time_offset_counter = 0;
 // 增量式PID控制器相关变量
@@ -164,7 +164,7 @@ void SRV_Channel::output_ch(void)
                     if(break_delay_time_offset_counter < 10)
                     {
                         break_delay_time_offset_counter++;
-                        break_delay_time_offset = break_delay_time_offset + 10;
+                        break_delay_time_offset = break_delay_time_offset + 4;
                         if(break_delay_time_offset - BREAK_DELAY_TIME_OFFSET_THRESHOLD > 0)
                         {
                             break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
@@ -184,7 +184,7 @@ void SRV_Channel::output_ch(void)
                     if(break_delay_time_offset_counter < 10)
                     {
                         break_delay_time_offset_counter++;
-                        break_delay_time_offset = break_delay_time_offset - 10;
+                        break_delay_time_offset = break_delay_time_offset - 4;
                         if(break_delay_time_offset + BREAK_DELAY_TIME_OFFSET_THRESHOLD < 0)
                         {
                             break_delay_time_offset = BREAK_DELAY_TIME_OFFSET_THRESHOLD;
