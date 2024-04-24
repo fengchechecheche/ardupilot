@@ -255,7 +255,7 @@ void SRV_Channel::output_ch(void)
                             Gear_Rev_Hold_Time_Flag = true;
                             Gear_Rev_Hold_Time = AP_HAL::micros64();
                         }
-                        if((AP_HAL::micros64() - Gear_Rev_Hold_Time) > 200000)
+                        if((AP_HAL::micros64() - Gear_Rev_Hold_Time) > 2000)
                         {
                             Gear_Rev_Hold_Time_Flag = false;
                             gear_rev_ready_flag = true;
