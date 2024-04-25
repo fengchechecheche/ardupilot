@@ -41,4 +41,5 @@ void Plane::read_recoder(void)
     Log_Write_Encoder();
     Log_Write_Encoder2();
     Log_Write_PID();
+    Log_Write_FltMode();
 }

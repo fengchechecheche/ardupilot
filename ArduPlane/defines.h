@@ -104,6 +104,7 @@ enum log_messages {
     LOG_ENCODER_MSG,
     LOG_ENCODER2_MSG,
     LOG_PID_MSG,
+    LOG_FLTMODE_MSG,
 };
 
 #define MASK_LOG_ATTITUDE_FAST          (1<<0)

@@ -75,11 +75,6 @@ struct PACKED log_Encoder
     float break_angle_degree;
     float break_suc_angle_degree;
     uint64_t enter_encoder_counter;
-    bool check_num_1;
-    bool check_num_2;
-    bool check_num_3;
-    bool check_num_4;
-    bool check_num_5;
 };
 
 void Plane::Log_Write_Encoder()
@@ -95,11 +90,6 @@ void Plane::Log_Write_Encoder()
         break_angle_degree      : break_angle_MT6701,
         break_suc_angle_degree  : break_success_angle,
         enter_encoder_counter   : enter_encoder_CNT,
-        check_num_1             : flight_mode_check_1,
-        check_num_2             : flight_mode_check_2,
-        check_num_3             : flight_mode_check_3,
-        check_num_4             : flight_mode_check_4,
-        check_num_5             : flight_mode_check_5,
     };
     logger.WriteCriticalBlock(&pkt, sizeof(pkt));
 }
@@ -152,6 +142,39 @@ void Plane::Log_Write_PID()
         time_us                 : AP_HAL::micros64(),
         log_delta_ch3_pwm       : delta_ch3_pwm,
         log_ch3_pwm_pid         : ch3_pwm_pid,
+    };
+    logger.WriteCriticalBlock(&pkt, sizeof(pkt));
+}
+
+
+struct PACKED log_FltMode
+{
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    bool check_num_1;
+    bool check_num_2;
+    bool check_num_3;
+    bool check_num_4;
+    bool check_num_5;
+    uint8_t log_SW_Pos;
+    uint8_t log_OldSW_Pos;
+    bool log_SW_debouncer;
+};
+
+
+void Plane::Log_Write_FltMode()
+{
+    struct log_FltMode pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_FLTMODE_MSG),
+        time_us                 : AP_HAL::micros64(),
+        check_num_1             : flight_mode_check_1,
+        check_num_2             : flight_mode_check_2,
+        check_num_3             : flight_mode_check_3,
+        check_num_4             : flight_mode_check_4,
+        check_num_5             : flight_mode_check_5,
+        log_SW_Pos              : Log_SwitchPosition,
+        log_OldSW_Pos           : Log_OldSwitchPosition,
+        log_SW_debouncer        : log_switch_debouncer,
     };
     logger.WriteCriticalBlock(&pkt, sizeof(pkt));
 }
@@ -568,9 +591,10 @@ const struct LogStructure Plane::log_structure[] = {
 // @Field: FM:  FlyMode，记录当前飞行方式是扑翼还是滑翔
 // @Field: BAg: BreakAngle，记录刹车开始时末端齿轮的角度
 // @Field: BsAg: break_success_angle，记录刹车成功后末端齿轮的角度
+// @Field: eECT: enter_Encoder_counter，记录调用读取编码器数据的定时器的次数
 // 注：这里的字符长度最长只能是64个
     { LOG_ENCODER_MSG, sizeof(log_Encoder),     
-      "ENCO", "QffffbffQbbbbb",    "TimeUS,MAg,MAgE,GR,AGR,FM,BAg,BsAg,eECT,CK1,CK2,CK3,CK4,CK5", "shhQQ-hhs-----", "F-------------"  },
+      "ENCO", "QffffbffQ",    "TimeUS,MAg,MAgE,GR,AGR,FM,BAg,BsAg,eECT", "shhQQ-hhs", "F--------"  },
 
 // @LoggerMessage: Encoder2
 // @Description: 记录编码器测量的相关数据
@@ -593,6 +617,19 @@ const struct LogStructure Plane::log_structure[] = {
 // @Field: Duty: 记录输出到油门控制通道的占空比的值
     { LOG_PID_MSG, sizeof(log_pid),     
       "PID", "Qhh",    "TimeUS,Delta_Duty,Duty", "s%-", "F--" },  
+
+// @LoggerMessage: FTMD
+// @Description: 记录遥控器输入通道6控制飞行方式的相关数据
+// @Field: CK1: flight_mode_check_1
+// @Field: CK2: flight_mode_check_2
+// @Field: CK3: flight_mode_check_3
+// @Field: CK4: flight_mode_check_4
+// @Field: CK5: flight_mode_check_5
+// @Field: SWP: Switch_Position，记录读取到的开关位置
+// @Field: OSWP: Old_Switch_Position，记录上一次滤波并根据开关位置执行相应功能后的开关位置
+// @Field: SWD: Switch_Debouncer，记录对开关位置的滤波状态
+    { LOG_FLTMODE_MSG, sizeof(log_FltMode),     
+      "FTMD", "QbbbbbBBb",    "TimeUS,CK1,CK2,CK3,CK4,CK5,SWP,OSWP,SWD", "s--------", "F--------" },    
 };
 
 

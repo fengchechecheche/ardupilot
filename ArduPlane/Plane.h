@@ -126,6 +126,9 @@ extern bool flight_mode_check_2;
 extern bool flight_mode_check_3;
 extern bool flight_mode_check_4;
 extern bool flight_mode_check_5;
+extern uint8_t Log_SwitchPosition;
+extern uint8_t Log_OldSwitchPosition;
+extern bool log_switch_debouncer;
 
 
 /*
@@ -927,6 +930,7 @@ private:
     void Log_Write_Encoder(void);
     void Log_Write_Encoder2(void);
     void Log_Write_PID(void);
+    void Log_Write_FltMode(void);
     void log_init();
 
     // Parameters.cpp

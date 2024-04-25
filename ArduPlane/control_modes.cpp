@@ -14,6 +14,9 @@ bool flight_mode_check_2 = false;
 bool flight_mode_check_3 = false;
 bool flight_mode_check_4 = false;
 bool flight_mode_check_5 = false;
+uint8_t Log_SwitchPosition = 0;
+uint8_t Log_OldSwitchPosition = 0;
+bool log_switch_debouncer = false;
 
 Mode *Plane::mode_from_mode_num(const enum Mode::Number num)
 {
@@ -285,6 +288,7 @@ void Plane::read_glide_switch()
     // 一个无符号8位整数变量，用于存储从 readSwitch 函数读取的开关位置。
     // 1.读取开关位置
     uint8_t switchPosition = readGlideSwitch();
+    Log_SwitchPosition = switchPosition;
 
     // If switchPosition = 255 this indicates that the mode control channel input was out of range
     // If we get this value we do not want to change modes.
@@ -311,7 +315,7 @@ void Plane::read_glide_switch()
         return;
     }
     else{
-        flight_mode_check_2  =false;
+        flight_mode_check_2  = false;
     }
 
     // 5.检查开关位置是否变化
@@ -322,13 +326,14 @@ void Plane::read_glide_switch()
         // 6.开关抖动消除
         // 如果 switch_debouncer 为 false，则将其设置为 true 并返回。
         // 这是为了确保只有当开关状态连续两次读取不同时，才进行模式切换，从而防止由于开关信号的短暂波动而导致的误操作。
-        // 两段式开关或三段式开关都是阶跃信号，怎么保证开关状态连续两次读取不同？？？
+        // 两段式开关或三段式开关都是阶跃信号，oldSwitchPosition在第一次开关状态时没有更新，所以可以保证开关状态连续两次读取不同。
         if (switch_debouncer == false) {
             // this ensures that mode switches only happen if the
             // switch changes for 2 reads. This prevents momentary
             // spikes in the mode control channel from causing a mode
             // switch
             switch_debouncer = true;
+            log_switch_debouncer = switch_debouncer;
             flight_mode_check_5 = true;
             return;
         }
@@ -348,6 +353,10 @@ void Plane::read_glide_switch()
                 gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ start glide ++++++++++");
                 Old_Glide_Mode_Flag_To_GCS = Glide_Mode_Flag;
             }
+            else
+            {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "enter switchPosition == 2.");
+            }
         }
         else if(switchPosition == 0)
         {
@@ -357,6 +366,10 @@ void Plane::read_glide_switch()
                 flight_mode_check_3 = false;
                 gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop  glide ++++++++++");
                 Old_Glide_Mode_Flag_To_GCS = Glide_Mode_Flag;
+            }
+            else
+            {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "enter switchPosition == 0.");
             }
         }
         else
@@ -368,6 +381,7 @@ void Plane::read_glide_switch()
         // 8.更新旧的开关位置
         // 更新 oldSwitchPosition 变量，使其存储当前读取的开关位置。
         oldSwitchPosition = switchPosition;
+        Log_OldSwitchPosition = oldSwitchPosition;
     }
     else{
         flight_mode_check_4 = false;
@@ -376,6 +390,7 @@ void Plane::read_glide_switch()
     // 9.重置开关抖动消除器
     // 在函数的最后，将 switch_debouncer 重置为 false，以便在下一次读取开关位置时重新开始抖动消除过程。
     switch_debouncer = false;
+    log_switch_debouncer = switch_debouncer;
 }
 
 uint8_t Plane::readGlideSwitch(void) const
