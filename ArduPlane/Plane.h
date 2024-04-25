@@ -121,6 +121,11 @@
 // variable define
 ////////////////////////////////////////////////////////////////////////////////
 extern bool Glide_Mode_Flag;
+extern bool flight_mode_check_1;
+extern bool flight_mode_check_2;
+extern bool flight_mode_check_3;
+extern bool flight_mode_check_4;
+extern bool flight_mode_check_5;
 
 
 /*

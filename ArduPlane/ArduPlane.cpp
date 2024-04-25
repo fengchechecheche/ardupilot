@@ -69,7 +69,8 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(set_servos, 400, 100, 21),
     SCHED_TASK(update_throttle_hover, 100, 90, 24),
     SCHED_TASK(read_control_switch, 7, 100, 27),
-    SCHED_TASK(read_glide_switch, 100, 100, 28),
+    // 频率不能过快，否则会导致消抖代码出问题
+    SCHED_TASK(read_glide_switch, 7, 100, 28),
     SCHED_TASK(update_GPS_50Hz, 50, 300, 30),
     SCHED_TASK(update_GPS_10Hz, 10, 400, 33),
     SCHED_TASK(navigate, 10, 150, 36),
@@ -93,7 +94,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     // 下面这个函数和读取测距模块的数据有关
     SCHED_TASK(read_rangefinder, 50, 100, 78),
     // 下面这个函数和读取编码器的数据有关
-    SCHED_TASK(read_recoder,     100, 50, 79),
+    SCHED_TASK(read_recoder,     100, 300, 79),
     SCHED_TASK_CLASS(AP_ICEngine, &plane.g2.ice_control, update, 10, 100, 81),
     // 下面这个函数和读取磁罗盘的数据有关
     SCHED_TASK_CLASS(Compass, &plane.compass, cal_update, 50, 50, 84),
@@ -117,7 +118,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(compass_save, 0.1, 200, 114),
     SCHED_TASK(Log_Write_Fast, 400, 300, 117),
     SCHED_TASK(update_logging1, 25, 300, 120),
-    SCHED_TASK(update_logging2, 25, 300, 123),
+    SCHED_TASK(update_logging2, 100, 300, 123),
 #if HAL_SOARING_ENABLED
     SCHED_TASK(update_soaring, 50, 400, 126),
 #endif

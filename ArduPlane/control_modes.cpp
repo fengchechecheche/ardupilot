@@ -9,8 +9,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 bool Glide_Mode_Flag = false;
 bool Old_Glide_Mode_Flag_To_GCS = false;
-// static uint64_t stored_time1_us = 0;
-// static uint64_t stored_time2_us = 0;
+bool flight_mode_check_1 = false;
+bool flight_mode_check_2 = false;
+bool flight_mode_check_3 = false;
+bool flight_mode_check_4 = false;
+bool flight_mode_check_5 = false;
 
 Mode *Plane::mode_from_mode_num(const enum Mode::Number num)
 {
@@ -293,66 +296,81 @@ void Plane::read_glide_switch()
     // 如果没有有效的遥控输入，函数直接返回。
     if (!rc().has_valid_input()) {
         // ignore the mode switch channel if there is no valid RC input
+        flight_mode_check_1 = true;
         return;
+    }
+    else{
+        flight_mode_check_1 = false;
     }
 
     // 4.检查遥控输入是否过时
     // 如果当前的遥控输入信号比最近一次有效信号老超过0.1秒（100毫秒），则函数直接返回。
     if (millis() - failsafe.last_valid_rc_ms > 100) {
         // only use signals that are less than 0.1s old.
+        flight_mode_check_2 = true;
         return;
+    }
+    else{
+        flight_mode_check_2  =false;
     }
 
     // 5.检查开关位置是否变化
     // 如果当前读取的开关位置与上一次的不同，则执行下面的代码块。
     // oldSwitchPosition：在代码中没有直接声明，但可以推测这是类的一个成员变量或全局变量，用于存储上一次读取的开关位置。
     if (oldSwitchPosition != switchPosition) {
+        flight_mode_check_4 = true;
         // 6.开关抖动消除
         // 如果 switch_debouncer 为 false，则将其设置为 true 并返回。
         // 这是为了确保只有当开关状态连续两次读取不同时，才进行模式切换，从而防止由于开关信号的短暂波动而导致的误操作。
+        // 两段式开关或三段式开关都是阶跃信号，怎么保证开关状态连续两次读取不同？？？
         if (switch_debouncer == false) {
             // this ensures that mode switches only happen if the
             // switch changes for 2 reads. This prevents momentary
             // spikes in the mode control channel from causing a mode
             // switch
             switch_debouncer = true;
+            flight_mode_check_5 = true;
             return;
         }
+        else{
+            flight_mode_check_5 = false;
+        }
+
 
         // 7.设置飞行方式
         // 如果 switch_debouncer 为 true，则根据开关位置 switchPosition 设置飞行器的飞行方式
         if(switchPosition == 2)
-        {
-            // if(AP_HAL::micros64() - stored_time2_us > 5000000)
-            // {
-            //     stored_time2_us = AP_HAL::micros64();
-            //     gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ start glide ++++++++++");
-            // }            
+        {          
             Glide_Mode_Flag  = true;  
             if(Old_Glide_Mode_Flag_To_GCS != Glide_Mode_Flag)
             {
+                flight_mode_check_3 = false;
                 gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ start glide ++++++++++");
+                Old_Glide_Mode_Flag_To_GCS = Glide_Mode_Flag;
+            }
+        }
+        else if(switchPosition == 0)
+        {
+            Glide_Mode_Flag = false;
+            if(Old_Glide_Mode_Flag_To_GCS != Glide_Mode_Flag)
+            {
+                flight_mode_check_3 = false;
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop  glide ++++++++++");
                 Old_Glide_Mode_Flag_To_GCS = Glide_Mode_Flag;
             }
         }
         else
         {
-            // if(AP_HAL::micros64() - stored_time1_us > 5000000)
-            // {
-            //     stored_time1_us = AP_HAL::micros64();
-            //     gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop  glide ++++++++++");
-            // }
-            Glide_Mode_Flag = false;
-            if(Old_Glide_Mode_Flag_To_GCS != Glide_Mode_Flag)
-            {
-                gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ stop  glide ++++++++++");
-                Old_Glide_Mode_Flag_To_GCS = Glide_Mode_Flag;
-            }
+            flight_mode_check_3 = true;
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "++++++++++ change failed ++++++++++");
         }
 
         // 8.更新旧的开关位置
         // 更新 oldSwitchPosition 变量，使其存储当前读取的开关位置。
         oldSwitchPosition = switchPosition;
+    }
+    else{
+        flight_mode_check_4 = false;
     }
 
     // 9.重置开关抖动消除器
