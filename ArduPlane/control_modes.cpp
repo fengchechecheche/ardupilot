@@ -305,8 +305,8 @@ void Plane::read_glide_switch()
 
     // 5.检查开关位置是否变化
     // 如果当前读取的开关位置与上一次的不同，则执行下面的代码块。
-    // oldSwitchPosition：在代码中没有直接声明，但可以推测这是类的一个成员变量或全局变量，用于存储上一次读取的开关位置。
-    if (oldSwitchPosition != switchPosition) {
+    // GlideoldSwitchPosition：在代码中没有直接声明，但可以推测这是类的一个成员变量或全局变量，用于存储上一次读取的开关位置。
+    if (GlideoldSwitchPosition != switchPosition) {
         // 6.开关抖动消除
         // 如果 switch_debouncer 为 false，则将其设置为 true 并返回。
         // 这是为了确保只有当开关状态连续两次读取不同时，才进行模式切换，从而防止由于开关信号的短暂波动而导致的误操作。
@@ -351,8 +351,8 @@ void Plane::read_glide_switch()
         }
 
         // 8.更新旧的开关位置
-        // 更新 oldSwitchPosition 变量，使其存储当前读取的开关位置。
-        oldSwitchPosition = switchPosition;
+        // 更新 GlideoldSwitchPosition 变量，使其存储当前读取的开关位置。
+        GlideoldSwitchPosition = switchPosition;
     }
 
     // 9.重置开关抖动消除器

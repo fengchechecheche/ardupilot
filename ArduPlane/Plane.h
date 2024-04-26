@@ -328,6 +328,7 @@ private:
     // 如果 oldSwitchPosition 和 switchPosition 不同，并且 switch_debouncer 也指示需要更新，那么函数可能会更改飞行器的控制模式。
     // 这样的设计确保了开关信号在真正改变时才会被考虑，从而减少了由于开关抖动导致的误操作。
     uint8_t oldSwitchPosition = 254;
+    uint8_t GlideoldSwitchPosition = 254;
 
     // This is used to enable the inverted flight feature
     bool inverted_flight;
