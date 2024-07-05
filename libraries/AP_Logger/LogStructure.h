@@ -763,15 +763,25 @@ struct PACKED log_VER {
 // @Description: Airspeed sensor data
 // @Field: TimeUS: Time since system startup
 // @Field: I: Airspeed sensor instance number
+//            空速传感器实例编号
 // @Field: Airspeed: Current airspeed
+//                   当前空速
 // @Field: DiffPress: Pressure difference between static and dynamic port
+//                    静压口和动压口之间的压差
 // @Field: Temp: Temperature used for calculation
+//               用于计算的温度
 // @Field: RawPress: Raw pressure less offset
+//                   原始压力减去偏移量
 // @Field: Offset: Offset from parameter
+//                 从参数中得出的偏移量
 // @Field: U: True if sensor is being used
+//            如果正在使用传感器则为真
 // @Field: H: True if sensor is healthy
+//            如传感器状态健康则为真
 // @Field: Hfp: Probability sensor has failed
+//              传感器故障的概率
 // @Field: Pri: True if sensor is the primary sensor
+//              如果传感器是主传感器则为真
 
 // @LoggerMessage: BCN
 // @Description: Beacon information
