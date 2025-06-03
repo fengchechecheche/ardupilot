@@ -37,4 +37,6 @@ void Plane::read_rangefinder(void)
 void Plane::read_encoder(void)
 {
     encoder.update();
+
+    Log_Write_Encoder();
 }

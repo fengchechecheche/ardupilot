@@ -35,21 +35,21 @@ AP_Encoder_Backend *AP_Encoder_MT6701_I2C::detect(AP_Encoder &encoder, AP_HAL::O
 
 bool AP_Encoder_MT6701_I2C::init()
 {
+    hal.scheduler->delay(200);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[2] run AP_Encoder_MT6701_I2C::init() start.\n");
     if (encoder_init())
     {
-        hal.console->printf("Found MT6701 Encoder.\n");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "Found MT6701 Encoder.\n");
         return true;
     }
-    hal.console->printf("Encoder not found.\n");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "Encoder not found.\n");
     return false;
 }
 
 bool AP_Encoder_MT6701_I2C::encoder_init()
 {
-    hal.scheduler->delay(10);
+    hal.scheduler->delay(200);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1] run AP_Encoder_MT6701_I2C::encoder_init() start.\n");
-    hal.scheduler->delay(10);
     union
     {
         be16_t be16_val;
@@ -62,17 +62,15 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
 
     if (((_dev->transfer(read_reg1, 2, timeout.bytes, 2)) && (_dev->transfer(read_reg2, 2, timeout.bytes, 2))) == true)
     {
-        hal.scheduler->delay(10);
+        hal.scheduler->delay(200);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] run AP_Encoder_MT6701_I2C::encoder_init() failed.\n");
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-1] timeout.bytes[0]: %d.\n", timeout.bytes[0]);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-2] timeout.bytes[1]: %d.\n", timeout.bytes[1]);
-        hal.scheduler->delay(10);
         return false;
     }
-    hal.scheduler->delay(10);
+    hal.scheduler->delay(200);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-1] timeout.bytes[0]: %d.\n", timeout.bytes[0]);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-2] timeout.bytes[1]: %d.\n", timeout.bytes[1]);
-    hal.scheduler->delay(10);
 
     // call timer() at 800Hz.       1,250 us = 0.00125 s 
     // call timer() at 500Hz.       2,000 us = 0.002 s 
@@ -83,10 +81,9 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
     // call timer() at 2Hz.         500,000 us = 0.5 s 
     // call timer() at 2s.          2,000,000 us = 2 s 
     // call timer() at 2s.          5,000,000 us = 5 s 
-    _dev->register_periodic_callback(SAMPLE_FREQUENCY * 1000000, FUNCTOR_BIND_MEMBER(&AP_Encoder_MT6701_I2C::encoder_timer, void));
-    hal.scheduler->delay(10);
+    _dev->register_periodic_callback(SAMPLE_FREQUENCY * 2000000, FUNCTOR_BIND_MEMBER(&AP_Encoder_MT6701_I2C::encoder_timer, void));
+    hal.scheduler->delay(200);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-4] run AP_Encoder_MT6701_I2C::encoder_init() success.\n");
-    hal.scheduler->delay(10);
 
     return true;
 }
@@ -162,17 +159,15 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     }
     
     
-    if(SEND_TEST_MESSAGE)
-    {
-        hal.scheduler->delay(10);
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
-        hal.scheduler->delay(10);
-    }
+    // if(SEND_TEST_MESSAGE)
+    // {
+    //     hal.scheduler->delay(50);
+    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
+    // }
     
-    // hal.scheduler->delay(10);
+    // hal.scheduler->delay(100);
     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-3] gear_rev: %.4f.", relative_gear_rev);
-    // hal.scheduler->delay(10);
 }
 
 void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
@@ -192,11 +187,10 @@ void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
     else{
         if(SEND_TEST_MESSAGE)
         {
-            // hal.scheduler->delay(10);
-            // gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3] read register 0x03 failed.");
-            // gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-1] read_reg3: %02x.", read_reg3);
-            // gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-2] ReadBuffer: %d.", ReadBuffer);
-            // hal.scheduler->delay(10);
+            hal.scheduler->delay(50);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3] read register 0x03 failed.");
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-1] read_reg3: %02x.", read_reg3);
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "[6-3-2] ReadBuffer: %d.", ReadBuffer);
         }
     }
     if (_dev->transfer(&read_reg4, 1, &ReadBuffer, sizeof(ReadBuffer)))
