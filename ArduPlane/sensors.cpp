@@ -36,3 +36,8 @@ void Plane::read_rangefinder(void)
 }
 
 #endif  // AP_RANGEFINDER_ENABLED
+
+void Plane::read_encoder(void)
+{
+    encoder.update();
+}

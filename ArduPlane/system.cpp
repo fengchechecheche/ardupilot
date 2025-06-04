@@ -43,6 +43,8 @@ void Plane::init_ardupilot()
     rangefinder.init(ROTATION_PITCH_270);
 #endif
 
+    encoder.init();
+
     // initialise battery monitoring
     battery.init();
 

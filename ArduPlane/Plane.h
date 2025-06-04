@@ -40,6 +40,7 @@
 #include <AP_AHRS/AP_AHRS.h>         // ArduPilot Mega DCM Library
 #include <SRV_Channel/SRV_Channel.h>
 #include <AP_RangeFinder/AP_RangeFinder_config.h>     // Range finder library
+#include "AP_Encoder/AP_Encoder.h"
 #include <Filter/Filter.h>                     // Filter library
 #include <AP_Camera/AP_Camera.h>          // Photo or video camera
 #include <AP_Terrain/AP_Terrain.h>
@@ -1131,6 +1132,8 @@ private:
     // sensors.cpp
     void read_rangefinder(void);
 #endif
+
+    void read_encoder(void);
 
     // system.cpp
     void init_ardupilot() override;
