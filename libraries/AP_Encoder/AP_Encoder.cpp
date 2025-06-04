@@ -21,15 +21,18 @@ AP_Encoder::AP_Encoder()
 
 void AP_Encoder::init(void)
 {
+    hal.scheduler->delay(5000);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[1] run AP_Encoder::init() start\n.");
 
     if (_add_backend(AP_Encoder_MT6701_I2C::detect(encoder, hal.i2c_mgr->get_device(0, SlaveAddress)), 0, 0))
     {
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-1] run detect success.\n");
+        hal.scheduler->delay(100);
     }
     else
     {
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[4-2] run detect failed.\n");
+        hal.scheduler->delay(100);
     }
 }
 
