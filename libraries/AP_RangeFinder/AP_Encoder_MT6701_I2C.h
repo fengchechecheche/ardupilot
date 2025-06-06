@@ -18,7 +18,8 @@ class AP_Encoder_MT6701_I2C : public AP_Encoder_Backend{
 public:
     // 此时因为AP_Encoder_Backend.h中已经包含了AP_Encoder.h
     // 所以在引用AP_Encoder类时，就不用再重新包含一遍了
-    AP_Encoder_MT6701_I2C(AP_Encoder& encoder);
+    // constructor
+    AP_Encoder_MT6701_I2C(AP_Encoder& encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev);
     ~AP_Encoder_MT6701_I2C(){};    // 此处析构函数为空实现
 
     // static detection function
@@ -29,9 +30,7 @@ public:
 private:
     bool encoder_init();
     void encoder_timer(void);
-    void get_reading(float &reading_m);
-    // constructor
-    AP_Encoder_MT6701_I2C(AP_Encoder& encoder, AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev);
+    void get_reading(float &reading_m);    
     bool init();
     AP_HAL::OwnPtr<AP_HAL::I2CDevice> _dev;
 };
