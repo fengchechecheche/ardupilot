@@ -29,7 +29,10 @@ AP_Encoder_Backend *AP_Encoder_MT6701_I2C::detect(AP_Encoder &encoder, AP_HAL::O
         return nullptr;
     }
 
-    sensor->init();
+    if (!sensor->init()) {  // 检查init返回值
+        return nullptr;
+    }
+
     return sensor;
 }
 
@@ -52,19 +55,35 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
     
     uint8_t data[2];
     uint8_t reg = ReadAddress1; // 0x03
+    bool success = false;
 
-    // 正确读取连续寄存器 (0x03-0x04)
-    if (!_dev->transfer(&reg, 1, data, 2))
-    {
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] I2C read failed.\n");
+    // 重试3次
+    for (int i = 0; i < 3; i++) {
+        if (_dev->transfer(&reg, 1, data, 2)) {
+            success = true;
+            break;
+        }
+        hal.scheduler->delay(10);
+    }
+    if (!success) {
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "I2C read failed after retry");
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-1] data[0]: %d.\n", data[0]);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-2] data[1]: %d.\n", data[1]);
-        hal.scheduler->delay(100);
         return false;
     }
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-1] data[0]: %d.\n", data[0]);
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-2] data[1]: %d.\n", data[1]);
-    hal.scheduler->delay(100);
+    
+    // 正确读取连续寄存器 (0x03-0x04)
+    // if (!_dev->transfer(&reg, 1, data, 2))
+    // {
+    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] I2C read failed.\n");
+    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-1] data[0]: %d.\n", data[0]);
+    //     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-2] data[1]: %d.\n", data[1]);
+    //     hal.scheduler->delay(100);
+    //     return false;
+    // }
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-1] data[0]: %d.\n", data[0]);
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-2] data[1]: %d.\n", data[1]);
+    // hal.scheduler->delay(100);
 
     // call timer() at 800Hz.       1,250 us = 0.00125 s 
     // call timer() at 500Hz.       2,000 us = 0.002 s 
