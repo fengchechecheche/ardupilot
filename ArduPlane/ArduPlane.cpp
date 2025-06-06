@@ -84,6 +84,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
 #if AP_RANGEFINDER_ENABLED
     SCHED_TASK(read_rangefinder,       50,    100, 78),
 #endif
+    SCHED_TASK(read_encoder,           50,    100, 79),
 #if AP_ICENGINE_ENABLED
     SCHED_TASK_CLASS(AP_ICEngine,      &plane.g2.ice_control, update,     10, 100,  81),
 #endif
