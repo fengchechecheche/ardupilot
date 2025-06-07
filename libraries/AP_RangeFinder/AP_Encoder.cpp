@@ -41,12 +41,12 @@ bool AP_Encoder::_add_backend(AP_Encoder_Backend *backend, uint8_t instance, uin
     if (instance >= ENCODER_MAX_INSTANCES) {
         AP_HAL::panic("Too many RANGERS backends");
     }
-    if (_drivers[instance] != nullptr) {
+    if (drivers[instance] != nullptr) {
         // we've allocated the same instance twice
         INTERNAL_ERROR(AP_InternalError::error_t::flow_of_control);
     }
     backend->init_serial(serial_instance);
-    _drivers[instance] = backend;
+    drivers[instance] = backend;
     num_instances = MAX(num_instances, instance+1);
 
     return true;
@@ -54,5 +54,5 @@ bool AP_Encoder::_add_backend(AP_Encoder_Backend *backend, uint8_t instance, uin
 
 void AP_Encoder::update(void)
 {
-    _drivers[0]->update();
+    drivers[0]->update();
 }

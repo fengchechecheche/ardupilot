@@ -21,7 +21,7 @@ public:
 private:
     uint8_t num_instances;
     // 前台类通过后台类的这个指针，就可以和后台类进行交流
-    AP_Encoder_Backend *_drivers[ENCODER_MAX_INSTANCES];
+    AP_Encoder_Backend *drivers[ENCODER_MAX_INSTANCES];
     bool _add_backend(AP_Encoder_Backend *backend, uint8_t instance, uint8_t serial_instance);
 };
 

@@ -11,7 +11,6 @@ class AP_Encoder_Backend{
 public:
     // constructor. This incorporates initialisation as well.
 	AP_Encoder_Backend(AP_Encoder& encoder);
-    ~AP_Encoder_Backend(){};
 
     // update the state structure
     virtual void update() = 0;
