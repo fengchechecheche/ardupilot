@@ -30,6 +30,8 @@
 #include "ch.h"
 #include "hal.h"
 
+#include <GCS_MAVLink/GCS.h>
+
 static const struct I2CInfo {
     I2CDriver *i2c;
     uint8_t instance;
@@ -316,6 +318,7 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
 {
     if (!bus.semaphore.check_owner()) {
         DEV_PRINTF("I2C: not owner of 0x%x for addr 0x%02x\n", (unsigned)get_bus_id(), _address);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1-1] I2C: not owner of 0x%x for addr 0x%02x\n", (unsigned)get_bus_id(), _address);
         return false;
     }
 

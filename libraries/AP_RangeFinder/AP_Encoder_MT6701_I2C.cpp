@@ -60,6 +60,8 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
     const uint8_t read_reg1[2] = {SlaveAddress, ReadAddress1};
     const uint8_t read_reg2[2] = {SlaveAddress, ReadAddress2};
 
+    WITH_SEMAPHORE(_dev->get_semaphore()); // 获取I2C信号量
+
     if (((_dev->transfer(read_reg1, 2, timeout.bytes, 2)) && (_dev->transfer(read_reg2, 2, timeout.bytes, 2))) == true)
     {
         hal.scheduler->delay(10);
