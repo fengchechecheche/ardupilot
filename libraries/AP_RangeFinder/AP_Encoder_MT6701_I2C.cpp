@@ -62,7 +62,7 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
 
     WITH_SEMAPHORE(_dev->get_semaphore()); // 获取I2C信号量
 
-    if (((_dev->transfer(read_reg1, 2, timeout.bytes, 2)) && (_dev->transfer(read_reg2, 2, timeout.bytes, 2))) == true)
+    if (((_dev->transfer(read_reg1, 2, timeout.bytes, 2)) && (_dev->transfer(read_reg2, 2, timeout.bytes, 2))) == false)
     {
         hal.scheduler->delay(10);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] run AP_Encoder_MT6701_I2C::encoder_init() failed.\n");
@@ -95,6 +95,9 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
 
 void AP_Encoder_MT6701_I2C::encoder_timer(void)
 {  
+    static uint32_t last_log_ms;
+    uint32_t now = AP_HAL::millis();
+
     // 为 angle_f 赋初值，避免仿真编译报错
     float angle_f = 0.0;
 
@@ -175,6 +178,13 @@ void AP_Encoder_MT6701_I2C::encoder_timer(void)
     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
     // gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-3] gear_rev: %.4f.", relative_gear_rev);
     // hal.scheduler->delay(10);
+
+    // 限制调试输出频率（每秒1次）
+    if (now - last_log_ms > 1000) {
+        last_log_ms = now;
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-2] angle_f: %.4f.", angle_f);
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "[5-3] gear_rev: %.4f.", relative_gear_rev);
+    }
 }
 
 void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
