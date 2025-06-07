@@ -8,6 +8,7 @@
 class AP_Encoder_Backend;
 
 extern const AP_HAL::HAL &hal;
+#define SlaveAddress    0X06        //MT6701 地址
 
 class AP_Encoder{
     friend class AP_Encoder_Backend;
