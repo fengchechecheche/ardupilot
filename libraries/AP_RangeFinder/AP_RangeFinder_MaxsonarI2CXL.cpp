@@ -90,7 +90,9 @@ bool AP_RangeFinder_MaxsonarI2CXL::_init(void)
 
     _dev->get_semaphore()->give();
 
-    _dev->register_periodic_callback(100000,
+    // 100000       us = 100        ms = 0.1    s = 10      Hz
+    //  50000       us =  50        ms = 0.05   s = 20      Hz
+    _dev->register_periodic_callback(50000,
                                      FUNCTOR_BIND_MEMBER(&AP_RangeFinder_MaxsonarI2CXL::_timer, void));
 
     return true;
@@ -145,7 +147,17 @@ void AP_RangeFinder_MaxsonarI2CXL::update(void)
 {
     WITH_SEMAPHORE(_sem);
     if (new_distance) {
-        state.distance_m = distance * 0.01f;
+        if (distance > 600 || distance < 30)
+        {
+            distanceBeforeFilter_m = distanceOld_cm * 0.01f;
+        }
+        else
+        {
+            distanceBeforeFilter_m = distance * 0.01f; 
+            distanceOld_cm = distance;
+        }        
+        distanceFiltered_m = _distanceFiltered_m * 0.25f + distanceBeforeFilter_m * 0.75f;
+        state.distance_m = distanceFiltered_m;
         new_distance = false;
         update_status();
     } else if (AP_HAL::millis() - state.last_reading_ms > 300) {
