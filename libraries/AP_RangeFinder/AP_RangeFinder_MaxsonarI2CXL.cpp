@@ -147,17 +147,20 @@ void AP_RangeFinder_MaxsonarI2CXL::update(void)
 {
     WITH_SEMAPHORE(_sem);
     if (new_distance) {
-        if (distance > 600 || distance < 30)
+        state.distanceCur_cm = distance;
+        if (state.distanceCur_cm > 600 || state.distanceCur_cm < 30)
         {
-            distanceBeforeFilter_m = distanceOld_cm * 0.01f;
+            state.distanceBeforeFilter_m = state.distanceOld_cm * 0.01f;
         }
         else
         {
-            distanceBeforeFilter_m = distance * 0.01f; 
-            distanceOld_cm = distance;
+            state.distanceBeforeFilter_m = state.distanceCur_cm * 0.01f; 
+            state.distanceOld_cm = state.distanceCur_cm;
         }        
-        distanceFiltered_m = _distanceFiltered_m * 0.25f + distanceBeforeFilter_m * 0.75f;
-        state.distance_m = distanceFiltered_m;
+        state.distanceFiltered_m = state._distanceFiltered_m * 0.25f + state.distanceBeforeFilter_m * 0.75f;
+        state._distanceFiltered_m = state.distanceFiltered_m;
+
+        state.distance_m = state.distanceFiltered_m;
         new_distance = false;
         update_status();
     } else if (AP_HAL::millis() - state.last_reading_ms > 300) {

@@ -38,11 +38,7 @@ private:
     bool _init(void);
     void _timer(void);
 
-    uint16_t distance;
-    uint16_t distanceOld_cm;
-    float distanceBeforeFilter_m;
-    float distanceFiltered_m;
-    float _distanceFiltered_m;
+    uint16_t distance;    
     bool new_distance;
     
     // start a reading

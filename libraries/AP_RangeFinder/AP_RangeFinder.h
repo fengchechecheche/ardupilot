@@ -218,6 +218,12 @@ public:
         uint32_t last_reading_ms;       // system time of last successful update from sensor
 
         const struct AP_Param::GroupInfo *var_info;
+
+        uint16_t distanceCur_cm;        // 存放本次测距时得到的原始结果    
+        uint16_t distanceOld_cm;        // 存放上次测距时得到的正常原始结果        
+        float distanceBeforeFilter_m;   // 剔除异常值后的可用结果
+        float distanceFiltered_m;       // 一阶低通滤波后的结果
+        float _distanceFiltered_m;      // 上次一阶低通滤波后的结果
     };
 
     static const struct AP_Param::GroupInfo *backend_var_info[RANGEFINDER_MAX_INSTANCES];

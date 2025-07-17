@@ -83,6 +83,11 @@ public:
     // parameter value which may be changed at runtime.
     RangeFinder::Type allocated_type() const { return _backend_type; }
 
+    // 读取超声波传感器滤波前后的相关测距数据
+    uint16_t distanceCur_cm() const { return state.distanceCur_cm; }
+    float distanceBeforeFilter_m() const { return state.distanceBeforeFilter_m; }
+    float distanceFiltered_m() const { return state.distanceFiltered_m; }
+
 protected:
 
     // update status based on distance measurement
