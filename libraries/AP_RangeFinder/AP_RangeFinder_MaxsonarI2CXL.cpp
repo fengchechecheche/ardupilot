@@ -92,6 +92,7 @@ bool AP_RangeFinder_MaxsonarI2CXL::_init(void)
 
     // 100000       us = 100        ms = 0.1    s = 10      Hz
     //  50000       us =  50        ms = 0.05   s = 20      Hz
+    //  25000       us =  25        ms = 0.025  s = 40      Hz
     _dev->register_periodic_callback(50000,
                                      FUNCTOR_BIND_MEMBER(&AP_RangeFinder_MaxsonarI2CXL::_timer, void));
 
