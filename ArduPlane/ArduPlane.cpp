@@ -82,7 +82,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
 #endif
     SCHED_TASK_CLASS(AP_BattMonitor, &plane.battery, read,   10, 300,  66),
 #if AP_RANGEFINDER_ENABLED
-    SCHED_TASK(read_rangefinder,       50,    100, 78),
+    SCHED_TASK(read_rangefinder,      100,    200, 28),
 #endif
 #if AP_ICENGINE_ENABLED
     SCHED_TASK_CLASS(AP_ICEngine,      &plane.g2.ice_control, update,     10, 100,  81),

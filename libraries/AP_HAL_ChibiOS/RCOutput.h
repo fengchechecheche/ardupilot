@@ -112,6 +112,8 @@ public:
     /*
       timer push (for oneshot min rate)
      */
+    // 使用using声明解决-Woverloaded-virtual警告
+    using AP_HAL::RCOutput::timer_tick;
     void timer_tick(rcout_timer_t cycle_start_us, rcout_timer_t timeout_period_us);
 
     /*
