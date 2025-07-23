@@ -25,6 +25,8 @@ extern const AP_HAL::HAL& hal;
 #define LIGHTWARE_DIST_MAX_CM           10000
 #define LIGHTWARE_OUT_OF_RANGE_ADD_CM   100
 
+uint16_t rawReading_cm = 0;
+
 // read - return last value measured by sensor
 bool AP_RangeFinder_LightWareSerial::get_reading(float &reading_m)
 {
@@ -35,6 +37,9 @@ bool AP_RangeFinder_LightWareSerial::get_reading(float &reading_m)
     float sum = 0;              // sum of all readings taken
     uint16_t valid_count = 0;   // number of valid readings
     uint16_t invalid_count = 0; // number of invalid readings
+
+    AP_AHRS &ahrs = AP::ahrs();
+    const float pitch_rad = ahrs.get_pitch();
 
     // max distance the sensor can reliably measure - read from parameters
     const int16_t distance_cm_max = max_distance_cm();
@@ -122,6 +127,12 @@ bool AP_RangeFinder_LightWareSerial::get_reading(float &reading_m)
     // return average of all valid readings
     if (valid_count > 0) {
         reading_m = sum / valid_count;
+        rawReading_cm = (uint16_t)(reading_m * 100);
+
+        // 增加根据俯仰角换算实际飞行高度的功能
+        // reading_m = reading_m * cosf(abs(degrees(pitch_rad)*100));
+        reading_m = reading_m * cosf(abs(pitch_rad));
+
         no_signal = false;
         return true;
     }

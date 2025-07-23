@@ -1,11 +1,14 @@
 #pragma once
 
 #include "AP_RangeFinder_config.h"
+#include "AP_AHRS/AP_AHRS.h"
 
 #if AP_RANGEFINDER_LIGHTWARE_SERIAL_ENABLED
 
 #include "AP_RangeFinder.h"
 #include "AP_RangeFinder_Backend_Serial.h"
+
+extern uint16_t rawReading_cm;
 
 class AP_RangeFinder_LightWareSerial : public AP_RangeFinder_Backend_Serial
 {

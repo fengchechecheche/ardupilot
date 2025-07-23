@@ -829,6 +829,7 @@ void RangeFinder::Log_RFND() const
                 time_us      : AP_HAL::micros64(),
                 instance     : i,
                 dist         : s->distance_cm(),
+                rawdist      : rawReading_cm,
                 status       : (uint8_t)s->status(),
                 orient       : s->orientation(),
                 quality      : s->signal_quality_pct(),
