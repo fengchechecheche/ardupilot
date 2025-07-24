@@ -54,6 +54,9 @@ private:
     uint8_t binary_valid_count;
 
     bool no_signal = false;
+
+    float last_valid_reading_m = 0;  // 成员变量，非static!
+    bool has_valid_history = false;   // 有效值标记
 };
 
 #endif  // AP_RANGEFINDER_LIGHTWARE_SERIAL_ENABLED

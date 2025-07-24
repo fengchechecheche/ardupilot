@@ -133,14 +133,39 @@ bool AP_RangeFinder_LightWareSerial::get_reading(float &reading_m)
         // reading_m = reading_m * cosf(abs(degrees(pitch_rad)*100));
         reading_m = reading_m * cosf(abs(pitch_rad));
 
+        last_valid_reading_m = reading_m;
+        has_valid_history = true;
+
         no_signal = false;
         return true;
     }
 
     // all readings were invalid so return out-of-range-high value
     if (invalid_count > 0) {
-        reading_m = MIN(MAX(LIGHTWARE_DIST_MAX_CM, distance_cm_max + LIGHTWARE_OUT_OF_RANGE_ADD_CM), UINT16_MAX) * 0.01f;
         no_signal = true;
+        
+        if (has_valid_history) {
+            // 关键修改：直接返回上次有效值
+            reading_m = last_valid_reading_m;
+            return true;
+        }
+        
+        // 无历史数据时使用安全值
+        /*
+            原始无效值处理代码中的三层保护逻辑：
+            步骤    函数                                                     目的                           实例值
+            1       distance_cm_max + LIGHTWARE_OUT_OF_RANGE_ADD_CM         基础超限值                      700cm + 100cm = 800cm
+            2       MAX(LIGHTWARE_DIST_MAX_CM, ...)                         确保不低于传感器物理极限         MAX(10000cm, 800cm) = 10000cm
+            3       MIN(..., UINT16_MAX)                                    防止16位整型溢出                MIN(10000cm, 65535) = 10000cm
+
+            4       * 0.01f                                                 厘米 → 米转换                   10000cm → 100.0m
+        */
+        const int16_t safe_cm = MIN(
+            MAX(LIGHTWARE_DIST_MAX_CM, distance_cm_max + LIGHTWARE_OUT_OF_RANGE_ADD_CM),
+            UINT16_MAX
+        );
+        reading_m = safe_cm * 0.01f;  // 统一转换为米
+        
         return true;
     }
 
