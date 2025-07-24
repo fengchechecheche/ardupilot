@@ -211,6 +211,7 @@ public:
     // The RangeFinder_State structure is filled in by the backend driver
     struct RangeFinder_State {
         float distance_m;               // distance in meters
+        float raw_distance_m;
         int8_t signal_quality_pct;      // measurement quality in percent 0-100, -1 -> quality is unknown
         uint16_t voltage_mv;            // voltage in millivolts, if applicable, otherwise 0
         enum RangeFinder::Status status; // sensor status

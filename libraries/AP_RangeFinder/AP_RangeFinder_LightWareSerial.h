@@ -8,8 +8,6 @@
 #include "AP_RangeFinder.h"
 #include "AP_RangeFinder_Backend_Serial.h"
 
-extern uint16_t rawReading_cm;
-
 class AP_RangeFinder_LightWareSerial : public AP_RangeFinder_Backend_Serial
 {
 
