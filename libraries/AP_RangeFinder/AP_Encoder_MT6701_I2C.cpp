@@ -48,7 +48,7 @@ bool AP_Encoder_MT6701_I2C::init()
 bool AP_Encoder_MT6701_I2C::encoder_init()
 {
     hal.scheduler->delay(10);
-    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1] run AP_Encoder_MT6701_I2C::encoder_init() start.\n");
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-1] run encoder_init() start.\n");
     hal.scheduler->delay(10);
     union
     {
@@ -57,19 +57,21 @@ bool AP_Encoder_MT6701_I2C::encoder_init()
     } timeout;
 
     // Retrieve lost signal timeout register
-    const uint8_t read_reg1[2] = {SlaveAddress, ReadAddress1};
-    const uint8_t read_reg2[2] = {SlaveAddress, ReadAddress2};
+    // const uint8_t read_reg1[2] = {SlaveAddress, ReadAddress1};
+    // const uint8_t read_reg2[2] = {SlaveAddress, ReadAddress2};
+    const uint8_t read_reg1[1] = {ReadAddress1};
+    const uint8_t read_reg2[1] = {ReadAddress2};
 
     WITH_SEMAPHORE(_dev->get_semaphore()); // 获取I2C信号量
 
-    if (((_dev->transfer(read_reg1, 2, timeout.bytes, 2)) && (_dev->transfer(read_reg2, 2, timeout.bytes, 2))) == false)
+    if (((_dev->transfer(read_reg1, 1, timeout.bytes, 2)) && (_dev->transfer(read_reg2, 1, timeout.bytes, 2))) == false)
     {
         hal.scheduler->delay(10);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2] run AP_Encoder_MT6701_I2C::encoder_init() failed.\n");
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-1] timeout.bytes[0]: %d.\n", timeout.bytes[0]);
         gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-2-2] timeout.bytes[1]: %d.\n", timeout.bytes[1]);
         hal.scheduler->delay(10);
-        return false;
+        // return false;
     }
     hal.scheduler->delay(10);
     gcs().send_text(MAV_SEVERITY_CRITICAL, "[3-3-1] timeout.bytes[0]: %d.\n", timeout.bytes[0]);
@@ -202,6 +204,8 @@ void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
         angle <<= 8;     
     }
     else{
+        angle = ReadBuffer;
+        angle <<= 8;
         if(SEND_TEST_MESSAGE)
         {
             // hal.scheduler->delay(10);
@@ -219,6 +223,10 @@ void AP_Encoder_MT6701_I2C::get_reading(float &reading_m)
         reading_m = angle_f;     
     }
     else{
+        angle += ReadBuffer;
+        angle >>= 2;
+        angle_f = (float)(angle * 360.0) / 16384.0;
+        reading_m = angle_f;  
         if(SEND_TEST_MESSAGE)
         {
             // hal.scheduler->delay(10);
