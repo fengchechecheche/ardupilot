@@ -38,6 +38,7 @@ bool AP_RangeFinder_LightWareSerial::get_reading(float &reading_m)
 
     AP_AHRS &ahrs = AP::ahrs();
     const float pitch_rad = ahrs.get_pitch();
+    const float roll_rad = ahrs.get_roll();
 
     // max distance the sensor can reliably measure - read from parameters
     const int16_t distance_cm_max = max_distance_cm();
@@ -127,9 +128,9 @@ bool AP_RangeFinder_LightWareSerial::get_reading(float &reading_m)
         reading_m = sum / valid_count;
         state.raw_distance_m = reading_m;
 
-        // 增加根据俯仰角换算实际飞行高度的功能
-        // reading_m = reading_m * cosf(abs(degrees(pitch_rad)*100));
-        reading_m = reading_m * cosf(abs(pitch_rad));
+        // 增加根据俯仰角和横滚角换算实际飞行高度的功能
+        // reading_m = reading_m * cosf(abs(pitch_rad)) * cosf(abs(roll_rad));
+        reading_m = reading_m * cosf(abs(pitch_rad)) * cosf(abs(roll_rad));
 
         last_valid_reading_m = reading_m;
         has_valid_history = true;
