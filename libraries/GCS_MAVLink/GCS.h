@@ -322,6 +322,7 @@ public:
     virtual void send_winch_status() const {};
     void send_water_depth() const;
     int8_t battery_remaining_pct(const uint8_t instance) const;
+    void send_nfcy_test_mavlink() const;
 
 #if HAL_HIGH_LATENCY2_ENABLED
     void send_high_latency2() const;

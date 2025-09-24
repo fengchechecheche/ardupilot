@@ -903,6 +903,7 @@ ap_message GCS_MAVLINK::mavlink_id_to_ap_message_id(const uint32_t mavlink_id) c
         { MAVLINK_MSG_ID_HIGH_LATENCY2,         MSG_HIGH_LATENCY2},
         { MAVLINK_MSG_ID_AIS_VESSEL,            MSG_AIS_VESSEL},
         { MAVLINK_MSG_ID_UAVIONIX_ADSB_OUT_STATUS, MSG_UAVIONIX_ADSB_OUT_STATUS},
+        { MAVLINK_MSG_ID_NFCY_TEST_MAVLINK,     MSG_NFCY_TEST},
             };
 
     for (uint8_t i=0; i<ARRAY_SIZE(map); i++) {
@@ -4926,6 +4927,12 @@ void GCS_MAVLINK::send_extended_sys_state() const
     mavlink_msg_extended_sys_state_send(chan, vtol_state(), landed_state());
 }
 
+void GCS_MAVLINK::send_nfcy_test_mavlink() const
+{
+    mavlink_msg_nfcy_test_mavlink_send(
+        chan, 1, 666, 12345);
+}
+
 void GCS_MAVLINK::send_attitude() const
 {
     const AP_AHRS &ahrs = AP::ahrs();
@@ -5470,6 +5477,10 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
         CHECK_PAYLOAD_SIZE(UAVIONIX_ADSB_OUT_STATUS);
         send_uavionix_adsb_out_status();
         break;
+
+    case MSG_NFCY_TEST:
+        send_nfcy_test_mavlink();
+        break;      
 
     default:
         // try_send_message must always at some stage return true for

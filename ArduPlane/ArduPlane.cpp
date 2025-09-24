@@ -336,6 +336,8 @@ void Plane::one_second_loop()
             // reset the landing altitude correction
             landing.alt_offset = 0;
     }
+    
+    gcs().send_message(MSG_NFCY_TEST);
 }
 
 void Plane::three_hz_loop()
