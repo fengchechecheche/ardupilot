@@ -93,6 +93,8 @@ uint32_t GCS_MAVLINK::reserve_param_space_start_ms;
 // don't get broadcasts or fwded packets
 uint8_t GCS_MAVLINK::mavlink_private = 0;
 
+static uint32_t nfcy_test_count = 0;
+
 GCS *GCS::_singleton = nullptr;
 
 GCS_MAVLINK::GCS_MAVLINK(GCS_MAVLINK_Parameters &parameters,
@@ -2097,6 +2099,11 @@ void GCS_MAVLINK::service_statustext(void)
 
 void GCS::send_message(enum ap_message id)
 {
+    if (id == MSG_NFCY_TEST)
+    {
+        nfcy_test_count++;
+    }
+    
     for (uint8_t i=0; i<num_gcs(); i++) {
         chan(i)->send_message(id);
     }
@@ -4930,7 +4937,7 @@ void GCS_MAVLINK::send_extended_sys_state() const
 void GCS_MAVLINK::send_nfcy_test_mavlink() const
 {
     mavlink_msg_nfcy_test_mavlink_send(
-        chan, 1, 666, 12345);
+        chan, 1, 666, nfcy_test_count);
 }
 
 void GCS_MAVLINK::send_attitude() const
