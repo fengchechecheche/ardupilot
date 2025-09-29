@@ -4940,7 +4940,7 @@ void GCS_MAVLINK::send_extended_sys_state() const
 
 void GCS_MAVLINK::send_nfcy_test_mavlink() const
 {
-    mavlink_msg_nfcy_test_mavlink_send(chan, 1, 666, nfcy_test_count);
+    mavlink_msg_nfcy_test_mavlink_send(chan, mavlink_system.sysid, 666, nfcy_test_count);
 }
 
 void GCS_MAVLINK::handle_nfcy_test_mavlink(const mavlink_message_t &msg)
@@ -4949,7 +4949,7 @@ void GCS_MAVLINK::handle_nfcy_test_mavlink(const mavlink_message_t &msg)
     mavlink_nfcy_test_mavlink_t packet;
     mavlink_msg_nfcy_test_mavlink_decode(&msg, &packet);
 
-    gcs().send_text(MAV_SEVERITY_EMERGENCY, "Got nfcy test: %d %d %lu", (int)packet.test1, (int)packet.test2, packet.test3);
+    gcs().send_text(MAV_SEVERITY_EMERGENCY, "SYSID_THISMAV = %d, Got from system_id: %d %d %lu", (int)mavlink_system.sysid, (int)packet.test1, (int)packet.test2, packet.test3);
 }
 
 void GCS_MAVLINK::send_attitude() const
