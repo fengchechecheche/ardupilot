@@ -323,6 +323,7 @@ public:
     void send_water_depth() const;
     int8_t battery_remaining_pct(const uint8_t instance) const;
     void send_nfcy_test_mavlink() const;
+    void handle_nfcy_test_mavlink(const mavlink_message_t &msg);
 
 #if HAL_HIGH_LATENCY2_ENABLED
     void send_high_latency2() const;
