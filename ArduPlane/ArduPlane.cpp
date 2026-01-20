@@ -94,7 +94,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(three_hz_loop,           3,     75,  93),
     SCHED_TASK(check_long_failsafe,     3,    400,  96),
 #if AP_RPM_ENABLED
-    SCHED_TASK_CLASS(AP_RPM,           &plane.rpm_sensor,     update,     10, 100,  99),
+    SCHED_TASK_CLASS(AP_RPM,           &plane.rpm_sensor,     update,     100, 100,  99),
 #endif
 #if AP_AIRSPEED_AUTOCAL_ENABLE
     SCHED_TASK(airspeed_ratio_update,   1,    100,  102),
